@@ -22,8 +22,17 @@ def _cmd_validate(args: argparse.Namespace) -> int:
 
 
 def _cmd_build(args: argparse.Namespace) -> int:
-    print("build: not implemented yet (M2 part c)", file=sys.stderr)
-    return 2
+    if not args.synthetic:
+        print("build: only --synthetic is implemented (real data comes in M10)", file=sys.stderr)
+        return 2
+    from .synthetic import BuildError, build_synthetic
+
+    try:
+        build_synthetic(args.root, seed=args.seed)
+    except BuildError as exc:
+        print(f"build: {exc}", file=sys.stderr)
+        return 1
+    return 0
 
 
 def make_parser() -> argparse.ArgumentParser:
@@ -36,9 +45,13 @@ def make_parser() -> argparse.ArgumentParser:
                        help="skip recomputing stats with the Node engine (rule 6 parity)")
     p_val.set_defaults(func=_cmd_validate)
 
-    p_build = sub.add_parser("build", help="write data/public (M2 part c)")
+    from .synthetic.config import DEFAULT_SEED
+
+    p_build = sub.add_parser("build", help="write data/public (clears old generated content first)")
     p_build.add_argument("--synthetic", action="store_true", help="write synthetic data with injected trends")
     p_build.add_argument("--root", type=Path, default=DEFAULT_ROOT, help="output folder (default: data/public)")
+    p_build.add_argument("--seed", type=int, default=DEFAULT_SEED,
+                         help=f"random seed for --synthetic (default: {DEFAULT_SEED})")
     p_build.set_defaults(func=_cmd_build)
     return parser
 

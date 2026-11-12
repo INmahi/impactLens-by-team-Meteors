@@ -78,11 +78,13 @@ def test_cli_problem_lines_and_exit_1(tree: Path) -> None:
     assert lines[-1].endswith("1 problems")
 
 
-def test_cli_build_not_implemented() -> None:
-    proc = subprocess.run([sys.executable, "-m", "pipeline", "build", "--synthetic"],
+def test_cli_real_build_not_implemented(tmp_path: Path) -> None:
+    # Only --synthetic exists until M10; without it nothing is written.
+    proc = subprocess.run([sys.executable, "-m", "pipeline", "build", "--root", str(tmp_path / "out")],
                           cwd=REPO_ROOT, capture_output=True, text=True)
     assert proc.returncode == 2
-    assert "not implemented yet" in proc.stderr
+    assert "only --synthetic" in proc.stderr
+    assert not (tmp_path / "out").exists()
 
 
 def test_missing_root_is_clear(tmp_path: Path) -> None:

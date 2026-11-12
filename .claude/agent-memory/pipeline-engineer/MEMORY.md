@@ -1,2 +1,3 @@
 - [Library quirks](library-quirks.md) — Pillow 16-bit PNG mode, jsonschema uri format, NaN in JSON, Node TS stripping
 - [Validator conventions](validator-conventions.md) — strict readings the validator enforces (global kind, period span, segments, stray files, PNG chunks)
+- [Synthetic generator](synthetic-generator.md) — M2c gate/coverage numbers, lowPower can't trigger, atlas sizes, grid row 0 = north

@@ -43,3 +43,10 @@ The data contract: JSON Schemas (`schemas/`, draft 2020-12) and TypeScript types
 - Map layers are folders named by some variable's `mapMode`; an unused layer folder, stray file, unlisted atlas or unreferenced outlines file is a rule 3 problem.
 - PNGs must be 8-bit RGBA with no colour chunks (iCCP, sRGB, gAMA, cHRM); colormaps too.
 - Not checked: `describe.video` files (they live in `media/`), atlas pixel values, colormap colours.
+
+### Conventions (after the synthetic generator, 2026-11-12)
+- **Grid orientation:** frame row 0 is the north edge of `grid.bbox`, column 0 the west edge; pixel centres sit half a cell inside (1-degree grid: first centre 89.5N, 179.5W). globe-engineer maps texture v accordingly.
+- **`valueRange`** is the fixed colour range of the colormap, not the data min/max. Values outside it saturate at the end colours. The legend shows this range.
+- **Polygons:** rings are counter-clockwise in plain lon/lat (GeoJSON RFC 7946 order). Polar regions follow the Natural Earth style (coast, then down the antimeridian to the pole). Regions that cross 180 are MultiPolygons split at 180. `bbox` never wraps (west <= east); a region crossing 180 uses the full longitude range.
+- **Outline dates** (`outlines.topo.json`) are annual `YYYY`, one outline per year, whatever the variable's frequency. Partial first and last years are allowed.
+- **`chartTypes` vocabulary:** `series` (default: time series with trend line and band), `anomaly`, `annual_change`, `sea_level_equivalent`, `bar` (rates with uncertainty), `running_mean`, `seasonal_cycle`, `summer_series`, `decade_means`, `budget`. New types are added here first.

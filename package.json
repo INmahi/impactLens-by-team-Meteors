@@ -3,11 +3,15 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@12.18.0",
-  "engines": { "node": ">=22.18" },
+  "engines": {
+    "node": ">=22.18"
+  },
   "scripts": {
     "dev": "pnpm --filter web dev",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
-    "golden": "uv run python pipeline/stats/make_golden.py 1000"
+    "golden": "uv run python pipeline/stats/make_golden.py 1000",
+    "data": "uv run python -m pipeline build --synthetic",
+    "validate": "uv run python -m pipeline validate"
   }
 }

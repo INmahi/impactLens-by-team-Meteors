@@ -6,7 +6,7 @@ metadata:
 ---
 
 Choices made in pipeline/validate/checks.py where the contract README was silent or ambiguous (reported to main 2026-11-12; check whether main changed the contract since):
-- Global region = `kind == "global"` (kind is optional in the schema). Global regions must NOT have a geometry; any other region must.
+- Global region = `kind == "global"` (kind became required in the schema, 2026-11-12). Global regions must NOT have a geometry; any other region must.
 - variables.json `period` must equal [min periods start, max periods end] (reported as rule 5).
 - Segments must be contiguous on the date grid: first start = dates[0], last end = dates[-1], next.start = step after prev.end.
 - Unexpected files anywhere (root, series/, stats/, frames/ not in atlases, stray folders, unreferenced outlines, layer folders no variable uses as mapMode) are rule 3 problems.

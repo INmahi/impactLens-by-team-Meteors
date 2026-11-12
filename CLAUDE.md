@@ -30,7 +30,7 @@ node packages/stats/test/golden.test.ts         # stats parity with Python
 node packages/stats/test/analyze.test.ts
 node packages/stats/test/simulate.ts 1000       # error rates, about 3 minutes
 uv run python pipeline/stats/make_golden.py 1000   # same as pnpm golden
-uv run python -m pipeline build --synthetic
+uv run python -m pipeline build --synthetic     # = pnpm data; [--seed N]; writes data/public/
 uv run python -m pipeline validate              # [--root data/public] [--no-stats-check]
 uv run pytest pipeline/tests -q
 ```
@@ -75,11 +75,13 @@ Node 22.18 or later. Python 3.12 or later with `uv`.
 |---|---|---|
 | M0 Scaffold | Done 2026-11-12 | Build, golden (40,475 checks) and analyze tests pass; worker verified in browser |
 | M1 Dataset cards | Done 2026-11-12 | 8 cards in `docs/datasets/`. Decisions in plan sections 2 and 16: IMBIE 2026 primary; ice_mass_rate annual; ice_extent Greenland only; MERRA-2 temperature, baseline 1991-2020; NASA-SSH sea level (no GIA); long records as separate ids `sea_level_long`, `ice_mass_long`, never joined |
-| M2 Contract + synthetic | Parts a, b done 2026-11-12 | (a) schemas + types + cross-file rules in `packages/contract/` (README lists changes and clarifications). (b) validator `uv run python -m pipeline validate`, 72 pytest tests. Next: (c) synthetic generator (pipeline-engineer) |
+| M2 Contract + synthetic | Done 2026-11-12 | Schemas + types + rules + conventions in `packages/contract/README.md`. Validator and generator in `pipeline/` (84 tests). Gate: 47 files, 0 problems; all 17 injected slopes inside their 95% interval (seed 20261112, not tuned); 50-seed coverage 0.948. `data/public/` is generated (`pnpm data`, 26 MB) and gitignored |
+| M3 Globe | Next | globe-engineer |
 
 Open follow-ups:
 - stats-lead: `packages/stats/package.json` `golden` script calls bare `python` (not on PATH here); use root `pnpm golden`. The usage comment in `src/worker.ts` uses `new URL('@trend/stats/worker', ...)`, which Vite does not resolve; the app uses `import StatsWorker from '@trend/stats/worker?worker'` (`apps/web/src/lib/stats.ts`).
-- `regions.json` shape is proposed in the data-contract skill; confirm in M2.
+- `lowPower` (engine: under 30 years or under 30 points) never fires on full records, which are all 45+ years. It only appears when the user picks a short time range; the UI and demo must show that case. temperature/antarctica is the realistic hard case (about 19% power).
+- Synthetic data is not physically consistent: maps and series are independent, Antarctic sub-regions do not add up, ice_mass and ice_mass_rate are independent.
 - Extensible glacier regions (decided 2026-11-12): M2 validator and generator must accept any region listed in `regions.json`; M3/M6 must build pickers, outlines and camera presets from it. Candidate future sources for mountain glaciers: GRACE mascons (already carded) and a glacier mass change product per RGI region; data-scout to card one when we add a region.
 - Glass tokens exist twice: `.claude/skills/glass-ui/tokens.css` and `apps/web/src/styles/glass.css`. Keep them identical.
 

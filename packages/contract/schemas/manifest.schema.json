@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://trend-detective.local/contract/manifest.schema.json",
   "title": "data/public/{layer_id}/manifest.json",
-  "description": "A gridded map layer: frames packed into atlas PNGs. Decode: value = (R * 256 + G) * scale + offset, valid where B == 255.",
+  "description": "A gridded map layer: frames packed into atlas PNGs. Decode: value = (R * 256 + G) * scale + offset, valid where B == 255. Frame row 0 = north edge of grid.bbox, column 0 = west edge. valueRange is the fixed colormap range (values beyond it saturate), not the data min/max.",
   "type": "object",
   "required": ["variable", "units", "grid", "encoding", "valueRange", "atlases", "frames", "missing", "synthetic"],
   "properties": {
