@@ -44,6 +44,7 @@ Node 22.18 or later. Python 3.12 or later with `uv`.
 - Never state a cause from a correlation. Never say warm air is melting Antarctica.
 - Sea level is global only. Never imply a local value.
 - Show "SYNTHETIC DATA" whenever `synthetic` is true.
+- Regions are data, not code. The app, globe, pickers, compare mode and pipeline read regions from `regions.json`, `regions.topo.json` and each variable's `regions` list. Never hard-code a region id, name, outline or camera in components or shaders. Adding a glacier region (for example High Mountain Asia or Alaska) must need only new data files and a pipeline config entry, with no app code change.
 
 ## Ownership (one owner per folder)
 | Owner | Owns |
@@ -72,11 +73,13 @@ Node 22.18 or later. Python 3.12 or later with `uv`.
 | Milestone | Status | Notes |
 |---|---|---|
 | M0 Scaffold | Done 2026-11-12 | Build, golden (40,475 checks) and analyze tests pass; worker verified in browser |
-| M1 Dataset cards | Next | data-scout, two batches: ice sources, then temperature and sea level |
+| M1 Dataset cards | Done 2026-11-12 | 8 cards in `docs/datasets/`. Decisions in plan sections 2 and 16: IMBIE 2026 primary; ice_mass_rate annual; ice_extent Greenland only; MERRA-2 temperature, baseline 1991-2020; NASA-SSH sea level (no GIA); long records as separate ids `sea_level_long`, `ice_mass_long`, never joined |
+| M2 Contract + synthetic | Next, 3 parts | (a) contract changes + JSON Schemas in `packages/contract/` (main); (b) validator, (c) synthetic generator (pipeline-engineer) |
 
 Open follow-ups:
 - stats-lead: `packages/stats/package.json` `golden` script calls bare `python` (not on PATH here); use root `pnpm golden`. The usage comment in `src/worker.ts` uses `new URL('@trend/stats/worker', ...)`, which Vite does not resolve; the app uses `import StatsWorker from '@trend/stats/worker?worker'` (`apps/web/src/lib/stats.ts`).
 - `regions.json` shape is proposed in the data-contract skill; confirm in M2.
+- Extensible glacier regions (decided 2026-11-12): M2 validator and generator must accept any region listed in `regions.json`; M3/M6 must build pickers, outlines and camera presets from it. Candidate future sources for mountain glaciers: GRACE mascons (already carded) and a glacier mass change product per RGI region; data-scout to card one when we add a region.
 - Glass tokens exist twice: `.claude/skills/glass-ui/tokens.css` and `apps/web/src/styles/glass.css`. Keep them identical.
 
 ## Gotchas (Windows dev machine)

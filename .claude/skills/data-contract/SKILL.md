@@ -26,6 +26,7 @@ media/{variable_id}_loop.webm (+ .mp4)
 - Variables: `ice_mass`, `ice_mass_rate`, `ice_extent`, `ice_mass_map`, `temperature`, `sea_level`. Group `ice_sheet` = `ice_mass`, `ice_mass_rate`, `ice_extent`.
 - Regions: `greenland`, `antarctica`, `antarctica_west`, `antarctica_east`, `antarctica_peninsula`, `global`.
 - Valid pairs: see the table in [reference.md](reference.md#regions). `sea_level` is `global` only; `ice_extent` is `greenland` only.
+- These are the current regions, not a closed list. **Regions must be addable without code changes:** a new glacier region (for example `high_mountain_asia`, `alaska`) is added by (1) an entry in `regions.json` with `bbox` and `camera`, (2) its outline in `regions.topo.json`, (3) its id in each valid variable's `regions` list, (4) `series/{region_id}.json` and `stats/{region_id}__default.json`. Pipeline code reads its regions from a config list; app code reads them from `regions.json`. Region ids are lowercase snake_case.
 
 ## Rules that are easy to break
 1. `dates` are `YYYY-MM` (monthly) or `YYYY` (annual), ascending, no duplicates. Missing values are `null`, never `NaN`, `0` or a dropped date.

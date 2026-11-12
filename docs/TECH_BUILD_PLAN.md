@@ -47,13 +47,15 @@ Ice mass, loss rate and extent are sub-variables of one group, `ice_sheet`.
 
 | Variable id | Unit | Source | Real coverage | Shape | Caveats for the Notes panel |
 |---|---|---|---|---|---|
-| `ice_mass` | Gt, cumulative | [IMBIE](https://imbie.org/) AR6 dataset | 1992-2020 | Time series with 1-sigma | Totals per ice sheet, no map. Reconciled from 46 satellite surveys |
-| `ice_mass` (long record) | Gt | NASA [JPL_RECON_GMSL](https://podaac.jpl.nasa.gov/dataset/JPL_RECON_GMSL): `GrIS_*`, `AIS_*` | 1900-2018 | Time series with bounds | Given in mm of sea level; 362 Gt = 1 mm. Before 2003 it rests on models and in-situ data |
-| `ice_mass_rate` | Gt/yr | IMBIE rates | 1992-2020 | Time series with 1-sigma | A trend in this series is acceleration |
+| `ice_mass` | Gt, cumulative | [IMBIE](https://imbie.org/) 2026 release (primary; DOI 10.5285/128c5e33-5224-4197-82f0-19dcc95b80a0); 2021 release as fallback | Greenland about 1972-2023, Antarctica 1979-2023 (2026 release); 1992-2020 (2021) | Time series with 1-sigma | Totals per ice sheet, no map. Period differs by region. Time step of the 2026 file to be confirmed at download. See `docs/datasets/imbie.md` |
+| `ice_mass` (long record) | Gt | NASA [JPL_RECON_GMSL](https://podaac.jpl.nasa.gov/dataset/JPL_RECON_GMSL): `GrIS_*`, `AIS_*` | 1900-2018, annual | Time series with 5-95% bounds | **Separate series, never joined to IMBIE** (decided 2026-11-12). Given in mm of sea level; use the source's own Gt-per-mm factor (IMBIE uses 360). `GrIS_*` includes peripheral glaciers. Before 2003 it rests on models and in-situ data |
+| `ice_mass_rate` | Gt/yr | IMBIE rates | Same as `ice_mass` | **Annual** time series with 1-sigma | The 2021 file repeats one rate per calendar year, so it is analysed as annual. A trend in this series is acceleration |
 | `ice_extent` | km2 | NASA [ITS_LIVE NSIDC-0793](https://nsidc.org/data/nsidc-0793) | Sept 1972 - Feb 2022, monthly | 120 m masks, EPSG:3413, netCDF-4 | **Greenland only.** We ship a monthly area series and coarse outlines, never the 120 m data |
 | `ice_mass_map` | cm water equivalent | NASA GRACE/GRACE-FO JPL mascons RL06.3 v4 | 2002 onward, monthly | 0.5 degree grid | Map layer only. About 300 km real resolution. Gap July 2017 to May 2018 |
-| `temperature` | deg C anomaly | NASA MERRA-2 (1980 onward) or GISTEMP as primary; [ERA5](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels) monthly means (1940 onward) as secondary | 45 to 85 years | Gridded | Reanalysis, not direct measurement; less reliable over Antarctica before 1979 |
-| `sea_level` | mm | NASA satellite global mean sea level (1993 onward); JPL_RECON_GMSL (1900-2018) | 33 to 118 years | Global time series | **Global only.** No Greenland or Antarctica sea level |
+| `temperature` | deg C anomaly, baseline 1991-2020 | NASA MERRA-2 `M2TMNXSLV` T2M (decided 2026-11-12). GISTEMP and ERA5 not shown in the first release | 1980-01 onward, monthly; 47 Greenland JJA and 46 Antarctic DJF seasons | Gridded, 0.625 x 0.5 deg | Reanalysis, not direct measurement. About 3 years short of 50. Seasonal means are area-weighted. See `docs/datasets/merra2.md` |
+| `sea_level` | mm | NASA-SSH GMSL indicator `NASA_SSH_GMSL_INDICATOR` v1 (decided 2026-11-12) | 1993 onward, 7-day | Global time series | **Global only.** Not corrected for glacial isostatic adjustment, so its rate is slightly below GIA-corrected values (stats-lead to quantify in M5). No per-point uncertainty |
+| `sea_level_long` | mm | NASA JPL_RECON_GMSL `global_average_sea_level_change*` | 1900-2018, annual | Global time series with 5-95% bounds | **Separate variable, never joined** to `sea_level`. Not independent of altimetry and mass estimates |
+| `ice_mass_long` | Gt | NASA JPL_RECON_GMSL `GrIS_*`, `AIS_*` | 1900-2018, annual | Time series with 5-95% bounds | Separate variable, never joined to `ice_mass` (see the `ice_mass` long record row above) |
 
 **The 50-year target.** Only ice extent, temperature and reconstructed sea level reach 50 years. IMBIE has 29. Never pad a series; show its true period.
 
@@ -459,9 +461,12 @@ Each milestone ends with its acceptance check passing.
 
 ## 16. Open items
 
-- [ ] Confirm whether an Antarctic ice extent or ice shelf product exists to pair with NSIDC-0793
-- [ ] Choose the primary temperature product: MERRA-2 (1980 onward, NASA) or GISTEMP; decide whether ERA5 is shown
-- [ ] Decide whether to join JPL_RECON_GMSL ice contributions to IMBIE for a longer mass record, or show them as separate series
+- [x] Antarctic ice extent: only NSIDC-0794 (annual, 1997-2021) exists. Decided 2026-11-12: `ice_extent` stays Greenland only
+- [x] Temperature: MERRA-2 primary, anomaly baseline 1991-2020; GISTEMP and ERA5 not shown in the first release (decided 2026-11-12)
+- [x] Sea level: NASA-SSH indicator primary; long records are separate variables `sea_level_long` and `ice_mass_long` (decided 2026-11-12)
+- [ ] MERRA-2 download: test server-side subsetting before M10; otherwise about 30-40 GB of disk
+- [x] JPL_RECON_GMSL ice contributions: decided 2026-11-12 to keep them as a separate series, not joined to IMBIE
+- [ ] Data contract (M2): allow a period per region (IMBIE 2026 starts at different years per ice sheet), and dated outlines for the ice extent ghost outline
 - [ ] Re-check every package version when scaffolding
 - [ ] Confirm the IMBIE file format and time step
 - [ ] Team research on the statistics may change choices in `stats-lead.md`; update `docs/stats/decisions.md` when it does
