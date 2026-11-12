@@ -33,22 +33,22 @@ function StatsCheck() {
 
   return (
     <div className="glass pointer-events-auto flex w-72 flex-col gap-3 p-4 text-sm">
-      <p className="text-muted-foreground">Stats worker check (demo series, slope -2 per year).</p>
+      <p className="text-white/90">Stats worker check (demo series, slope -2 per year).</p>
       <Button onClick={run} disabled={busy} size="sm">
         {busy ? 'Running…' : 'Run analysis'}
       </Button>
       {error && <p className="text-destructive">{error}</p>}
       {report && (
         <dl data-testid="report" className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 tabular-nums">
-          <dt className="text-muted-foreground">Trend</dt>
+          <dt className="text-white/90">Trend</dt>
           <dd>{report.test.trend}</dd>
-          <dt className="text-muted-foreground">p</dt>
+          <dt className="text-white/90">p</dt>
           <dd>{report.test.p.toExponential(2)}</dd>
-          <dt className="text-muted-foreground">Sen's slope</dt>
+          <dt className="text-white/90">Sen's slope</dt>
           <dd>
             {report.slope.perYear.toFixed(3)}/yr ({report.slope.lower.toFixed(2)} to {report.slope.upper.toFixed(2)})
           </dd>
-          <dt className="text-muted-foreground">n</dt>
+          <dt className="text-white/90">n</dt>
           <dd>{report.n}</dd>
         </dl>
       )}
@@ -71,14 +71,15 @@ export default function App() {
             </span>
           )}
         </header>
-        <div className="pointer-events-auto absolute right-3 top-3">
-          <GlobeControls />
-        </div>
         <SyntheticWatermark className="absolute left-1/2 top-3 -translate-x-1/2" />
         {/* Left column: map mode picker; the stats check card stays until the M6 panels replace it. */}
         <div className="absolute left-3 top-16 flex flex-col gap-3">
           <MapModePicker />
           <StatsCheck />
+        </div>
+        {/* Right column after the left one in DOM order, so Tab goes left panel -> right controls. */}
+        <div className="pointer-events-auto absolute right-3 top-3">
+          <GlobeControls />
         </div>
         {/* Legend sits under the globe controls so it never overlaps the bottom-centre scroller. */}
         <div className="absolute right-3 top-32">
