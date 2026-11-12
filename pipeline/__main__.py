@@ -1,4 +1,4 @@
-"""Command line: uv run python -m pipeline {validate,build,ingest,standin} ..."""
+"""Command line: uv run python -m pipeline {validate,build,ingest,standin,media} ..."""
 
 from __future__ import annotations
 
@@ -69,6 +69,17 @@ def _cmd_standin(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_media(args: argparse.Namespace) -> int:
+    from .media import MediaError, build_media
+
+    try:
+        build_media(args.root, args.out)
+    except (MediaError, FileNotFoundError) as exc:
+        print(f"media: {exc}", file=sys.stderr)
+        return 1
+    return 0
+
+
 def make_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="python -m pipeline", description="Trend Detective data pipeline")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -106,6 +117,11 @@ def make_parser() -> argparse.ArgumentParser:
     p_si.add_argument("--topo", type=Path, default=None, help="sea_level: regions.topo.json (default: from config)")
     p_si.add_argument("--date-format", choices=["iso", "decimal"], default="iso", help="imbie: Date column format")
     p_si.set_defaults(func=_cmd_standin)
+
+    p_media = sub.add_parser("media", help="Describe-popup loop videos (needs `uv run --group media`)")
+    p_media.add_argument("--root", type=Path, default=DEFAULT_ROOT, help="data folder (default: data/public)")
+    p_media.add_argument("--out", type=Path, default=Path("media"), help="output folder (default: media)")
+    p_media.set_defaults(func=_cmd_media)
     return parser
 
 

@@ -337,7 +337,7 @@ VARIABLES: list[VariableSpec] = [
         map_mode="ice_mass_map", chart_types=["series", "anomaly", "annual_change", "sea_level_equivalent"],
         source=_IMBIE, segment_source="Synthetic (IMBIE 2026 shape)",
         describe={"what": "How much ice an ice sheet holds, compared with the start of its record.",
-                  "whyItMatters": "Ice lost from the ice sheets raises sea level; about 360 Gt is 1 mm."},
+                  "whyItMatters": "Ice lost from the ice sheets raises sea level; about 362 Gt is 1 mm."},
         notes=[SYNTH_NOTE, "Record starts in July 1971 for Greenland and 1979 for Antarctica.",
                "Uncertainty (1-sigma) is larger early in the record.", _ICE_REGIONS_NOTE],
         series={

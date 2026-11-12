@@ -2,3 +2,4 @@
 - [Validator conventions](validator-conventions.md) — strict readings the validator enforces (global kind, period span, segments, stray files, PNG chunks)
 - [Ingest + stand-ins](ingest-standins.md) — netCDF-4 engine missing, in-memory build path, short-series NaN stats, IMBIE header fix
 - [Synthetic generator](synthetic-generator.md) — gate/coverage numbers, coastal seas (offshore polygons, us_east_coast gate miss), atlas sizes, grid orientation
+- [Media videos](media-videos.md) — pipeline media command, clip-kind rule, encoder settings, sizes, media-group test

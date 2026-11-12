@@ -18,6 +18,9 @@ dev = [
     "jsonschema>=4.26.0",
     "pytest>=9.2.0",
 ]
+media = [
+    "imageio-ffmpeg==0.7.0",
+]
 stats = [
     "arch>=8.0.0",
     "pymannkendall==1.4.3",
