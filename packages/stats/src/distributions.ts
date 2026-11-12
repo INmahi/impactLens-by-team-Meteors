@@ -105,3 +105,113 @@ export function normPpf(p: number): number {
   }
   return x;
 }
+
+// ---------------------------------------------------------------------------
+// Student t distribution (for correlation and HAC regression p-values, M5).
+
+const LANCZOS_G = 7;
+const LANCZOS = [
+  0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313,
+  -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6,
+  1.5056327351493116e-7,
+];
+
+/** Natural log of the gamma function for x > 0 (Lanczos, g = 7). */
+export function lgamma(x: number): number {
+  if (!(x > 0)) return NaN;
+  if (x < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * x)) - lgamma(1 - x);
+  const xx = x - 1;
+  let a = LANCZOS[0];
+  const t = xx + LANCZOS_G + 0.5;
+  for (let i = 1; i < 9; i++) a += LANCZOS[i] / (xx + i);
+  return 0.5 * Math.log(2 * Math.PI) + (xx + 0.5) * Math.log(t) - t + Math.log(a);
+}
+
+/** Continued fraction for the incomplete beta function (modified Lentz). */
+function betacf(a: number, b: number, x: number): number {
+  const tiny = 1e-300;
+  const qab = a + b;
+  const qap = a + 1;
+  const qam = a - 1;
+  let c = 1;
+  let d = 1 - (qab * x) / qap;
+  if (Math.abs(d) < tiny) d = tiny;
+  d = 1 / d;
+  let h = d;
+  for (let m = 1; m <= 10000; m++) {
+    const m2 = 2 * m;
+    let aa = (m * (b - m) * x) / ((qam + m2) * (a + m2));
+    d = 1 + aa * d;
+    if (Math.abs(d) < tiny) d = tiny;
+    c = 1 + aa / c;
+    if (Math.abs(c) < tiny) c = tiny;
+    d = 1 / d;
+    h *= d * c;
+    aa = (-(a + m) * (qab + m) * x) / ((a + m2) * (qap + m2));
+    d = 1 + aa * d;
+    if (Math.abs(d) < tiny) d = tiny;
+    c = 1 + aa / c;
+    if (Math.abs(c) < tiny) c = tiny;
+    d = 1 / d;
+    const del = d * c;
+    h *= del;
+    if (Math.abs(del - 1) < 1e-16) break;
+  }
+  return h;
+}
+
+/** Regularized incomplete beta function I_x(a, b). */
+export function betaincReg(a: number, b: number, x: number): number {
+  if (Number.isNaN(x) || x < 0 || x > 1) return NaN;
+  if (x === 0) return 0;
+  if (x === 1) return 1;
+  const lbt = lgamma(a + b) - lgamma(a) - lgamma(b) + a * Math.log(x) + b * Math.log1p(-x);
+  if (x < (a + 1) / (a + b + 2)) return (Math.exp(lbt) * betacf(a, b, x)) / a;
+  return 1 - (Math.exp(lbt) * betacf(b, a, 1 - x)) / b;
+}
+
+/** Upper tail P(T > t) of Student's t with `df` (> 0, may be fractional) degrees of freedom. */
+export function studentTSf(t: number, df: number): number {
+  if (Number.isNaN(t) || !(df > 0)) return NaN;
+  if (t === Infinity) return 0;
+  if (t === -Infinity) return 1;
+  // P(|T| > |t|) = I_{df/(df+t^2)}(df/2, 1/2); compute the small tail directly.
+  const x = df / (df + t * t);
+  const tail = 0.5 * betaincReg(df / 2, 0.5, x);
+  return t > 0 ? tail : 1 - tail;
+}
+
+/** Two-sided p-value for a t statistic. */
+export function studentTTwoSided(t: number, df: number): number {
+  if (Number.isNaN(t) || !(df > 0)) return NaN;
+  const x = df / (df + t * t);
+  return Math.min(1, betaincReg(df / 2, 0.5, x));
+}
+
+/** Student t quantile (inverse CDF), by bisection refined with Newton steps. */
+export function studentTPpf(p: number, df: number): number {
+  if (Number.isNaN(p) || p < 0 || p > 1 || !(df > 0)) return NaN;
+  if (p === 0) return -Infinity;
+  if (p === 1) return Infinity;
+  if (p === 0.5) return 0;
+  if (p < 0.5) return -studentTPpf(1 - p, df);
+  // p > 0.5: solve sf(t) = 1 - p for t > 0.
+  const q = 1 - p;
+  let lo = 0;
+  let hi = 1;
+  while (studentTSf(hi, df) > q) hi *= 2;
+  for (let i = 0; i < 200 && hi - lo > 1e-15 * hi; i++) {
+    const mid = 0.5 * (lo + hi);
+    if (studentTSf(mid, df) > q) lo = mid;
+    else hi = mid;
+  }
+  let t = 0.5 * (lo + hi);
+  const logC = lgamma((df + 1) / 2) - lgamma(df / 2) - 0.5 * Math.log(df * Math.PI);
+  for (let i = 0; i < 3; i++) {
+    const pdf = Math.exp(logC - ((df + 1) / 2) * Math.log1p((t * t) / df));
+    const step = (studentTSf(t, df) - q) / pdf;
+    if (!Number.isFinite(step)) break;
+    t += step;
+  }
+  return t;
+}

@@ -4,7 +4,10 @@ Runs the Python reference libraries (pymannkendall, scipy) on generated
 series and writes inputs plus expected outputs to
 packages/stats/test/golden.json.
 
-Usage:  python pipeline/stats/make_golden.py [n_cases]
+Also writes the M5 golden cases (compare, correlate, sensitivity,
+uncertainty, detectability) from golden_m5.py under the "m5" key.
+
+Usage:  uv run python pipeline/stats/make_golden.py [n_cases]
 """
 import json
 import sys
@@ -13,6 +16,8 @@ from pathlib import Path
 import numpy as np
 import pymannkendall as mk
 from scipy import stats
+
+import golden_m5
 
 OUT = Path(__file__).resolve().parents[2] / "packages" / "stats" / "test" / "golden.json"
 
@@ -124,6 +129,7 @@ def main():
                  "sf": [float(stats.norm.sf(z)) for z in zs],
                  "p": ps, "ppf": [float(stats.norm.ppf(p)) for p in ps]},
         "cases": cases,
+        "m5": golden_m5.build(n_cases),
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(golden))

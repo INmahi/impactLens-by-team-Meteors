@@ -1,26 +1,26 @@
 // Web Worker entry point, so the analysis never blocks the globe.
 //
-// In the app:
-//   const worker = new Worker(new URL('@trend/stats/worker', import.meta.url), { type: 'module' });
-//   worker.postMessage({ id: 1, input });           // input: TrendInput
-//   worker.onmessage = (e) => e.data;                // { id, ok: true, report } or { id, ok: false, error }
-import { analyzeTrend, type TrendInput } from './analyze.ts';
-
-interface Request {
-  id: number;
-  input: TrendInput;
-}
+// In the app (Vite):
+//   import StatsWorker from '@trend/stats/worker?worker';
+//   const worker = new StatsWorker();
+//   worker.postMessage({ id: 1, input });                     // trend (default): input is a TrendInput
+//   worker.postMessage({ id: 2, type: 'compare', input });    // CompareInput
+//   worker.onmessage = (e) => e.data;   // { id, ok: true, type, report } or { id, ok: false, type, error }
+//
+// Message types (see dispatch.ts, StatsMessages):
+//   'trend'         analyzeTrend          -> TrendReport (default when `type` is absent)
+//   'compare'       compareTrends         -> CompareReport
+//   'correlate'     correlateSeries       -> CorrelationReport
+//   'sensitivity'   sensitivity           -> SensitivityReport
+//   'uncertainty'   propagateUncertainty  -> UncertaintyReport
+//   'detectability' yearsToDetect         -> DetectabilityReport
+import { handleRequest, type StatsRequest } from './dispatch.ts';
 
 const ctx = self as unknown as {
-  onmessage: ((e: { data: Request }) => void) | null;
+  onmessage: ((e: { data: StatsRequest }) => void) | null;
   postMessage: (message: unknown) => void;
 };
 
 ctx.onmessage = (e) => {
-  const { id, input } = e.data;
-  try {
-    ctx.postMessage({ id, ok: true, report: analyzeTrend(input) });
-  } catch (err) {
-    ctx.postMessage({ id, ok: false, error: err instanceof Error ? err.message : String(err) });
-  }
+  ctx.postMessage(handleRequest(e.data));
 };
