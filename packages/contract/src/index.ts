@@ -49,7 +49,7 @@ export interface Region {
   id: Id;
   name: string;
   parent: Id | null;
-  kind?: RegionKind;
+  kind: RegionKind;
   variables: Id[];
   /** [west, south, east, north] in degrees. */
   bbox: [number, number, number, number];

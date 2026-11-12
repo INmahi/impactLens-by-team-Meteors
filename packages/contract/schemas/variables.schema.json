@@ -39,8 +39,14 @@
           "minProperties": 1
         },
         "baseline": {
-          "description": "Anomaly reference period, for anomaly variables (temperature: 1991-2020).",
-          "$ref": "common.schema.json#/$defs/period"
+          "description": "Anomaly reference period as years [\"YYYY\", \"YYYY\"], inclusive (temperature: 1991-2020).",
+          "type": "array",
+          "prefixItems": [
+            { "$ref": "common.schema.json#/$defs/annualDate" },
+            { "$ref": "common.schema.json#/$defs/annualDate" }
+          ],
+          "minItems": 2,
+          "maxItems": 2
         },
         "regions": {
           "type": "array",

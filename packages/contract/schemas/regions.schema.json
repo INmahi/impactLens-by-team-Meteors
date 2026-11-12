@@ -7,7 +7,7 @@
   "minItems": 1,
   "items": {
     "type": "object",
-    "required": ["id", "name", "parent", "variables", "bbox", "camera"],
+    "required": ["id", "name", "parent", "kind", "variables", "bbox", "camera"],
     "properties": {
       "id": { "$ref": "common.schema.json#/$defs/id" },
       "name": { "type": "string", "minLength": 1 },
@@ -16,7 +16,7 @@
         "oneOf": [{ "$ref": "common.schema.json#/$defs/id" }, { "type": "null" }]
       },
       "kind": {
-        "description": "What the region is, for grouping in the picker.",
+        "description": "What the region is, for grouping in the picker. global means no outline geometry.",
         "enum": ["ice_sheet", "ice_sheet_basin", "glacier_region", "global"]
       },
       "variables": {

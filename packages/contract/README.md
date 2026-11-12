@@ -33,3 +33,13 @@ The data contract: JSON Schemas (`schemas/`, draft 2020-12) and TypeScript types
 7. Manifest: frames sorted by date, unique; each rectangle lies inside its atlas and inside `grid` size (`w == grid.width`, `h == grid.height`); no two frames overlap in one atlas; `missing` dates have no frame. Atlas PNGs are 8-bit RGBA with the listed size. `colormap.png` is 256x1.
 8. Synthetic flag: the same `synthetic` value across a variable's files. `injected` appears only when `synthetic` is true.
 9. Topology: `regions.topo.json` has object `regions`; outlines files have object `outlines` with `region` and `date` on every geometry.
+
+### Clarifications (after the validator was built, 2026-11-12)
+- Region `kind` is required; `kind: "global"` regions have no geometry, every other region has one.
+- `period` must equal the span of `periods` (earliest start, latest end); checked under rule 5.
+- `baseline` is always years, `["YYYY", "YYYY"]`, even for monthly variables.
+- Segments are contiguous on the date grid: first start = first date, last end = last date, each start follows the previous end. Gaps inside a segment are nulls.
+- Stats files are recomputed with `{dates, values, frequency, kind}` and default alpha (0.05). A series on which the engine returns NaN (for example a constant series) cannot be stored and fails rule 6.
+- Map layers are folders named by some variable's `mapMode`; an unused layer folder, stray file, unlisted atlas or unreferenced outlines file is a rule 3 problem.
+- PNGs must be 8-bit RGBA with no colour chunks (iCCP, sRGB, gAMA, cHRM); colormaps too.
+- Not checked: `describe.video` files (they live in `media/`), atlas pixel values, colormap colours.
