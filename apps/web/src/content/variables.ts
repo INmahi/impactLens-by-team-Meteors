@@ -13,11 +13,11 @@ export interface VariableText {
 
 const IMBIE = { label: 'IMBIE: ice sheet mass balance', url: 'https://imbie.org/' };
 const IMBIE_GREENLAND = {
-  label: 'IMBIE Team (2020), Mass balance of the Greenland Ice Sheet, Nature',
+  label: 'IMBIE Team (2020), Mass balance of the Greenland Ice Sheet from 1992 to 2018, Nature',
   url: 'https://doi.org/10.1038/s41586-019-1855-2',
 };
 const IMBIE_ANTARCTICA = {
-  label: 'IMBIE Team (2018), Mass balance of the Antarctic Ice Sheet, Nature',
+  label: 'IMBIE Team (2018), Mass balance of the Antarctic Ice Sheet from 1992 to 2017, Nature',
   url: 'https://doi.org/10.1038/s41586-018-0179-y',
 };
 const NASA_SEA_LEVEL = { label: 'NASA Sea Level Change portal', url: 'https://sealevel.nasa.gov/' };
@@ -45,9 +45,9 @@ const MERRA2 = {
 };
 
 const ICE_SHEET_RELATES =
-  'Ice mass, ice loss rate and ice extent are three views of one ice sheet. ' +
+  'Ice mass, ice mass change rate and ice extent are three views of one ice sheet. ' +
   'Ice mass (Gt) is how much ice there is compared with the start of the record. ' +
-  'Ice loss rate (Gt/yr) is how fast that mass changes each year, so a trend in the rate means loss is speeding up or slowing down. ' +
+  'Ice mass change rate (Gt/yr) is how much the mass changes each year; negative means ice was lost. A trend in this rate means loss is speeding up or slowing down. ' +
   'Ice extent (km2) is area, not mass: an ice sheet can thin and lose mass while its area hardly changes.';
 
 export const VARIABLE_TEXT: Record<string, VariableText> = {
@@ -56,7 +56,7 @@ export const VARIABLE_TEXT: Record<string, VariableText> = {
     what:
       'How much ice an ice sheet holds, in gigatonnes (Gt), compared with the start of its record. ' +
       'One gigatonne is a billion tonnes. A falling line means the ice sheet is losing more ice than snowfall adds back. ' +
-      'Satellites measure this by weighing the ice with gravity, tracking its height, and adding up snowfall and ice flow.',
+      'It is measured with satellites and models: by weighing the ice with gravity (since 2002), tracking its height (since the 1990s), and comparing snowfall from climate models with ice flowing out, seen in satellite images (since the 1970s). Early years are less certain.',
     whyItMatters:
       'Ice on land that melts or flows into the ocean raises sea level. ' +
       'About 362 Gt of lost ice raises global mean sea level by about 1 mm. ' +
@@ -67,7 +67,7 @@ export const VARIABLE_TEXT: Record<string, VariableText> = {
   },
 
   ice_mass_rate: {
-    title: 'Ice loss rate',
+    title: 'Ice mass change rate',
     what:
       'How fast an ice sheet gains or loses ice each year, in gigatonnes per year (Gt/yr). ' +
       'A negative value means the ice sheet lost ice that year. ' +
@@ -103,7 +103,7 @@ export const VARIABLE_TEXT: Record<string, VariableText> = {
     whyItMatters:
       'On Greenland, warmer summers bring more surface melt, so summer air temperature matters for its ice loss. ' +
       'Antarctica is different. Most of its surface stays below freezing even in summer. ' +
-      'Its ice loss comes mainly from warm ocean water thinning glaciers from below, not from warm air. ' +
+      'Its ice loss comes mainly from warm ocean water thinning the floating ends of glaciers from below, not from warm air. ' +
       'Same warming planet, different response.',
     sources: [MERRA2, IMBIE_GREENLAND, IMBIE_ANTARCTICA],
   },
@@ -113,7 +113,7 @@ export const VARIABLE_TEXT: Record<string, VariableText> = {
     what:
       'Sea surface height measured by satellites since 1993, in millimetres (mm). ' +
       'Pick the global mean over the whole ocean, or the mean over one coastal sea. ' +
-      'A coastal sea is an open-sea area about 100 km offshore, because satellites are less reliable near land. ' +
+      'A coastal sea is an open-sea area at least about 100 km offshore, because satellites are less reliable near land. ' +
       'It is not the value at any town, and it does not include land sinking.',
     whyItMatters:
       'Sea level rises because ocean water warms and expands, and because mountain glaciers and ice sheets add water. ' +
@@ -142,7 +142,7 @@ export const VARIABLE_TEXT: Record<string, VariableText> = {
     what:
       'Change in ice sheet mass since 1900, in gigatonnes (Gt), for Greenland and Antarctica. ' +
       'It is rebuilt from models and older measurements, so it is less certain in the early decades. ' +
-      'For Greenland, the years before 2003 rest on models and ground data. ' +
+      'For Greenland, the years before 2003 (before gravity satellites) rest on reconstructions from models, older images and field data. ' +
       'Greenland here includes its small nearby glaciers.',
     whyItMatters:
       'It puts the satellite years in a longer context and shows how ice sheet loss compares with the century before. ' +

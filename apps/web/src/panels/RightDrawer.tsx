@@ -4,7 +4,7 @@
 import { useId, useState } from 'react'
 import type { Region, Variable } from '@trend/contract'
 import { formatP, type CompareReport, type MannKendallResult } from '@trend/stats'
-import { formatStep, useRegionsData, useVariablesData } from '@/lib/useData'
+import { formatStep, formatUnitsText, useRegionsData, useVariablesData } from '@/lib/useData'
 import { compareVerdict, correlationText, detectText, fmt, interpretation, rateUnits, trendVerdict, uncertaintyText } from '@/lib/verdict'
 import { useAppStore, type AnalysisResult } from '@/state/store'
 import { cn } from 'cn'
@@ -83,8 +83,9 @@ function Body({ a, v, r, regions, variables }: { a: AnalysisResult; v: Variable;
       >
         <h3 id="res-verdict" className="mb-1 flex items-center gap-2 text-xs font-medium tracking-wide uppercase">
           {a.compare ? `${r.name}, full range` : 'Main conclusion'}
-          <Badge tone={verdict.tone}>{verdict.tone === 'significant' ? 'Significant' : 'Not significant'}</Badge>
+          <Badge tone={verdict.tone}>{verdict.tone === 'significant' ? 'Significant' : 'Cannot tell yet'}</Badge>
           {rep.lowPower && <Badge tone="low">Low power</Badge>}
+          {v.synthetic && <Badge tone="low">Synthetic data</Badge>}
         </h3>
         <p className="text-[15px] leading-snug font-medium">{verdict.headline}</p>
         <p className="mt-1 text-[13px] leading-snug text-white/90">{verdict.detail}</p>
@@ -111,7 +112,7 @@ function Body({ a, v, r, regions, variables }: { a: AnalysisResult; v: Variable;
           <dd>{rep.test.z.toFixed(2)}</dd>
           <dt className="text-white/80">Sen's slope</dt>
           <dd>
-            {fmt(rep.slope.perYear)} {rateUnits(v)} ({fmt(rep.slope.perDecade)} per decade)
+            {fmt(rep.slope.perYear)} {rateUnits(v)} ({fmt(rep.slope.perDecade)} {formatUnitsText(v.units)} per decade)
           </dd>
           <dt className="text-white/80">95% interval</dt>
           <dd>
@@ -140,7 +141,7 @@ function Body({ a, v, r, regions, variables }: { a: AnalysisResult; v: Variable;
                 <tr key={c.method}>
                   <td className="pr-2">{c.method}</td>
                   <td className="pr-2">{trendWord(c.trend)}</td>
-                  <td>{formatP(c.p).replace(/^p\s*/, '')}</td>
+                  <td>{formatP(c.p).replace(/^p\s*=?\s*/, '')}</td>
                 </tr>
               ))}
             </tbody>
@@ -154,7 +155,7 @@ function Body({ a, v, r, regions, variables }: { a: AnalysisResult; v: Variable;
           Interpretation
         </h3>
         <ul className="flex list-disc flex-col gap-1 pl-4 text-[13px] text-white/90">
-          {interpretation(v, r, rep).map((t) => (
+          {interpretation(v, r, rep, variables).map((t) => (
             <li key={t}>{t}</li>
           ))}
         </ul>
@@ -214,7 +215,7 @@ function CompareBlock({ v, A, B, rep }: { v: Variable; A: Region; B: Region; rep
       <td className="pr-2">
         {fmt(t.slope.perYear)} ({fmt(t.slope.lower)} to {fmt(t.slope.upper)})
       </td>
-      <td>{formatP(t.test.p).replace(/^p\s*/, '')}</td>
+      <td>{formatP(t.test.p).replace(/^p\s*=?\s*/, '')}</td>
     </tr>
   )
   return (
@@ -226,6 +227,7 @@ function CompareBlock({ v, A, B, rep }: { v: Variable; A: Region; B: Region; rep
         Main conclusion: {A.name} vs {B.name}
         <Badge tone={cv.tone}>{cv.tone === 'significant' ? 'Different' : 'Cannot tell apart'}</Badge>
         {rep.lowPower && <Badge tone="low">Low power</Badge>}
+          {v.synthetic && <Badge tone="low">Synthetic data</Badge>}
       </h3>
       <p className="text-[15px] leading-snug font-medium">{cv.headline}</p>
       <p className="mt-1 text-[13px] leading-snug text-white/90">{cv.detail}</p>
@@ -273,11 +275,11 @@ function ExtrasBlock({ a, v, r, variables }: { a: AnalysisResult; v: Variable; r
           <div key={x.variable} className="rounded-xl border border-white/15 p-3">
             <p className="mb-1 flex items-center gap-2 text-xs font-medium">
               {xv.name}
-              <Badge tone={t.tone}>{t.tone === 'significant' ? 'Significant' : 'Not significant'}</Badge>
+              <Badge tone={t.tone}>{t.tone === 'significant' ? 'Significant' : 'Cannot tell yet'}</Badge>
             </p>
             <p className="text-[13px] leading-snug">{t.headline}</p>
             <p className="mt-1 text-[12px] text-white/90">{t.detail}</p>
-            {x.correlation && <p className="mt-2 text-[12px] text-white/90">{correlationText(v, xv, x.correlation)}</p>}
+            {x.correlation && <p className="mt-2 text-[12px] text-white/90">{correlationText(v, xv, x.correlation, r)}</p>}
           </div>
         )
       })}

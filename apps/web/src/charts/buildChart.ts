@@ -180,7 +180,7 @@ export function buildChart(input: ChartInput): ChartOutput {
       }
       yName = 'mm of global sea level'
       showTrend = false
-      subtitle = `${span}   ·   Ice lost as mm of global sea level (${GT_PER_MM} Gt = 1 mm); positive = sea level rise`
+      subtitle = `${span}   ·   Ice mass change as mm of global sea level (${GT_PER_MM} Gt = 1 mm), relative to the record's zero; positive = adds to sea level`
       break
     case 'bar':
       kind = 'bar'
@@ -190,7 +190,7 @@ export function buildChart(input: ChartInput): ChartOutput {
         option: null,
         title,
         message:
-          'The budget view needs the components of sea level change (ice sheets, glaciers, ocean warming). They arrive with the real data (M10).',
+          'The budget view needs the components of sea level change (ice sheets, glaciers, ocean warming). They will be added with the real data.',
         csv: { header: [], rows: [] },
       }
     default:
@@ -375,7 +375,11 @@ export function buildTogetherChart(input: { region: Region; start: string; end: 
     itemStyle: { color: PALETTE[i % PALETTE.length] },
   }))
   const span = common.length ? `${formatStep(common[0])} to ${formatStep(common[common.length - 1])}` : 'no common period'
-  const subtitle = `${span}${mixed ? '   ·   annual means' : '   ·   seasonal cycle removed'}   ·   Standardized: (value − mean) ÷ standard deviation over the common period. Moving together is not cause and effect.`
+  const prep = mixed ? 'annual means' : items[0].series.frequency === 'monthly' ? 'seasonal cycle removed' : 'annual values'
+  const antarcticTemp = /^antarctica/.test(r.id) && items.some((x) => x.variable.id === 'temperature')
+  const subtitle =
+    `${span}   ·   ${prep}   ·   Standardized: (value − mean) ÷ standard deviation over the common period. Moving together is not cause and effect.` +
+    (antarcticTemp ? '\nAntarctic ice loss is driven mainly by warm ocean water reaching West Antarctic glaciers, not by air temperature.' : '')
   const synthetic = items.some((x) => x.variable.synthetic)
   const source = `Sources: ${[...new Set(items.map((x) => x.variable.source.name))].join('; ')}${synthetic ? '   ·   SYNTHETIC DATA: not observations' : ''}`
   return {

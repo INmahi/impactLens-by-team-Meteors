@@ -354,7 +354,7 @@ VARIABLES: list[VariableSpec] = [
         },
     ),
     VariableSpec(
-        id="ice_mass_rate", group="ice_sheet", name="Ice loss rate", units="Gt/yr", kind="rate", frequency="annual",
+        id="ice_mass_rate", group="ice_sheet", name="Ice mass change rate", units="Gt/yr", kind="rate", frequency="annual",
         map_mode="ice_mass_map", chart_types=["bar", "series"],
         source=_IMBIE, segment_source="Synthetic (IMBIE 2026 shape)",
         describe={"what": "How fast an ice sheet gains or loses ice each year.",
@@ -397,7 +397,7 @@ VARIABLES: list[VariableSpec] = [
                   "whyItMatters": "Warm summers drive surface melt on Greenland."},
         notes=[SYNTH_NOTE, "Greenland: June-August mean. Antarctica: December-February mean, labelled by the "
                "year of its January.", "Anomaly from the 1991-2020 average.",
-               "Reanalysis, not direct measurement. About 3 years short of 50."],
+               "Reanalysis, not direct measurement. Greenland summers from 1980, Antarctic summers from 1981 (the first full December-February in MERRA-2)."],
         series={
             "greenland": SeriesSpec("1980", "2026", slope=0.045, ar1=0.2, noise_sd=0.6, decimals=3,
                                     baseline=(1991, 2020)),
@@ -474,7 +474,7 @@ VARIABLES: list[VariableSpec] = [
         describe={"what": "Ice sheet mass change since 1900, reconstructed.",
                   "whyItMatters": "Puts the satellite era in a longer context."},
         notes=[SYNTH_NOTE, "Separate from the IMBIE record; never joined to it.",
-               "Greenland includes peripheral glaciers. Before 2003 it rests on models and in-situ data.",
+               "Greenland includes peripheral glaciers. Before 2003 (before gravity satellites) it rests on reconstructions from models, older images and field data.",
                "Bounds are 5-95%."],
         series={
             "greenland": SeriesSpec("1900", "2018", slope=-55.0, ar1=0.5, noise_sd=150.0, bounds=(900.0, 150.0),

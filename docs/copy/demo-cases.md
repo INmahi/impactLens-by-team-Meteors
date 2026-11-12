@@ -8,7 +8,7 @@ Owner: science-writer. Three short scripts for the live demo and video.
 
 Clicks: Variable **Sea level** -> Region **Bay of Bengal (northern)** -> full range -> Compare **Another region** -> **Global** -> **Run analysis**.
 
-Say: "This is satellite sea level averaged over the open northern Bay, about 100 km offshore, not the value at any town. In this synthetic data it rises faster than the global mean, and the test says that difference is very unlikely to be chance. Land sinking in the Ganges-Brahmaputra delta is not included, so the rise people feel on the coast is larger."
+Say: "This is satellite sea level averaged over the open northern Bay, about 100 km offshore, not the value at any town. In this synthetic data it rises faster than the global mean, and the test says a difference this large would be very unlikely if the two trends were the same. Land sinking in the Ganges-Brahmaputra delta is not included, so the rise people feel on the coast is larger."
 
 (Synthetic expected result: Bay of Bengal faster than global by about 0.54 mm/yr, p = 0.006.)
 
