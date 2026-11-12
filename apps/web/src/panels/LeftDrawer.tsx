@@ -28,14 +28,14 @@ function groupLabel(group: string): string {
   return group.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase())
 }
 
-export default function LeftDrawer() {
+export default function LeftDrawer({ className }: { className?: string }) {
   const [open, setOpen] = useState(true)
   const bodyId = useId()
   const { data: variables } = useVariablesData()
   const { data: regions } = useRegionsData()
 
   return (
-    <section aria-label="Analysis inputs" className="glass-strong flex max-h-[calc(100dvh-7.5rem)] w-80 flex-col overflow-hidden">
+    <section aria-label="Analysis inputs" className={cn("glass-strong flex max-h-[calc(100dvh-7.5rem)] w-80 flex-col overflow-hidden", className)}>
       <header className="flex items-center justify-between gap-2 px-4 pt-3 pb-2">
         <h2 className="text-sm font-semibold tracking-wide text-white">Analyse a trend</h2>
         <button

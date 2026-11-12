@@ -9,7 +9,7 @@ import { detectText, fmt, interpretation, rateUnits, trendVerdict, uncertaintyTe
 import { useAppStore, type AnalysisResult } from '@/state/store'
 import { cn } from 'cn'
 
-export default function RightDrawer() {
+export default function RightDrawer({ className }: { className?: string }) {
   const analysis = useAppStore((s) => s.analysis)
   const status = useAppStore((s) => s.analysisStatus)
   const { data: variables } = useVariablesData()
@@ -22,7 +22,7 @@ export default function RightDrawer() {
   const r = analysis ? regions?.find((x) => x.id === analysis.region) : undefined
 
   return (
-    <section aria-label="Results" aria-busy={status === 'running'} className="glass-strong flex w-96 max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden text-white">
+    <section aria-label="Results" aria-busy={status === 'running'} className={cn("glass-strong flex w-96 max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden text-white", className)}>
       <header className="flex items-center justify-between gap-2 px-4 pt-3 pb-2">
         <h2 className="text-sm font-semibold tracking-wide">Results</h2>
         <button
