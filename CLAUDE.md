@@ -74,7 +74,7 @@ Node 22.18 or later. Python 3.12 or later with `uv`.
 |---|---|---|
 | M0 Scaffold | Done 2026-11-12 | Build, golden (40,475 checks) and analyze tests pass; worker verified in browser |
 | M1 Dataset cards | Done 2026-11-12 | 8 cards in `docs/datasets/`. Decisions in plan sections 2 and 16: IMBIE 2026 primary; ice_mass_rate annual; ice_extent Greenland only; MERRA-2 temperature, baseline 1991-2020; NASA-SSH sea level (no GIA); long records as separate ids `sea_level_long`, `ice_mass_long`, never joined |
-| M2 Contract + synthetic | Next, 3 parts | (a) contract changes + JSON Schemas in `packages/contract/` (main); (b) validator, (c) synthetic generator (pipeline-engineer) |
+| M2 Contract + synthetic | Part a done 2026-11-12 | (a) done: schemas + types + cross-file rules in `packages/contract/` (README lists changes); skill examples validate. Next: (b) validator, (c) synthetic generator (pipeline-engineer) |
 
 Open follow-ups:
 - stats-lead: `packages/stats/package.json` `golden` script calls bare `python` (not on PATH here); use root `pnpm golden`. The usage comment in `src/worker.ts` uses `new URL('@trend/stats/worker', ...)`, which Vite does not resolve; the app uses `import StatsWorker from '@trend/stats/worker?worker'` (`apps/web/src/lib/stats.ts`).

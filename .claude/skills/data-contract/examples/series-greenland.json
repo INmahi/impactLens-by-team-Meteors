@@ -1,12 +1,13 @@
 {
-  "variable": "ice_mass",
+  "variable": "ice_mass_rate",
   "region": "greenland",
-  "units": "Gt",
-  "frequency": "monthly",
-  "kind": "cumulative",
-  "dates": ["1992-01", "1992-02", "1992-03", "1992-04", "1992-05", "1992-06"],
-  "values": [0.0, -3.1, null, -9.8, -12.4, -20.6],
-  "sigma": [12.0, 12.1, null, 12.3, 12.4, 12.5],
-  "segments": [{ "source": "IMBIE", "start": "1992-01", "end": "2020-12", "offset": 0 }],
-  "synthetic": true
+  "units": "Gt/yr",
+  "frequency": "annual",
+  "kind": "rate",
+  "dates": ["1992", "1993", "1994", "1995", "1996", "1997", "1998", "1999", "2000", "2001", "2002", "2003"],
+  "values": [-25.0, -48.1, null, -30.2, -62.5, -41.0, -88.3, -70.9, -59.4, -95.1, -120.6, -101.2],
+  "sigma": [40.0, 39.0, null, 38.0, 37.5, 37.0, 36.0, 35.0, 34.0, 33.0, 32.0, 30.0],
+  "segments": [{ "source": "IMBIE", "start": "1992", "end": "2003", "offset": 0 }],
+  "synthetic": true,
+  "injected": { "slopePerYear": -7.0, "ar1": 0.3, "noiseSd": 20.0 }
 }

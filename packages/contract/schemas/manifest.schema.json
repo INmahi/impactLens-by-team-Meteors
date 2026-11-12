@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trend-detective.local/contract/manifest.schema.json",
+  "title": "data/public/{layer_id}/manifest.json",
+  "description": "A gridded map layer: frames packed into atlas PNGs. Decode: value = (R * 256 + G) * scale + offset, valid where B == 255.",
+  "type": "object",
+  "required": ["variable", "units", "grid", "encoding", "valueRange", "atlases", "frames", "missing", "synthetic"],
+  "properties": {
+    "variable": { "$ref": "common.schema.json#/$defs/id" },
+    "units": { "type": "string", "minLength": 1 },
+    "grid": {
+      "type": "object",
+      "required": ["bbox", "width", "height"],
+      "properties": {
+        "bbox": { "$ref": "common.schema.json#/$defs/bbox" },
+        "width": { "type": "integer", "minimum": 1, "maximum": 4096 },
+        "height": { "type": "integer", "minimum": 1, "maximum": 4096 }
+      },
+      "additionalProperties": false
+    },
+    "encoding": {
+      "type": "object",
+      "required": ["scale", "offset", "packing"],
+      "properties": {
+        "scale": { "type": "number", "exclusiveMinimum": 0 },
+        "offset": { "type": "number" },
+        "packing": { "const": "R=high byte, G=low byte, B=valid mask, A=255" }
+      },
+      "additionalProperties": false
+    },
+    "valueRange": {
+      "type": "array",
+      "prefixItems": [{ "type": "number" }, { "type": "number" }],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "atlases": {
+      "description": "Atlas files in order, relative to the layer folder, with their pixel size.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["file", "width", "height"],
+        "properties": {
+          "file": { "type": "string", "pattern": "^frames/atlas-[0-9]{3}\\.png$" },
+          "width": { "type": "integer", "minimum": 1, "maximum": 4096 },
+          "height": { "type": "integer", "minimum": 1, "maximum": 4096 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "frames": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["date", "atlas", "x", "y", "w", "h"],
+        "properties": {
+          "date": { "$ref": "common.schema.json#/$defs/date" },
+          "atlas": { "type": "integer", "minimum": 0 },
+          "x": { "type": "integer", "minimum": 0 },
+          "y": { "type": "integer", "minimum": 0 },
+          "w": { "type": "integer", "minimum": 1 },
+          "h": { "type": "integer", "minimum": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "missing": {
+      "description": "Dates inside the layer's span with no frame (for example the GRACE gap).",
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/date" },
+      "uniqueItems": true
+    },
+    "source": { "$ref": "common.schema.json#/$defs/source" },
+    "synthetic": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

@@ -7,19 +7,52 @@
     "kind": "cumulative",
     "frequency": "monthly",
     "period": ["1992-01", "2020-12"],
+    "periods": {
+      "greenland": ["1992-01", "2020-12"],
+      "antarctica": ["1992-01", "2020-12"],
+      "antarctica_west": ["1992-01", "2020-12"],
+      "antarctica_east": ["1992-01", "2020-12"],
+      "antarctica_peninsula": ["1992-01", "2020-12"]
+    },
     "regions": ["greenland", "antarctica", "antarctica_west", "antarctica_east", "antarctica_peninsula"],
     "mapMode": "ice_mass_map",
     "chartTypes": ["series", "anomaly", "annual_change", "sea_level_equivalent"],
     "source": {
       "name": "IMBIE",
       "url": "https://imbie.org/",
-      "citation": "IMBIE Team. Mass balance of the Greenland and Antarctic ice sheets, 1992-2020."
+      "citation": "IMBIE Team. Mass balance of the Greenland and Antarctic ice sheets."
     },
     "describe": {
       "video": "/media/ice_mass_loop.webm",
-      "what": "How much ice an ice sheet holds, compared with 1992.",
-      "whyItMatters": "Ice lost from the ice sheets raises sea level; 362 Gt is about 1 mm."
+      "what": "How much ice an ice sheet holds, compared with the start of the record.",
+      "whyItMatters": "Ice lost from the ice sheets raises sea level; about 360 Gt is 1 mm."
     },
-    "notes": ["Totals per ice sheet, reconciled from 46 satellite surveys. No map at this resolution."]
+    "notes": ["Totals per ice sheet, reconciled from many satellite surveys. No map at this resolution."],
+    "synthetic": true
+  },
+  {
+    "id": "sea_level_long",
+    "variantOf": "sea_level",
+    "name": "Sea level, long record",
+    "units": "mm",
+    "kind": "level",
+    "frequency": "annual",
+    "period": ["1900", "2018"],
+    "periods": { "global": ["1900", "2018"] },
+    "regions": ["global"],
+    "mapMode": null,
+    "chartTypes": ["series", "budget"],
+    "source": {
+      "name": "NASA JPL_RECON_GMSL",
+      "url": "https://podaac.jpl.nasa.gov/dataset/JPL_RECON_GMSL",
+      "citation": "Frederikse et al. (2020), The causes of sea-level rise since 1900."
+    },
+    "describe": {
+      "video": "/media/sea_level_long_loop.webm",
+      "what": "Global mean sea level since 1900, reconstructed from tide gauges and models.",
+      "whyItMatters": "Shows how fast sea level rose before satellites, to compare with today."
+    },
+    "notes": ["Separate from the satellite record; never joined to it.", "Global only."],
+    "synthetic": true
   }
 ]

@@ -194,6 +194,8 @@ Versions seen on 2026-11-10. Re-check each with `npm view <pkg> version` or `pip
 
 Every data file, synthetic or real, follows this. The app never changes when data is swapped.
 
+**Source of truth since M2:** the JSON Schemas in `packages/contract/schemas/`. Changes from the text below (per-region `periods`, `variantOf`, `baseline`, `outlines`, `atlases`, `bounds`, `injected`, dated outlines) and the cross-file rules are listed in `packages/contract/README.md`.
+
 ```
 data/public/
   variables.json
@@ -466,7 +468,7 @@ Each milestone ends with its acceptance check passing.
 - [x] Sea level: NASA-SSH indicator primary; long records are separate variables `sea_level_long` and `ice_mass_long` (decided 2026-11-12)
 - [ ] MERRA-2 download: test server-side subsetting before M10; otherwise about 30-40 GB of disk
 - [x] JPL_RECON_GMSL ice contributions: decided 2026-11-12 to keep them as a separate series, not joined to IMBIE
-- [ ] Data contract (M2): allow a period per region (IMBIE 2026 starts at different years per ice sheet), and dated outlines for the ice extent ghost outline
+- [x] Data contract (M2): period per region and dated outlines added (`packages/contract/`, 2026-11-12)
 - [ ] Re-check every package version when scaffolding
 - [ ] Confirm the IMBIE file format and time step
 - [ ] Team research on the statistics may change choices in `stats-lead.md`; update `docs/stats/decisions.md` when it does

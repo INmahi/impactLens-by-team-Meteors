@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trend-detective.local/contract/stats.schema.json",
+  "title": "data/public/{variable_id}/stats/{region_id}__default.json",
+  "description": "The TrendReport returned by analyzeTrend() in packages/stats for the full record, plus variable, region and synthetic. Must match packages/stats/src/analyze.ts.",
+  "type": "object",
+  "required": [
+    "variable", "region", "synthetic",
+    "frequency", "kind", "start", "end", "n", "coverage", "alpha",
+    "test", "crossChecks", "slope", "lowPower", "notes"
+  ],
+  "properties": {
+    "variable": { "$ref": "common.schema.json#/$defs/id" },
+    "region": { "$ref": "common.schema.json#/$defs/id" },
+    "synthetic": { "type": "boolean" },
+    "frequency": { "$ref": "common.schema.json#/$defs/frequency" },
+    "kind": { "$ref": "common.schema.json#/$defs/kind" },
+    "start": { "$ref": "common.schema.json#/$defs/date" },
+    "end": { "$ref": "common.schema.json#/$defs/date" },
+    "n": { "type": "integer", "minimum": 0 },
+    "coverage": { "type": "number", "minimum": 0, "maximum": 1 },
+    "alpha": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 },
+    "test": { "$ref": "#/$defs/mannKendall" },
+    "crossChecks": { "type": "array", "items": { "$ref": "#/$defs/mannKendall" } },
+    "slope": {
+      "type": "object",
+      "required": ["perYear", "lower", "upper", "perDecade"],
+      "properties": {
+        "perYear": { "type": "number" },
+        "lower": { "type": "number" },
+        "upper": { "type": "number" },
+        "perDecade": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+    "lowPower": { "type": "boolean" },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "mannKendall": {
+      "type": "object",
+      "required": ["method", "trend", "significant", "p", "z", "tau", "s", "varS", "n", "correction"],
+      "properties": {
+        "method": { "type": "string" },
+        "trend": { "enum": ["increasing", "decreasing", "no trend"] },
+        "significant": { "type": "boolean" },
+        "p": { "type": "number", "minimum": 0, "maximum": 1 },
+        "z": { "type": "number" },
+        "tau": { "type": "number", "minimum": -1, "maximum": 1 },
+        "s": { "type": "number" },
+        "varS": { "type": "number", "minimum": 0 },
+        "n": { "type": "integer", "minimum": 0 },
+        "correction": { "type": "number", "exclusiveMinimum": 0 },
+        "warning": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

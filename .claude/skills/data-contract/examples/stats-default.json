@@ -1,0 +1,62 @@
+{
+  "variable": "ice_mass_rate",
+  "region": "greenland",
+  "synthetic": true,
+  "frequency": "annual",
+  "kind": "rate",
+  "start": "1992",
+  "end": "2003",
+  "n": 11,
+  "coverage": 0.9166666666666666,
+  "alpha": 0.05,
+  "test": {
+    "method": "Mann-Kendall with autocorrelation correction (lag-1 effective sample size)",
+    "trend": "decreasing",
+    "significant": true,
+    "p": 0.0030934493227611215,
+    "z": -2.9582959878137873,
+    "tau": -0.7090909090909091,
+    "s": -39,
+    "varS": 165,
+    "n": 11,
+    "correction": 1
+  },
+  "crossChecks": [
+    {
+      "method": "Modified Mann-Kendall (Hamed-Rao)",
+      "trend": "decreasing",
+      "significant": true,
+      "p": 0.0030934493227611215,
+      "z": -2.9582959878137873,
+      "tau": -0.7090909090909091,
+      "s": -39,
+      "varS": 165,
+      "n": 11,
+      "correction": 1
+    },
+    {
+      "method": "Mann-Kendall (no autocorrelation correction)",
+      "trend": "decreasing",
+      "significant": true,
+      "p": 0.0030934493227611215,
+      "z": -2.9582959878137873,
+      "tau": -0.7090909090909091,
+      "s": -39,
+      "varS": 165,
+      "n": 11,
+      "correction": 1
+    }
+  ],
+  "slope": {
+    "perYear": -7.574999999999999,
+    "lower": -12.099999999999994,
+    "upper": -3.2,
+    "perDecade": -75.75
+  },
+  "lowPower": true,
+  "notes": [
+    "1 of 12 time steps are missing; they were skipped, not filled in.",
+    "Short record: a real trend may not reach significance yet.",
+    "This is a rate, so a trend here means the change is speeding up or slowing down."
+  ]
+}

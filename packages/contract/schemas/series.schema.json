@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trend-detective.local/contract/series.schema.json",
+  "title": "data/public/{variable_id}/series/{region_id}.json",
+  "description": "One time series. Array lengths, the regular date grid and agreement with variables.json are checked by the validator, not by this schema.",
+  "type": "object",
+  "required": ["variable", "region", "units", "frequency", "kind", "dates", "values", "segments", "synthetic"],
+  "properties": {
+    "variable": { "$ref": "common.schema.json#/$defs/id" },
+    "region": { "$ref": "common.schema.json#/$defs/id" },
+    "units": { "type": "string", "minLength": 1 },
+    "frequency": { "$ref": "common.schema.json#/$defs/frequency" },
+    "kind": { "$ref": "common.schema.json#/$defs/kind" },
+    "dates": { "type": "array", "minItems": 2, "uniqueItems": true },
+    "values": { "$ref": "common.schema.json#/$defs/numOrNullArray" },
+    "sigma": {
+      "description": "1-sigma uncertainty per value.",
+      "$ref": "common.schema.json#/$defs/numOrNullArray"
+    },
+    "lower": { "$ref": "common.schema.json#/$defs/numOrNullArray" },
+    "upper": { "$ref": "common.schema.json#/$defs/numOrNullArray" },
+    "bounds": {
+      "description": "What lower and upper mean, for example \"5-95%\".",
+      "type": "string"
+    },
+    "segments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["source", "start", "end", "offset"],
+        "properties": {
+          "source": { "type": "string", "minLength": 1 },
+          "start": { "$ref": "common.schema.json#/$defs/date" },
+          "end": { "$ref": "common.schema.json#/$defs/date" },
+          "offset": { "type": "number" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "synthetic": { "type": "boolean" },
+    "injected": {
+      "description": "Synthetic files only: the true trend the generator injected, so tests can check analyzeTrend() recovers it.",
+      "type": "object",
+      "required": ["slopePerYear"],
+      "properties": {
+        "slopePerYear": { "type": "number" },
+        "ar1": { "type": "number", "minimum": -1, "maximum": 1 },
+        "noiseSd": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "frequency": { "const": "monthly" } } },
+      "then": { "properties": { "dates": { "items": { "$ref": "common.schema.json#/$defs/monthlyDate" } } } },
+      "else": { "properties": { "dates": { "items": { "$ref": "common.schema.json#/$defs/annualDate" } } } }
+    },
+    {
+      "description": "lower and upper come together, with a bounds label.",
+      "dependentRequired": { "lower": ["upper", "bounds"], "upper": ["lower", "bounds"] }
+    },
+    {
+      "description": "injected only on synthetic files.",
+      "if": { "required": ["injected"] },
+      "then": { "properties": { "synthetic": { "const": true } } }
+    }
+  ],
+  "additionalProperties": false
+}

@@ -23,7 +23,8 @@ media/{variable_id}_loop.webm (+ .mp4)
 ```
 
 ## Ids (use exactly these)
-- Variables: `ice_mass`, `ice_mass_rate`, `ice_extent`, `ice_mass_map`, `temperature`, `sea_level`. Group `ice_sheet` = `ice_mass`, `ice_mass_rate`, `ice_extent`.
+- Variables: `ice_mass`, `ice_mass_rate` (annual), `ice_extent`, `temperature`, `sea_level`, and the long-record variants `ice_mass_long` and `sea_level_long` (`variantOf`, never joined). Group `ice_sheet` = `ice_mass`, `ice_mass_rate`, `ice_extent`.
+- Map-only layers (not in `variables.json`): `ice_mass_map`, plus `temperature` as a map. A layer is a folder with `manifest.json`, named by a variable's `mapMode`.
 - Regions: `greenland`, `antarctica`, `antarctica_west`, `antarctica_east`, `antarctica_peninsula`, `global`.
 - Valid pairs: see the table in [reference.md](reference.md#regions). `sea_level` is `global` only; `ice_extent` is `greenland` only.
 - These are the current regions, not a closed list. **Regions must be addable without code changes:** a new glacier region (for example `high_mountain_asia`, `alaska`) is added by (1) an entry in `regions.json` with `bbox` and `camera`, (2) its outline in `regions.topo.json`, (3) its id in each valid variable's `regions` list, (4) `series/{region_id}.json` and `stats/{region_id}__default.json`. Pipeline code reads its regions from a config list; app code reads them from `regions.json`. Region ids are lowercase snake_case.
@@ -44,8 +45,11 @@ Browsers reduce 16-bit PNGs to 8 bits, so each value is packed into two 8-bit ch
 - Decode: `value = (R * 256 + G) * scale + offset`, valid only where `B == 255`
 - Save as 8-bit RGBA PNG, no colour profile, no premultiplied alpha. Sample with NEAREST filtering only.
 
+## Schemas (source of truth)
+`packages/contract/schemas/*.schema.json` (JSON Schema 2020-12) and TypeScript types in `packages/contract/src/index.ts`. **`packages/contract/README.md` lists the M2 changes and the cross-file rules the validator enforces.** If this skill and the schemas disagree, the schemas win. M2 additions to know: `periods` per region, `variantOf`, `baseline`, `outlines`, `synthetic` in `variables.json`; `kind` in `regions.json`; `bounds` with `lower`/`upper` and `injected` (synthetic only) in series; `units` and `atlases` in manifests; `{variable}/outlines.topo.json` for dated outlines. Series are monthly or annual only; average finer data to monthly.
+
 ## Validator
-`uv run python -m pipeline validate` checks every file against the JSON Schemas in `packages/contract/`. (Built in M2 by pipeline-engineer; until then, check by hand against `examples/`.) Never report data work done while validation fails.
+`uv run python -m pipeline validate` checks every file against the schemas and the cross-file rules. (Built in M2 part b by pipeline-engineer; until then, check against `examples/`.) Never report data work done while validation fails.
 
 ## Changing the contract
 Subagents do not change the contract. Stop and tell main exactly what field to add or change and why; main updates `packages/contract/`, this skill and `docs/TECH_BUILD_PLAN.md` section 8 together.

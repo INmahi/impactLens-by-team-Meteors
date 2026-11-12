@@ -1,0 +1,14 @@
+{
+  "name": "@trend/contract",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "JSON Schemas and TypeScript types for the Trend Detective data contract.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schemas/*": "./schemas/*"
+  },
+  "dependencies": {
+    "@trend/stats": "workspace:*"
+  }
+}

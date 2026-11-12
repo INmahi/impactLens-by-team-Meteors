@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trend-detective.local/contract/regions.schema.json",
+  "title": "data/public/regions.json",
+  "description": "Every region. The list is open: adding a region needs only data files, never app code.",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "required": ["id", "name", "parent", "variables", "bbox", "camera"],
+    "properties": {
+      "id": { "$ref": "common.schema.json#/$defs/id" },
+      "name": { "type": "string", "minLength": 1 },
+      "parent": {
+        "description": "Parent region id (antarctica for its sub-regions), or null.",
+        "oneOf": [{ "$ref": "common.schema.json#/$defs/id" }, { "type": "null" }]
+      },
+      "kind": {
+        "description": "What the region is, for grouping in the picker.",
+        "enum": ["ice_sheet", "ice_sheet_basin", "glacier_region", "global"]
+      },
+      "variables": {
+        "description": "Variables valid here. Must be the inverse of variables.json regions.",
+        "type": "array",
+        "items": { "$ref": "common.schema.json#/$defs/id" },
+        "minItems": 1,
+        "uniqueItems": true
+      },
+      "bbox": { "$ref": "common.schema.json#/$defs/bbox" },
+      "camera": {
+        "description": "Preset for camera.flyTo. Height in metres, angles in degrees.",
+        "type": "object",
+        "required": ["lon", "lat", "height", "heading", "pitch"],
+        "properties": {
+          "lon": { "type": "number", "minimum": -180, "maximum": 180 },
+          "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+          "height": { "type": "number", "exclusiveMinimum": 0 },
+          "heading": { "type": "number", "minimum": -360, "maximum": 360 },
+          "pitch": { "type": "number", "minimum": -90, "maximum": 0 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "additionalProperties": false
+  }
+}

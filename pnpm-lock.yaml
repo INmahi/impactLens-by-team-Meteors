@@ -227,6 +227,12 @@ importers:
         specifier: ^8.3.6
         version: 8.3.7(@types/node@24.19.2)(jiti@2.7.0)
 
+  packages/contract:
+    dependencies:
+      '@trend/stats':
+        specifier: workspace:*
+        version: link:../stats
+
   packages/stats: {}
 
 packages:

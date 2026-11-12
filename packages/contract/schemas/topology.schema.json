@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trend-detective.local/contract/topology.schema.json",
+  "title": "regions.topo.json and {variable_id}/outlines.topo.json",
+  "description": "Light TopoJSON check. regions.topo.json has object 'regions' (geometry id = region id). outlines.topo.json has object 'outlines' (properties.region and properties.date on each geometry). Geometry correctness is checked by the validator.",
+  "type": "object",
+  "required": ["type", "objects", "arcs"],
+  "properties": {
+    "type": { "const": "Topology" },
+    "objects": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["type", "geometries"],
+        "properties": {
+          "type": { "const": "GeometryCollection" },
+          "geometries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": { "enum": ["Polygon", "MultiPolygon", "LineString", "MultiLineString"] },
+                "id": { "$ref": "common.schema.json#/$defs/id" },
+                "properties": {
+                  "type": "object",
+                  "properties": {
+                    "name": { "type": "string" },
+                    "region": { "$ref": "common.schema.json#/$defs/id" },
+                    "date": { "$ref": "common.schema.json#/$defs/date" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "arcs": { "type": "array" },
+    "transform": { "type": "object" },
+    "bbox": { "type": "array" }
+  }
+}

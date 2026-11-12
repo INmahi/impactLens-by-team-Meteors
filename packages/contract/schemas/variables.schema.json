@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trend-detective.local/contract/variables.schema.json",
+  "title": "data/public/variables.json",
+  "description": "Every variable the user can analyse. Map-only layers (for example ice_mass_map) are not listed here; they are referenced by mapMode and live in data/public/{layer_id}/manifest.json.",
+  "type": "array",
+  "minItems": 1,
+  "items": { "$ref": "#/$defs/variable" },
+  "$defs": {
+    "variable": {
+      "type": "object",
+      "required": [
+        "id", "name", "units", "kind", "frequency", "period", "periods", "regions",
+        "mapMode", "chartTypes", "source", "describe", "notes", "synthetic"
+      ],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/id" },
+        "group": {
+          "description": "Groups sub-variables in the picker, for example ice_sheet.",
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        "variantOf": {
+          "description": "Set on a long-record or alternative-source variable (for example sea_level_long has variantOf sea_level). Shown as a sub-option of that variable; never joined to it.",
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        "name": { "type": "string", "minLength": 1 },
+        "units": { "type": "string", "minLength": 1 },
+        "kind": { "$ref": "common.schema.json#/$defs/kind" },
+        "frequency": { "$ref": "common.schema.json#/$defs/frequency" },
+        "period": {
+          "description": "Overall span across all regions: earliest start, latest end.",
+          "$ref": "common.schema.json#/$defs/period"
+        },
+        "periods": {
+          "description": "True record per region (first and last non-null value). Keys must equal the regions list.",
+          "type": "object",
+          "propertyNames": { "$ref": "common.schema.json#/$defs/id" },
+          "additionalProperties": { "$ref": "common.schema.json#/$defs/period" },
+          "minProperties": 1
+        },
+        "baseline": {
+          "description": "Anomaly reference period, for anomaly variables (temperature: 1991-2020).",
+          "$ref": "common.schema.json#/$defs/period"
+        },
+        "regions": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/id" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "mapMode": {
+          "description": "Id of the gridded layer drawn on the globe for this variable, or null.",
+          "oneOf": [{ "$ref": "common.schema.json#/$defs/id" }, { "type": "null" }]
+        },
+        "outlines": {
+          "description": "Path, relative to data/public, of a TopoJSON file with dated outlines (ice extent ghost outline), or absent.",
+          "type": "string",
+          "pattern": "^[a-z0-9_]+/outlines\\.topo\\.json$"
+        },
+        "chartTypes": {
+          "description": "First entry is the default chart.",
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "source": { "$ref": "common.schema.json#/$defs/source" },
+        "describe": {
+          "type": "object",
+          "required": ["video", "what", "whyItMatters"],
+          "properties": {
+            "video": { "type": "string", "pattern": "^/media/[a-z0-9_]+_loop\\.(webm|mp4)$" },
+            "what": { "type": "string" },
+            "whyItMatters": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "notes": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "synthetic": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

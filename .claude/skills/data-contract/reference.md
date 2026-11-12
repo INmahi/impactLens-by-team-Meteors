@@ -1,6 +1,6 @@
 # Data contract reference
 
-Source of truth: `docs/TECH_BUILD_PLAN.md` section 8. This file repeats it in full plus the parts the plan leaves implicit.
+Source of truth: the schemas in `packages/contract/schemas/`. **Since M2 (2026-11-12) the contract has fields not listed below; read `packages/contract/README.md` for them and for the cross-file rules.** This file repeats plan section 8 plus the parts the plan leaves implicit. `examples/` is kept valid against the schemas.
 
 ## variables.json
 An array. One entry per variable:

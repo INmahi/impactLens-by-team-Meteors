@@ -1,0 +1,35 @@
+# @trend/contract
+
+The data contract: JSON Schemas (`schemas/`, draft 2020-12) and TypeScript types (`src/index.ts`). Owned by main. Plain-language guide: the `data-contract` skill. Spec: `docs/TECH_BUILD_PLAN.md` section 8.
+
+| File in `data/public/` | Schema |
+|---|---|
+| `variables.json` | `variables.schema.json` |
+| `regions.json` | `regions.schema.json` |
+| `regions.topo.json`, `{variable}/outlines.topo.json` | `topology.schema.json` |
+| `{variable}/series/{region}.json` | `series.schema.json` |
+| `{variable}/stats/{region}__default.json` | `stats.schema.json` |
+| `{layer}/manifest.json` | `manifest.schema.json` |
+| (shared definitions) | `common.schema.json` |
+
+## Changes from plan section 8 (M2, 2026-11-12)
+- `variables.json`: `periods` per region (IMBIE 2026 starts in different years per ice sheet; MERRA-2 JJA vs DJF). `period` stays as the overall span.
+- `variables.json`: `variantOf` for long-record variables (`sea_level_long`, `ice_mass_long`), shown as sub-options and never joined.
+- `variables.json`: `baseline` for anomaly variables (temperature 1991-2020), `outlines` for dated outlines, and `synthetic`.
+- `regions.json`: shape defined (`parent`, `kind`, `variables`, `bbox`, `camera`). The region list is open; `kind: glacier_region` is ready for mountain glaciers.
+- `series`: `bounds` label required with `lower`/`upper` (JPL_RECON uses 5-95%); `injected` true slope on synthetic files only.
+- `manifest`: `units` and an `atlases` list with sizes, so UV maths needs no image probing.
+- New `{variable}/outlines.topo.json`: dated outlines for the ice extent ghost outline.
+- Frequencies stay `monthly` and `annual` (the stats engine supports only these). Finer data, such as the 7-day sea level indicator, is averaged to monthly by the pipeline.
+- Map-only layers (`ice_mass_map`) are not in `variables.json`; they are folders with a `manifest.json` named by `mapMode`.
+
+## Cross-file rules (checked by the validator, not by the schemas)
+1. Every file validates against its schema.
+2. Ids: every id in `variables.json` `regions`, `periods`, `regions.json` `variables` and `parent`, `mapMode`, `variantOf` exists. `regions.json` `variables` is exactly the inverse of `variables.json` `regions`. `periods` keys equal `regions`.
+3. Files: for every (variable, region) pair there is `series/{region}.json` and `stats/{region}__default.json`. No series for a pair that is not declared. Every `mapMode` has a `manifest.json` and `colormap.png`. Every non-global region has a geometry in `regions.topo.json` with that id.
+4. Series: `variable`, `region`, `units`, `frequency`, `kind` match `variables.json`. `values`, `sigma`, `lower`, `upper` have the same length as `dates`. Dates are ascending on a regular monthly or annual grid with no duplicates (gaps are `null`, never dropped dates). No `NaN`. First and last non-null dates equal `periods[region]`. `lower <= values <= upper` where all are present. `sigma >= 0`. Segments cover the dates, in order, without overlap.
+5. Never padded: no leading or trailing run of nulls outside `periods[region]`.
+6. Stats: `variable`, `region`, `synthetic`, `frequency`, `kind` match the series; `start`/`end` lie within the series; numbers equal a fresh `analyzeTrend()` run on the series (tolerance 1e-9).
+7. Manifest: frames sorted by date, unique; each rectangle lies inside its atlas and inside `grid` size (`w == grid.width`, `h == grid.height`); no two frames overlap in one atlas; `missing` dates have no frame. Atlas PNGs are 8-bit RGBA with the listed size. `colormap.png` is 256x1.
+8. Synthetic flag: the same `synthetic` value across a variable's files. `injected` appears only when `synthetic` is true.
+9. Topology: `regions.topo.json` has object `regions`; outlines files have object `outlines` with `region` and `date` on every geometry.
