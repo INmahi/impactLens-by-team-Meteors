@@ -4,7 +4,7 @@
 // trends are speed-ups/slow-downs; cumulative slopes are average rates; low power is stated.
 // Region and variable names come from the data files.
 import type { Region, Variable } from '@trend/contract'
-import { formatP, type DetectabilityReport, type TrendReport, type UncertaintyReport } from '@trend/stats'
+import { formatP, type CompareReport, type CorrelationReport, type DetectabilityReport, type TrendReport, type UncertaintyReport } from '@trend/stats'
 import { formatStep, formatUnitsText, spanYears } from './useData'
 
 /** Number formatting matched to the size of the value. */
@@ -114,4 +114,62 @@ export function uncertaintyText(v: Variable, x: UncertaintyReport): string {
     tail = ` That is about ${fmt(1 + w)} times as wide as the fit alone: the source's stated uncertainty, not the year-to-year scatter, limits how well this rate is known.`
   const corr = x.combined.model === 'correlated' ? ' Errors that persist over time matter most here.' : ''
   return base + tail + corr
+}
+
+// ---------- compare two regions (wording.md "Compare two regions") ----------
+
+export function compareVerdict(v: Variable, A: Region, B: Region, rep: CompareReport): VerdictText & { notes: string[] } {
+  const u = rateUnits(v)
+  const a = rep.a.slope.perYear
+  const b = rep.b.slope.perYear
+  const d = rep.difference
+  const span = `${formatStep(rep.start)} – ${formatStep(rep.end)}`
+  const pText = formatP(rep.p)
+  const detail = `${fmt(a)} vs ${fmt(b)} ${u}, ${span}. Difference ${fmt(d.perYear)} ${u} (95% interval ${fmt(d.lower)} to ${fmt(d.upper)}), ${pText}.`
+  const notes = [
+    "Trends are compared, not levels: each region's series has its own zero.",
+    'A difference in trends does not by itself say why the two differ.',
+  ]
+  if (!rep.crossCheck.agrees) notes.push('The cross-check disagrees; treat this as borderline.')
+  if (rep.lowPower) notes.push(`With only ${Math.round(spanYears(rep.start, rep.end))} common years of data, a real difference could still be missed.`)
+
+  const isRate = rep.a.kind === 'rate'
+  const verb = (x: number) => (x >= 0 ? 'rising' : 'falling')
+
+  if (rep.verdict === 'cannot_tell_apart') {
+    return {
+      tone: 'not-significant',
+      headline: isRate
+        ? `Cannot tell yet whether ${A.name}'s change is speeding up faster than ${B.name}'s.`
+        : 'Cannot tell these two trends apart yet.',
+      detail: `${A.name} ${fmt(a)} and ${B.name} ${fmt(b)} ${u}; the difference (${fmt(d.perYear)}, 95% interval ${fmt(d.lower)} to ${fmt(d.upper)}) could be zero (${pText}).`,
+      notes,
+    }
+  }
+  if (rep.verdict === 'different_directions') {
+    const [up, down] = a >= 0 ? [A, B] : [B, A]
+    return { tone: 'significant', headline: `${up.name} is rising while ${down.name} is falling.`, detail, notes }
+  }
+  const [fast, slow, sFast] = rep.verdict === 'a_faster' ? [A, B, a] : [B, A, b]
+  let headline = `${fast.name} is ${verb(sFast)} faster than ${slow.name}.`
+  if (isRate && sFast < 0) headline = `${fast.name}'s change is speeding up faster than ${slow.name}'s.`
+  if (/sea/i.test(v.name) && fast.kind === 'coastal_sea' && slow.kind === 'global' && sFast > 0) {
+    headline = `Sea level averaged over the ${fast.name} area rose faster than the global mean.`
+    if ((fast.notes ?? []).some((n) => /subsid|sinking/i.test(n))) notes.push('Land sinking is not included, so the rise felt on the coast is larger.')
+  }
+  return { tone: 'significant', headline, detail, notes }
+}
+
+// ---------- two variables (wording.md "Two variables: correlation") ----------
+
+export function correlationText(X: Variable, Y: Variable, c: CorrelationReport): string {
+  const d = c.detrended
+  const r0 = c.raw
+  if (d.pearson.significant) {
+    return `After removing both trends, the year-to-year ups and downs of ${X.name.toLowerCase()} and ${Y.name.toLowerCase()} move together (r = ${d.pearson.r.toFixed(2)}, ${formatP(d.pearson.p)}, about ${Math.round(d.nEff)} independent points). This does not show that one causes the other.`
+  }
+  if (r0.pearson.significant) {
+    return `${X.name} and ${Y.name.toLowerCase()} both trend over the record, so they look correlated (r = ${r0.pearson.r.toFixed(2)}). After removing the trends, their year-to-year changes are not significantly related: cannot tell yet.`
+  }
+  return `No clear link between ${X.name.toLowerCase()} and ${Y.name.toLowerCase()} in this record: cannot tell yet.`
 }

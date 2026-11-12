@@ -1,7 +1,7 @@
 // The one app store, read by the globe and the panels.
 // Plain, serialisable values only: never put Cesium objects here (CLAUDE.md hard rule).
 import { create } from 'zustand'
-import type { DetectabilityReport, TrendReport, UncertaintyReport } from '@trend/stats'
+import type { CompareReport, CorrelationReport, DetectabilityReport, TrendReport, UncertaintyReport } from '@trend/stats'
 
 export type Pole = 'north' | 'south'
 
@@ -16,7 +16,13 @@ export interface AnalysisResult {
   detect: DetectabilityReport | null
   /** Source 1-sigma propagated into the slope, only when the series carries sigma. */
   uncertainty: UncertaintyReport | null
+  /** Compare mode "regions": the second region and the difference test (its a/b are on the common period). */
+  compare: { region: string; report: CompareReport } | null
+  /** Compare mode "variables": each extra variable's trend in the same region and its correlation with the main one. */
+  extras: { variable: string; report: TrendReport; correlation: CorrelationReport | null }[]
 }
+
+export type CompareMode = 'none' | 'regions' | 'variables'
 
 export type AnalysisStatus = 'idle' | 'running' | 'done' | 'error'
 
@@ -36,6 +42,9 @@ export interface AppState {
   /** Chosen analysis range, same date format as the variable ("YYYY-MM" or "YYYY"); null = full record. */
   rangeStart: string | null
   rangeEnd: string | null
+  compareMode: CompareMode
+  /** Up to three more variables for the multi-variable view (same region). */
+  compareVariables: string[]
 
   analysisStatus: AnalysisStatus
   analysis: AnalysisResult | null
@@ -49,6 +58,8 @@ export interface AppState {
   setPlaying: (p: boolean) => void
   setPole: (p: Pole) => void
   setRange: (start: string | null, end: string | null) => void
+  setCompareMode: (m: CompareMode) => void
+  setCompareVariables: (ids: string[]) => void
   setAnalysisRunning: () => void
   setAnalysisDone: (result: AnalysisResult) => void
   setAnalysisError: (message: string) => void
@@ -64,12 +75,14 @@ export const useAppStore = create<AppState>()((set) => ({
   pole: 'north',
   rangeStart: null,
   rangeEnd: null,
+  compareMode: 'none',
+  compareVariables: [],
   analysisStatus: 'idle',
   analysis: null,
   analysisError: null,
 
-  // Changing the variable resets the range (each variable has its own record).
-  setVariable: (variable) => set({ variable, rangeStart: null, rangeEnd: null }),
+  // Changing the variable resets the range (each variable has its own record) and the comparison picks.
+  setVariable: (variable) => set({ variable, rangeStart: null, rangeEnd: null, compareRegion: null, compareVariables: [] }),
   // Changing the region resets the range too: records differ per region.
   setRegion: (region) => set({ region, rangeStart: null, rangeEnd: null }),
   setCompareRegion: (compareRegion) => set({ compareRegion }),
@@ -78,6 +91,8 @@ export const useAppStore = create<AppState>()((set) => ({
   setPlaying: (playing) => set({ playing }),
   setPole: (pole) => set({ pole }),
   setRange: (rangeStart, rangeEnd) => set({ rangeStart, rangeEnd }),
+  setCompareMode: (compareMode) => set({ compareMode }),
+  setCompareVariables: (compareVariables) => set({ compareVariables: compareVariables.slice(0, 3) }),
   setAnalysisRunning: () => set({ analysisStatus: 'running', analysisError: null }),
   setAnalysisDone: (analysis) => set({ analysisStatus: 'done', analysis, analysisError: null }),
   setAnalysisError: (analysisError) => set({ analysisStatus: 'error', analysisError }),

@@ -10,7 +10,7 @@ import type { Region, Series, Variable } from '@trend/contract'
 import { getSeriesCached, useRegionsData, useVariablesData } from '@/lib/useData'
 import { useAppStore, type AnalysisResult } from '@/state/store'
 import { cn } from 'cn'
-import { buildChart, CHART_LABELS, toCsv } from './buildChart'
+import { buildChart, buildCompareChart, buildTogetherChart, CHART_LABELS, toCsv } from './buildChart'
 
 echarts.use([LineChart, BarChart, GridComponent, TooltipComponent, LegendComponent, TitleComponent, MarkLineComponent, GraphicComponent, CanvasRenderer, SVGRenderer])
 
@@ -56,19 +56,26 @@ export default function ChartDrawer({ className, onOpenChange }: { className?: s
       </header>
       {open && (
         <div id={bodyId}>
-          <ChartBody a={analysis} v={v} r={r} regions={regions} />
+          <ChartBody a={analysis} v={v} r={r} regions={regions} variables={variables} />
         </div>
       )}
     </section>
   )
 }
 
-function ChartBody({ a, v, r, regions }: { a: AnalysisResult; v: Variable; r: Region; regions: Region[] }) {
-  const types = v.chartTypes.length ? v.chartTypes : ['series']
+function ChartBody({ a, v, r, regions, variables }: { a: AnalysisResult; v: Variable; r: Region; regions: Region[]; variables: Variable[] }) {
+  // Compare views first when a comparison was run, then the variable's own chart types.
+  const types = [
+    ...(a.compare ? ['compare_regions'] : []),
+    ...(a.extras.length ? ['together'] : []),
+    ...(v.chartTypes.length ? v.chartTypes : ['series']),
+  ]
   const [type, setType] = useState(types[0])
-  useEffect(() => setType(types[0]), [v.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => setType(types[0]), [a]) // eslint-disable-line react-hooks/exhaustive-deps
   const [series, setSeries] = useState<Series | null>(null)
   const [refData, setRefData] = useState<{ region: Region; series: Series } | null>(null)
+  const [seriesB, setSeriesB] = useState<Series | null>(null)
+  const [extraSeries, setExtraSeries] = useState<{ variable: Variable; series: Series }[]>([])
   const el = useRef<HTMLDivElement | null>(null)
   const chart = useRef<echarts.ECharts | null>(null)
 
@@ -79,15 +86,29 @@ function ChartBody({ a, v, r, regions }: { a: AnalysisResult; v: Variable; r: Re
     const globalRegion = r.kind === 'coastal_sea' ? regions.find((x) => x.kind === 'global' && v.regions.includes(x.id)) : undefined
     if (globalRegion) getSeriesCached(v.id, globalRegion.id).then((s) => alive && setRefData({ region: globalRegion, series: s }))
     else setRefData(null)
+    if (a.compare) getSeriesCached(a.variable, a.compare.region).then((s) => alive && setSeriesB(s))
+    else setSeriesB(null)
+    Promise.all(
+      a.extras.map(async (x) => ({ variable: variables.find((y) => y.id === x.variable)!, series: await getSeriesCached(x.variable, a.region) })),
+    ).then((xs) => alive && setExtraSeries(xs.filter((x) => x.variable)))
     return () => {
       alive = false
     }
-  }, [a, r, v, regions])
+  }, [a, r, v, regions, variables])
 
-  const out = useMemo(
-    () => (series ? buildChart({ type, variable: v, region: r, series, report: a.report, start: a.start, end: a.end, reference: refData }) : null),
-    [type, v, r, series, a, refData],
-  )
+  const out = useMemo(() => {
+    if (!series) return null
+    if (type === 'compare_regions') {
+      const B = regions.find((x) => x.id === a.compare?.region)
+      return a.compare && B && seriesB ? buildCompareChart({ variable: v, A: r, B, seriesA: series, seriesB, rep: a.compare.report }) : null
+    }
+    if (type === 'together') {
+      return extraSeries.length === a.extras.length
+        ? buildTogetherChart({ region: r, start: a.start, end: a.end, items: [{ variable: v, series }, ...extraSeries] })
+        : null
+    }
+    return buildChart({ type, variable: v, region: r, series, report: a.report, start: a.start, end: a.end, reference: refData })
+  }, [type, v, r, series, a, refData, seriesB, extraSeries, regions])
 
   useEffect(() => {
     if (!el.current || !out?.option) {

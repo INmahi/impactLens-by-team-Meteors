@@ -21,6 +21,8 @@ export const CHART_LABELS: Record<string, string> = {
   summer_series: 'Summer series',
   decade_means: 'Decade means',
   budget: 'Budget',
+  compare_regions: 'Compare regions',
+  together: 'Variables together',
 }
 
 export interface ChartInput {
@@ -280,4 +282,106 @@ export function buildChart(input: ChartInput): ChartOutput {
 export function toCsv(out: ChartOutput, meta: string[]): string {
   const esc = (x: string | number | null) => (x == null ? '' : /[",\n]/.test(String(x)) ? `"${String(x).replace(/"/g, '""')}"` : String(x))
   return [...meta.map((m) => `# ${m}`), out.csv.header.join(','), ...out.csv.rows.map((r) => r.map(esc).join(','))].join('\n') + '\n'
+}
+
+// ---------- compare mode ----------
+
+const PALETTE = ['#7dd3fc', '#fbbf24', '#f472b6', '#86efac']
+
+function centred(p: Pts): Pts {
+  const ok = p.values.filter((v): v is number => v != null)
+  const m = ok.reduce((a, b) => a + b, 0) / Math.max(1, ok.length)
+  return { ...p, values: p.values.map((v) => (v == null ? null : v - m)), lower: null, upper: null }
+}
+
+function baseOption(titleText: string, subtitle: string, yName: string, source: string, synthetic: boolean, seriesList: Record<string, unknown>[]) {
+  return {
+    backgroundColor: '#0b1220',
+    animation: false,
+    textStyle: { fontFamily: 'Geist, system-ui, sans-serif' },
+    title: { text: titleText, subtext: subtitle, left: 12, top: 8, textStyle: { color: '#f8fafc', fontSize: 14 }, subtextStyle: { color: '#cbd5e1', fontSize: 11 } },
+    legend: { bottom: 26, textStyle: { color: '#e2e8f0' } },
+    grid: { left: 64, right: 44, top: 88, bottom: 64 },
+    tooltip: { trigger: 'axis', valueFormatter: (x: unknown) => (typeof x === 'number' ? fmt(x) : String(x)) },
+    xAxis: { type: 'time', name: 'Year', nameLocation: 'end', nameGap: 8, nameTextStyle: { color: '#cbd5e1' }, ...AXIS },
+    yAxis: { type: 'value', name: yName, nameGap: 14, nameTextStyle: { color: '#cbd5e1', align: 'left' }, scale: true, ...AXIS },
+    graphic: [{ type: 'text', left: 12, bottom: 6, style: { text: source, fill: synthetic ? '#fcd34d' : '#cbd5e1', fontSize: 11 } }],
+    series: seriesList,
+  }
+}
+
+/** Two regions on their common period, each relative to its own mean: trends are compared, not levels. */
+export function buildCompareChart(input: {
+  variable: Variable
+  A: Region
+  B: Region
+  seriesA: Series
+  seriesB: Series
+  rep: import('@trend/stats').CompareReport
+}): ChartOutput {
+  const { variable: v, A, B, seriesA, seriesB, rep } = input
+  const toFreq = (p: Pts) => (rep.frequency === 'annual' ? annualMeans(p) : removeSeasonal(p))
+  const pa = centred(toFreq(slice(seriesA, rep.start.slice(0, rep.start.length), rep.end.length === 4 ? `${rep.end}-12` : rep.end)))
+  const pb = centred(toFreq(slice(seriesB, rep.start, rep.end.length === 4 ? `${rep.end}-12` : rep.end)))
+  const units = formatUnitsText(v.units)
+  const list: Record<string, unknown>[] = []
+  ;[
+    [A, pa, rep.a.slope.perYear, PALETTE[0]],
+    [B, pb, rep.b.slope.perYear, PALETTE[1]],
+  ].forEach(([r, p, slope, color]) => {
+    const pts = p as Pts
+    list.push({ name: (r as Region).name, type: 'line', data: pair(pts.dates, pts.values), symbol: 'none', lineStyle: { width: 1.3, color }, itemStyle: { color } })
+    const tl = trendLine(pts, slope as number)
+    if (tl.length) list.push({ name: `${(r as Region).name} trend`, type: 'line', data: tl, symbol: 'none', lineStyle: { width: 2.4, color, type: 'dashed' }, itemStyle: { color } })
+  })
+  const d = rep.difference
+  const span = `${formatStep(rep.start)} to ${formatStep(rep.end)}`
+  const subtitle = `${span}   ·   Each series relative to its own mean (levels are not compared)   ·   Difference ${fmt(d.perYear)} ${rateUnits(v)} (95% interval ${fmt(d.lower)} to ${fmt(d.upper)}), ${formatP(rep.p)}`
+  const source = `Source: ${v.source.name}${v.synthetic ? '   ·   SYNTHETIC DATA: not observations' : ''}`
+  const option = baseOption(`${v.name}: ${A.name} vs ${B.name}`, subtitle, `${units} (relative to own mean)`, source, v.synthetic, list)
+  const dates = [...new Set([...pa.dates, ...pb.dates])].sort()
+  const get = (p: Pts, dt: string) => p.values[p.dates.indexOf(dt)] ?? null
+  return {
+    option,
+    title: `${v.name}, ${A.name} vs ${B.name}`,
+    csv: { header: ['date', `${A.id} (${v.units}, minus own mean)`, `${B.id} (${v.units}, minus own mean)`], rows: dates.map((dt) => [dt, get(pa, dt), get(pb, dt)]) },
+  }
+}
+
+/** Two to four variables in one region, each standardized over the common period (shape only). */
+export function buildTogetherChart(input: { region: Region; start: string; end: string; items: { variable: Variable; series: Series }[] }): ChartOutput {
+  const { region: r, start, end, items } = input
+  const mixed = new Set(items.map((x) => x.series.frequency)).size > 1
+  const pts = items.map((x) => {
+    const endFix = x.series.frequency === 'annual' && end.length === 7 ? end.slice(0, 4) : x.series.frequency === 'monthly' && end.length === 4 ? `${end}-12` : end
+    const startFix = x.series.frequency === 'annual' && start.length === 7 ? start.slice(0, 4) : x.series.frequency === 'monthly' && start.length === 4 ? `${start}-01` : start
+    const p = slice(x.series, startFix, endFix)
+    return mixed ? annualMeans(p) : removeSeasonal(p)
+  })
+  // Common dates where every variable has a value.
+  const common = pts[0].dates.filter((d) => pts.every((p) => p.values[p.dates.indexOf(d)] != null))
+  const z = pts.map((p) => {
+    const vals = common.map((d) => p.values[p.dates.indexOf(d)] as number)
+    const m = vals.reduce((a, b) => a + b, 0) / Math.max(1, vals.length)
+    const sd = Math.sqrt(vals.reduce((a, b) => a + (b - m) ** 2, 0) / Math.max(1, vals.length - 1)) || 1
+    return vals.map((x) => (x - m) / sd)
+  })
+  const list = items.map((x, i) => ({
+    name: x.variable.name,
+    type: 'line',
+    data: common.map((d, k) => [toTime(d), z[i][k]]),
+    symbol: 'none',
+    lineStyle: { width: 1.4, color: PALETTE[i % PALETTE.length] },
+    itemStyle: { color: PALETTE[i % PALETTE.length] },
+  }))
+  const span = common.length ? `${formatStep(common[0])} to ${formatStep(common[common.length - 1])}` : 'no common period'
+  const subtitle = `${span}${mixed ? '   ·   annual means' : '   ·   seasonal cycle removed'}   ·   Standardized: (value − mean) ÷ standard deviation over the common period. Moving together is not cause and effect.`
+  const synthetic = items.some((x) => x.variable.synthetic)
+  const source = `Sources: ${[...new Set(items.map((x) => x.variable.source.name))].join('; ')}${synthetic ? '   ·   SYNTHETIC DATA: not observations' : ''}`
+  return {
+    option: common.length ? baseOption(`${r.name}: variables together`, subtitle, 'Standardized units', source, synthetic, list) : null,
+    message: common.length ? undefined : 'These variables have no years in common in the selected range.',
+    title: `${r.name}: variables together`,
+    csv: { header: ['date', ...items.map((x) => `${x.variable.id} (standardized)`)], rows: common.map((d, k) => [d, ...z.map((col) => col[k])]) },
+  }
 }

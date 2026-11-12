@@ -86,6 +86,7 @@ function Inputs({ variables, regions }: { variables: Variable[]; regions: Region
       {variable && regionId && variable.periods[regionId] && (
         <>
           <TimeRange variable={variable} regionId={regionId} />
+          <ComparePicker variable={variable} variables={variables} regions={regions} regionId={regionId} />
           <RunAnalysis variable={variable} regionId={regionId} />
         </>
       )}
@@ -287,9 +288,11 @@ function RunAnalysis({ variable, regionId }: { variable: Variable; regionId: str
     s.setAnalysisRunning()
     const start = rangeStart ?? recStart
     const end = rangeEnd ?? recEnd
+    const { compareMode, compareRegion, compareVariables } = useAppStore.getState()
     try {
       const series = await getSeriesCached(variable.id, regionId)
-      const input = { dates: series.dates, values: series.values, frequency: series.frequency, kind: series.kind, start, end }
+      const asInput = (x: typeof series) => ({ dates: x.dates, values: x.values, frequency: x.frequency, kind: x.kind })
+      const input = { ...asInput(series), start, end }
       const report = await runTrend(input)
       // Extras: "years needed" when not significant; source uncertainty when the series has sigma.
       const sigma = series.sigma
@@ -297,7 +300,28 @@ function RunAnalysis({ variable, regionId }: { variable: Variable; regionId: str
         report.test.significant ? null : runStats('detectability', input).catch(() => null),
         sigma && sigma.some((x) => x != null) ? runStats('uncertainty', { ...input, sigma }).catch(() => null) : null,
       ])
-      useAppStore.getState().setAnalysisDone({ variable: variable.id, region: regionId, start, end, report, detect, uncertainty })
+
+      // Compare two regions: difference of trends on the common period (paired bootstrap).
+      let compare: { region: string; report: Awaited<ReturnType<typeof runStats<'compare'>>> } | null = null
+      if (compareMode === 'regions' && compareRegion && compareRegion !== regionId && variable.regions.includes(compareRegion)) {
+        const b = await getSeriesCached(variable.id, compareRegion)
+        compare = { region: compareRegion, report: await runStats('compare', { a: asInput(series), b: asInput(b), start, end }) }
+      }
+
+      // More variables in the same region: each one's trend, and its correlation with the main variable.
+      const extras: { variable: string; report: Awaited<ReturnType<typeof runTrend>>; correlation: Awaited<ReturnType<typeof runStats<'correlate'>>> | null }[] = []
+      if (compareMode === 'variables') {
+        for (const id of compareVariables) {
+          const other = await getSeriesCached(id, regionId).catch(() => null)
+          if (!other) continue
+          const rep = await runTrend({ ...asInput(other), start, end }).catch(() => null)
+          if (!rep) continue
+          const correlation = await runStats('correlate', { x: asInput(series), y: asInput(other), start, end }).catch(() => null)
+          extras.push({ variable: id, report: rep, correlation })
+        }
+      }
+
+      useAppStore.getState().setAnalysisDone({ variable: variable.id, region: regionId, start, end, report, detect, uncertainty, compare, extras })
     } catch (e) {
       useAppStore.getState().setAnalysisError(e instanceof Error ? e.message : String(e))
     }
@@ -314,5 +338,97 @@ function RunAnalysis({ variable, regionId }: { variable: Variable; regionId: str
         </p>
       )}
     </div>
+  )
+}
+
+// ---------- compare ----------
+
+function ComparePicker({
+  variable,
+  variables,
+  regions,
+  regionId,
+}: {
+  variable: Variable
+  variables: Variable[]
+  regions: Region[]
+  regionId: string
+}) {
+  const mode = useAppStore((s) => s.compareMode)
+  const setMode = useAppStore((s) => s.setCompareMode)
+  const compareRegion = useAppStore((s) => s.compareRegion)
+  const setCompareRegion = useAppStore((s) => s.setCompareRegion)
+  const extra = useAppStore((s) => s.compareVariables)
+  const setExtra = useAppStore((s) => s.setCompareVariables)
+  const modeName = useId()
+  const regionName = useId()
+
+  // Other regions with data for this variable; other variables with data for this region.
+  const otherRegions = regions.filter((r) => r.id !== regionId && variable.regions.includes(r.id))
+  const otherVariables = variables.filter((v) => v.id !== variable.id && v.regions.includes(regionId))
+  const modes: { id: 'none' | 'regions' | 'variables'; label: string; disabled: boolean }[] = [
+    { id: 'none', label: 'Off', disabled: false },
+    { id: 'regions', label: 'Another region', disabled: otherRegions.length === 0 },
+    { id: 'variables', label: 'More variables', disabled: otherVariables.length === 0 },
+  ]
+  const chip = (active: boolean) =>
+    cn(
+      'cursor-pointer rounded-full border px-2.5 py-1 text-[13px]',
+      'has-focus-visible:outline-2 has-focus-visible:outline-offset-1 has-focus-visible:outline-ring',
+      'has-disabled:cursor-not-allowed has-disabled:opacity-40',
+      active ? 'border-amber-300/80 bg-amber-300/20 text-white' : 'border-white/20 text-white/90 hover:bg-white/10',
+    )
+
+  return (
+    <fieldset className="flex flex-col gap-2">
+      <legend className="mb-1 text-xs font-medium tracking-wide text-white/85 uppercase">Compare</legend>
+      <div className="flex flex-wrap gap-1">
+        {modes.map((m) => (
+          <label key={m.id} className={chip(mode === m.id)}>
+            <input type="radio" name={modeName} className="sr-only" disabled={m.disabled} checked={mode === m.id} onChange={() => setMode(m.id)} />
+            {m.label}
+          </label>
+        ))}
+      </div>
+
+      {mode === 'regions' && (
+        <div role="radiogroup" aria-label="Second region" className="flex flex-col gap-1">
+          <p className="text-xs text-white/80">Compare the trend with:</p>
+          <div className="flex flex-wrap gap-1">
+            {otherRegions.map((r) => (
+              <label key={r.id} className={chip(compareRegion === r.id)}>
+                <input type="radio" name={regionName} className="sr-only" checked={compareRegion === r.id} onChange={() => setCompareRegion(r.id)} />
+                {r.name}
+              </label>
+            ))}
+          </div>
+          <p className="text-xs text-white/80">Trends are compared on the years both records cover. Levels are not compared.</p>
+        </div>
+      )}
+
+      {mode === 'variables' && (
+        <div className="flex flex-col gap-1">
+          <p className="text-xs text-white/80">Add up to three more variables for this region ({extra.length}/3):</p>
+          <div className="flex flex-wrap gap-1">
+            {otherVariables.map((v) => {
+              const on = extra.includes(v.id)
+              return (
+                <label key={v.id} className={chip(on)}>
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={on}
+                    disabled={!on && extra.length >= 3}
+                    onChange={() => setExtra(on ? extra.filter((x) => x !== v.id) : [...extra, v.id])}
+                  />
+                  {v.name}
+                </label>
+              )
+            })}
+          </div>
+          <p className="text-xs text-white/80">Moving together is not cause and effect.</p>
+        </div>
+      )}
+    </fieldset>
   )
 }
