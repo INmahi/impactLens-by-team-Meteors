@@ -5,7 +5,7 @@ import TimeScroller from '@/components/TimeScroller'
 import { Globe, GlobeControls, MapLegend, MapModePicker, SyntheticWatermark } from '@/globe'
 import { useRegionsData } from '@/lib/useData'
 import LeftDrawer from '@/panels/LeftDrawer'
-import ResultsSummary from '@/panels/ResultsSummary'
+import RightDrawer from '@/panels/RightDrawer'
 import { useAppStore } from '@/state/store'
 
 function RegionChip() {
@@ -34,11 +34,11 @@ export default function App() {
         <div className="absolute left-3 top-16">
           <LeftDrawer />
         </div>
-        <div className="absolute right-3 top-3 bottom-32 flex w-80 flex-col items-end gap-3 overflow-y-auto">
+        <div className="absolute right-3 top-3 bottom-32 flex w-96 max-w-[calc(100vw-1.5rem)] flex-col items-end gap-3 overflow-y-auto overscroll-contain [&>*]:shrink-0">
           <div className="pointer-events-auto">
             <GlobeControls />
           </div>
-          <ResultsSummary />
+          <RightDrawer />
           <MapModePicker />
           <MapLegend />
         </div>

@@ -5,7 +5,7 @@ import type { Region, Variable } from '@trend/contract'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { mapModeForVariable, mapModes } from '@/globe'
-import { runTrend } from '@/lib/stats'
+import { runStats, runTrend } from '@/lib/stats'
 import { dateSteps, formatStep, getSeriesCached, spanYears, useRegionsData, useVariablesData } from '@/lib/useData'
 import { useAppStore } from '@/state/store'
 import { cn } from 'cn'
@@ -289,15 +289,15 @@ function RunAnalysis({ variable, regionId }: { variable: Variable; regionId: str
     const end = rangeEnd ?? recEnd
     try {
       const series = await getSeriesCached(variable.id, regionId)
-      const report = await runTrend({
-        dates: series.dates,
-        values: series.values,
-        frequency: series.frequency,
-        kind: series.kind,
-        start,
-        end,
-      })
-      useAppStore.getState().setAnalysisDone({ variable: variable.id, region: regionId, start, end, report })
+      const input = { dates: series.dates, values: series.values, frequency: series.frequency, kind: series.kind, start, end }
+      const report = await runTrend(input)
+      // Extras: "years needed" when not significant; source uncertainty when the series has sigma.
+      const sigma = series.sigma
+      const [detect, uncertainty] = await Promise.all([
+        report.test.significant ? null : runStats('detectability', input).catch(() => null),
+        sigma && sigma.some((x) => x != null) ? runStats('uncertainty', { ...input, sigma }).catch(() => null) : null,
+      ])
+      useAppStore.getState().setAnalysisDone({ variable: variable.id, region: regionId, start, end, report, detect, uncertainty })
     } catch (e) {
       useAppStore.getState().setAnalysisError(e instanceof Error ? e.message : String(e))
     }

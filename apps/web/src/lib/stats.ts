@@ -1,13 +1,13 @@
-// The app's only way to run a trend analysis: analyzeTrend() from @trend/stats,
-// executed in a Web Worker so the globe never stalls.
-import type { TrendInput, TrendReport } from '@trend/stats'
+// The app's only way to run statistics: @trend/stats executed in a Web Worker so the globe never stalls.
+// runStats(type, input) covers every message type in packages/stats/src/dispatch.ts.
+import type { StatsMessages, StatsMessageType, TrendInput, TrendReport } from '@trend/stats'
 import StatsWorker from '@trend/stats/worker?worker'
 
-type Reply = { id: number; ok: true; report: TrendReport } | { id: number; ok: false; error: string }
+type Reply = { id: number; ok: true; report: unknown } | { id: number; ok: false; error: string }
 
 let worker: Worker | null = null
 let nextId = 1
-const pending = new Map<number, { resolve: (r: TrendReport) => void; reject: (e: Error) => void }>()
+const pending = new Map<number, { resolve: (r: unknown) => void; reject: (e: Error) => void }>()
 
 function getWorker(): Worker {
   if (worker) return worker
@@ -28,10 +28,15 @@ function getWorker(): Worker {
   return worker
 }
 
-export function runTrend(input: TrendInput): Promise<TrendReport> {
+export function runStats<K extends StatsMessageType>(
+  type: K,
+  input: StatsMessages[K]['input'],
+): Promise<StatsMessages[K]['report']> {
   const id = nextId++
   return new Promise((resolve, reject) => {
-    pending.set(id, { resolve, reject })
-    getWorker().postMessage({ id, input })
+    pending.set(id, { resolve: resolve as (r: unknown) => void, reject })
+    getWorker().postMessage({ id, type, input })
   })
 }
+
+export const runTrend = (input: TrendInput): Promise<TrendReport> => runStats('trend', input)

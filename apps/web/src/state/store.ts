@@ -1,7 +1,7 @@
 // The one app store, read by the globe and the panels.
 // Plain, serialisable values only: never put Cesium objects here (CLAUDE.md hard rule).
 import { create } from 'zustand'
-import type { TrendReport } from '@trend/stats'
+import type { DetectabilityReport, TrendReport, UncertaintyReport } from '@trend/stats'
 
 export type Pole = 'north' | 'south'
 
@@ -12,6 +12,10 @@ export interface AnalysisResult {
   start: string
   end: string
   report: TrendReport
+  /** "Years of data needed", only when the headline test is not significant. */
+  detect: DetectabilityReport | null
+  /** Source 1-sigma propagated into the slope, only when the series carries sigma. */
+  uncertainty: UncertaintyReport | null
 }
 
 export type AnalysisStatus = 'idle' | 'running' | 'done' | 'error'
