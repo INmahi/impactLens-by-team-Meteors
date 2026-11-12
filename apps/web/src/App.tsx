@@ -3,6 +3,7 @@
 // bottom-centre time scroller. Phone (<768 px): one bottom sheet at a time, chosen from a tab bar.
 // The overlay root passes pointer events through; only the panels capture them.
 import { useEffect, useState } from 'react'
+import ChartDrawer from '@/charts/ChartDrawer'
 import TimeScroller from '@/components/TimeScroller'
 import { Globe, GlobeControls, SyntheticWatermark, useActiveMode } from '@/globe'
 import { usePhone } from '@/lib/useMedia'
@@ -36,6 +37,9 @@ export default function App() {
 }
 
 function DesktopOverlay() {
+  // When the chart drawer is open, side panels end above the bottom stack (scroller + charts).
+  const [chartsOpen, setChartsOpen] = useState(false)
+  const sideBottom = chartsOpen ? '31rem' : '2.5rem'
   return (
     <>
       <header className="absolute left-3 top-3 flex items-center gap-3">
@@ -43,25 +47,29 @@ function DesktopOverlay() {
         <RegionChip />
       </header>
       <SyntheticWatermark className="absolute left-1/2 top-3 -translate-x-1/2" />
-      {/* Left drawer first in DOM order, so Tab goes inputs -> right column -> scroller. */}
-      <div className="absolute left-3 top-16">
-        <LeftDrawer />
+      {/* Left drawer first in DOM order, so Tab goes inputs -> right column -> scroller -> charts. */}
+      <div className="absolute left-3 top-16 flex flex-col" style={{ bottom: sideBottom }}>
+        <LeftDrawer className="max-h-full" />
       </div>
-      <div className="absolute right-3 top-3 bottom-32 flex w-96 max-w-[calc(100vw-1.5rem)] flex-col items-end gap-3 overflow-y-auto overscroll-contain [&>*]:shrink-0">
+      <div
+        className="absolute right-3 top-3 flex w-96 max-w-[calc(100vw-1.5rem)] flex-col items-end gap-3 overflow-y-auto overscroll-contain [&>*]:shrink-0"
+        style={{ bottom: chartsOpen ? sideBottom : '8rem' }}
+      >
         <div className="pointer-events-auto">
           <GlobeControls />
         </div>
         <RightDrawer />
         <MapPanel />
       </div>
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
+      <div className="absolute inset-x-3 bottom-10 flex flex-col items-center gap-2">
         <TimeScroller />
+        <ChartDrawer className="max-w-[1100px]" onOpenChange={setChartsOpen} />
       </div>
     </>
   )
 }
 
-type Sheet = 'inputs' | 'results' | 'map' | null
+type Sheet = 'inputs' | 'results' | 'charts' | 'map' | null
 
 function PhoneOverlay() {
   const [sheet, setSheet] = useState<Sheet>('inputs')
@@ -75,6 +83,7 @@ function PhoneOverlay() {
   const tabs: { id: Exclude<Sheet, null>; label: string; disabled?: boolean }[] = [
     { id: 'inputs', label: 'Analyse' },
     { id: 'results', label: 'Results', disabled: !analysis },
+    { id: 'charts', label: 'Charts', disabled: !analysis },
     { id: 'map', label: 'Map' },
   ]
 
@@ -92,6 +101,7 @@ function PhoneOverlay() {
       <div className="absolute inset-x-2 bottom-[calc(3.75rem+env(safe-area-inset-bottom))] flex max-h-[60dvh] flex-col gap-2">
         {sheet === 'inputs' && <LeftDrawer className="max-h-[60dvh] w-full" />}
         {sheet === 'results' && <RightDrawer className="max-h-[60dvh] w-full max-w-none" />}
+        {sheet === 'charts' && <ChartDrawer className="max-h-[60dvh] overflow-y-auto" />}
         {sheet === 'map' && (
           <div className="flex max-h-[60dvh] flex-col items-stretch gap-2 overflow-y-auto">
             <MapPanel />
