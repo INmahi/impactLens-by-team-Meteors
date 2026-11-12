@@ -76,7 +76,7 @@ Node 22.18 or later. Python 3.12 or later with `uv`.
 | M0 Scaffold | Done 2026-11-12 | Build, golden (40,475 checks) and analyze tests pass; worker verified in browser |
 | M1 Dataset cards | Done 2026-11-12 | 8 cards in `docs/datasets/`. Decisions in plan sections 2 and 16: IMBIE 2026 primary; ice_mass_rate annual; ice_extent Greenland only; MERRA-2 temperature, baseline 1991-2020; NASA-SSH sea level (no GIA); long records as separate ids `sea_level_long`, `ice_mass_long`, never joined |
 | M2 Contract + synthetic | Done 2026-11-12 | Schemas + types + rules + conventions in `packages/contract/README.md`. Validator and generator in `pipeline/` (84 tests). Gate: 47 files, 0 problems; all 17 injected slopes inside their 95% interval (seed 20261112, not tuned); 50-seed coverage 0.948. `data/public/` is generated (`pnpm data`, 26 MB) and gitignored |
-| M3 Globe | Next | globe-engineer |
+| M3 Globe | Part a done 2026-11-12 | (a) Cesium 1.146.0 + asset copy script, CESIUM_BASE_URL, `/data` and `/media` served by `repoStatic` in `vite.config.ts`, Zustand store `src/state/store.ts`, loaders `src/lib/data.ts`. Next: (b) base globe, (c) data layer + legend (globe-engineer), then ui-qa |
 
 Open follow-ups:
 - stats-lead: `packages/stats/package.json` `golden` script calls bare `python` (not on PATH here); use root `pnpm golden`. The usage comment in `src/worker.ts` uses `new URL('@trend/stats/worker', ...)`, which Vite does not resolve; the app uses `import StatsWorker from '@trend/stats/worker?worker'` (`apps/web/src/lib/stats.ts`).
@@ -102,6 +102,9 @@ Installed at M0 (2026-11-12). Check before upgrading; the lockfiles (`pnpm-lock.
 | react, react-dom | 19.3.1 | |
 | typescript | 7.0.2 | Native compiler; `baseUrl` is gone, use `paths` only |
 | tailwindcss, @tailwindcss/vite | 4.3.5 | Config in CSS (`@theme`), no `tailwind.config.js` |
+| cesium | 1.146.0 | 1.147.0 was under 2 weeks old at install; assets copied by `apps/web/scripts/copy-cesium.mjs` |
+| zustand | 5.0.16 | 5.1.0 was under 2 weeks old at install |
+| topojson-client | 3.1.0 | with `@types/topojson-client`, `@types/topojson-specification` |
 | shadcn CLI / style | 4.23.0 / `base-nova` | Base UI primitives (`@base-ui/react` 1.9); `render` prop, not `asChild`; `cn` comes from the `cn` package |
 | numpy, scipy | 2.5.4, 1.18.1 | |
 | pymannkendall | 1.4.3 | Reference only (`stats` group) |
