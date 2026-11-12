@@ -53,7 +53,7 @@ Ice mass, loss rate and extent are sub-variables of one group, `ice_sheet`.
 | `ice_extent` | km2 | NASA [ITS_LIVE NSIDC-0793](https://nsidc.org/data/nsidc-0793) | Sept 1972 - Feb 2022, monthly | 120 m masks, EPSG:3413, netCDF-4 | **Greenland only.** We ship a monthly area series and coarse outlines, never the 120 m data |
 | `ice_mass_map` | cm water equivalent | NASA GRACE/GRACE-FO JPL mascons RL06.3 v4 | 2002 onward, monthly | 0.5 degree grid | Map layer only. About 300 km real resolution. Gap July 2017 to May 2018 |
 | `temperature` | deg C anomaly, baseline 1991-2020 | NASA MERRA-2 `M2TMNXSLV` T2M (decided 2026-11-12). GISTEMP and ERA5 not shown in the first release | 1980-01 onward, monthly; 47 Greenland JJA and 46 Antarctic DJF seasons | Gridded, 0.625 x 0.5 deg | Reanalysis, not direct measurement. About 3 years short of 50. Seasonal means are area-weighted. See `docs/datasets/merra2.md` |
-| `sea_level` | mm | NASA-SSH GMSL indicator `NASA_SSH_GMSL_INDICATOR` v1 (decided 2026-11-12) | 1993 onward, 7-day | Global time series | **Global only.** Not corrected for glacial isostatic adjustment, so its rate is slightly below GIA-corrected values (stats-lead to quantify in M5). No per-point uncertainty |
+| `sea_level` | mm | Global: NASA-SSH GMSL indicator `NASA_SSH_GMSL_INDICATOR` v1 (decided 2026-11-12). Coastal seas: area means of NASA-SSH gridded sea surface height `NASA_SSH_REF_SIMPLE_GRID_V11` (V1.1; never mix with V1), see `docs/datasets/sea-level-gridded-ssh.md`. For a fair region-against-global comparison, the `global` series is computed from the same grids and checked against the indicator (decided 2026-11-12) | 1993 onward, 7-day | Global and regional time series | **Global mean or a coastal-sea mean (`kind: coastal_sea`).** Regional values are absolute (satellite) sea level over the sea area: not the value at a town, and no land subsidence. Altimetry is degraded within about 10-20 km of the coast. Regional series swing more from year to year (El Nino), so they have less power. Global series not corrected for glacial isostatic adjustment, so its rate is slightly below GIA-corrected values (stats-lead to quantify in M5). No per-point uncertainty |
 | `sea_level_long` | mm | NASA JPL_RECON_GMSL `global_average_sea_level_change*` | 1900-2018, annual | Global time series with 5-95% bounds | **Separate variable, never joined** to `sea_level`. Not independent of altimetry and mass estimates |
 | `ice_mass_long` | Gt | NASA JPL_RECON_GMSL `GrIS_*`, `AIS_*` | 1900-2018, annual | Time series with 5-95% bounds | Separate variable, never joined to `ice_mass` (see the `ice_mass` long record row above) |
 
@@ -74,7 +74,10 @@ Ice mass, loss rate and extent are sub-variables of one group, `ice_sheet`.
 | `greenland` | all ice variables, temperature |
 | `antarctica` | ice mass, loss rate, mass map, temperature |
 | `antarctica_west`, `antarctica_east`, `antarctica_peninsula` | ice mass, loss rate |
-| `global` | sea level only |
+| `global` | sea level, sea level long record |
+| Coastal seas (`kind: coastal_sea`), initial set: `bay_of_bengal`, `gulf_of_mexico`, `us_east_coast`, `western_tropical_pacific`, `north_sea`, `mediterranean` | sea level |
+
+Regions are data: more coastal seas or glacier regions are added as data files and a pipeline config entry, with no app code change.
 
 ## 4. UI spec
 
@@ -92,7 +95,7 @@ A full-screen globe sits behind everything. Glass panels float on top.
 **Centre: globe**
 - Zoom by scroll and by buttons. Presets: Greenland, Antarctica, and a toggle between the poles.
 - Map modes: ice mass (GRACE, 2002 onward), ice extent (Greenland outlines, with the earliest outline kept as a ghost), temperature anomaly.
-- Sea level has no polar map.
+- Sea level has no map layer. Coastal seas are drawn as outlines and can be clicked; the pole toggle frames ice regions only.
 - Legend with colormap and units. "SYNTHETIC DATA" watermark while data is synthetic.
 
 **Time scroller (bottom centre):** play, pause, drag, step by month or year. Shows where a layer has no data. Slides up with the bottom drawer.
@@ -113,7 +116,7 @@ A full-screen globe sits behind everything. Glass panels float on top.
 | Loss rate | Bars with uncertainty, 5-year running mean |
 | Ice extent | Seasonal cycle, anomaly |
 | Temperature | Anomaly, summer-only series, decade means |
-| Sea level | Budget view: ice sheets, glaciers and ocean warming as parts of the total |
+| Sea level | Budget view (global): ice sheets, glaciers and ocean warming as parts of the total. Regional: the region's series against the global mean |
 
 - Multi-variable view: each variable standardized to its own mean and spread, or two labelled axes. The normalization is stated on the chart.
 - Every chart: title, axis titles with units, time frame, trend equation, p-value, source line, uncertainty band where the data has one, and a mark at any join between sources.
@@ -312,7 +315,7 @@ The price is power: with 50 annual points and strong autocorrelation, the headli
 - `simulate.ts`: the error-rate table above.
 
 **Still to build (stats-lead, milestone M5)**
-- Compare test: difference of Sen's slopes between two regions by moving-block bootstrap
+- Compare test: difference of Sen's slopes between two regions (ice sheets, or two coastal seas, or a coastal sea against the global mean) by moving-block bootstrap on the paired series, so the signal they share is kept
 - Two-variable view: correlation on raw and on detrended series, with effective sample size
 - Sensitivity of loss rate to temperature (per ice sheet) with HAC errors
 - Monte Carlo propagation of source 1-sigma
@@ -465,6 +468,7 @@ Each milestone ends with its acceptance check passing.
 
 - [x] Antarctic ice extent: only NSIDC-0794 (annual, 1997-2021) exists. Decided 2026-11-12: `ice_extent` stays Greenland only
 - [x] Temperature: MERRA-2 primary, anomaly baseline 1991-2020; GISTEMP and ERA5 not shown in the first release (decided 2026-11-12)
+- [x] Sea level is regional too: the global mean plus coastal seas, so users can test one region and compare two (decided 2026-11-12). Regional source NASA-SSH gridded `NASA_SSH_REF_SIMPLE_GRID_V11` (card `docs/datasets/sea-level-gridded-ssh.md`). `global` is computed from the same grids, with the GMSL indicator as a cross-check. The polygon drawn on the globe is the polygon averaged (about 100 km offshore). Compare mode uses the common period and compares trends, never levels (each region has its own zero)
 - [x] Sea level: NASA-SSH indicator primary; long records are separate variables `sea_level_long` and `ice_mass_long` (decided 2026-11-12)
 - [ ] MERRA-2 download: test server-side subsetting before M10; otherwise about 30-40 GB of disk
 - [x] JPL_RECON_GMSL ice contributions: decided 2026-11-12 to keep them as a separate series, not joined to IMBIE

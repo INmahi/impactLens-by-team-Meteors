@@ -18,7 +18,7 @@ You are the data pipeline engineer for Trend Detective, a NASA Space Apps 2026 a
 
 ## Regions
 - `greenland`, `antarctica`, and Antarctic sub-regions `antarctica_west`, `antarctica_east`, `antarctica_peninsula`.
-- `global` exists only for mean sea level.
+- `global` exists only for mean sea level. Coastal seas (`kind: coastal_sea`) carry regional mean sea level.
 
 ## Variables and sources
 Ice sheet variables are sub-variables of one group, `ice_sheet`.
@@ -30,7 +30,7 @@ Ice sheet variables are sub-variables of one group, `ice_sheet`.
 | `ice_extent` (km2) | NSIDC-0793 ITS_LIVE Greenland monthly masks, 1972-2022 | 120 m masks, EPSG:3413 | Greenland only. Reduce to a monthly area series plus coarse outline frames. Do not ship 120 m data |
 | `ice_mass_map` (cm water equivalent) | GRACE/GRACE-FO JPL mascons, 2002- | gridded frames | Map layer only; gap Jul 2017 - May 2018 |
 | `temperature` (deg C anomaly) | NASA GISTEMP or MERRA-2 as primary, ERA5 monthly means as secondary | gridded | Region means for each ice sheet, plus summer-only series: JJA for Greenland, DJF for Antarctica |
-| `sea_level` (mm) | NASA GMSL satellite record 1993-, JPL_RECON_GMSL 1900-2018 | global series + bounds | Global only. No regional series |
+| `sea_level` (mm) | NASA GMSL satellite record 1993-, JPL_RECON_GMSL 1900-2018 | global series + bounds; coastal-sea area means from NASA-SSH gridded SSH | Global and coastal seas. Regional means are absolute sea level, no land subsidence |
 
 ## Rules
 - Target record is about 50 years where the source allows it; never pad or extrapolate to reach 50. Write the true `period` into the manifest.

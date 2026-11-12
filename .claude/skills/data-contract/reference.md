@@ -39,10 +39,11 @@ The plan names the file but not its shape. Proposed:
 | `greenland` | `ice_mass`, `ice_mass_rate`, `ice_extent`, `ice_mass_map`, `temperature` |
 | `antarctica` | `ice_mass`, `ice_mass_rate`, `ice_mass_map`, `temperature` |
 | `antarctica_west`, `antarctica_east`, `antarctica_peninsula` | `ice_mass`, `ice_mass_rate` |
-| `global` | `sea_level` |
+| `global` | `sea_level`, `sea_level_long` |
+| coastal seas (`kind: coastal_sea`, e.g. `bay_of_bengal`) | `sea_level` |
 
 ## regions.topo.json
-TopoJSON with one object named `regions`. Each geometry has `id` equal to the region id and `properties.name`. Coarse outlines only (a few hundred vertices each). `global` has no geometry.
+TopoJSON with one object named `regions`. Each geometry has `id` equal to the region id and `properties.name`. Coarse outlines only (a few hundred vertices each). `global` has no geometry. Coastal seas have a polygon over the sea area they average.
 
 ## series/{region_id}.json
 | Field | Type | Notes |

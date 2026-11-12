@@ -145,6 +145,62 @@ def test_new_region_needs_only_data(tree: Path) -> None:
     assert result.ok, "\n".join(map(str, result.problems))
 
 
+SEA = "north_sea"
+
+
+def add_coastal_sea(tree: Path) -> None:
+    """Add a coastal sea with a sea_level series through data files alone."""
+    edit(tree, "regions.json", lambda d: d.append({
+        "id": SEA, "name": "North Sea", "parent": None, "kind": "coastal_sea",
+        "variables": ["sea_level"], "bbox": [-4, 51, 9, 61],
+        "camera": {"lon": 2.5, "lat": 56, "height": 2800000, "heading": 0, "pitch": -90}}))
+    edit(tree, "regions.topo.json", lambda d: (
+        d["arcs"].append(topo_square(-2, 52, 8, 60)),
+        d["objects"]["regions"]["geometries"].append({"type": "Polygon", "id": SEA, "arcs": [[2]]})))
+
+    def add_region(v):
+        sl = next(x for x in v if x["id"] == "sea_level")
+        sl["regions"].append(SEA)
+        sl["periods"][SEA] = list(sl["periods"]["global"])
+    edit(tree, "variables.json", add_region)
+    s = read_json(tree, "sea_level/series/global.json")
+    s.update(region=SEA, values=[round(v + 3.0 * (i % 4), 3) for i, v in enumerate(s["values"])])
+    write_json(tree, f"sea_level/series/{SEA}.json", s)
+    (res,) = run_analyze([{k: s[k] for k in ("dates", "values", "frequency", "kind")}])
+    write_json(tree, f"sea_level/stats/{SEA}__default.json", stats_file_content("sea_level", SEA, True, res["report"]))
+
+
+def test_coastal_sea_needs_only_data(tree: Path) -> None:
+    add_coastal_sea(tree)
+    result = check(tree)
+    assert result.ok, "\n".join(map(str, result.problems))
+
+
+def test_rule2_coastal_sea_lists_other_variable(tree: Path) -> None:
+    add_coastal_sea(tree)
+    edit(tree, "regions.json", lambda d: d[-1]["variables"].append("ice_mass"))
+    assert_rule(check(tree), 2, "north_sea: kind coastal_sea allows only sea_level, but variables lists ice_mass")
+
+
+def test_rule2_other_variable_declares_coastal_sea(tree: Path) -> None:
+    add_coastal_sea(tree)
+
+    def declare(v):
+        v[0]["regions"].append(SEA)  # ice_mass
+        v[0]["periods"][SEA] = ["2000-01", "2002-12"]
+    edit(tree, "variables.json", declare)
+    edit(tree, "regions.json", lambda d: d[-1]["variables"].append("ice_mass"))
+    result = check(tree)
+    assert_rule(result, 2, "ice_mass: regions north_sea are kind coastal_sea, where only sea_level is valid")
+    assert_rule(result, 2, "north_sea: kind coastal_sea allows only sea_level")
+
+
+def test_rule3_coastal_sea_needs_geometry(tree: Path) -> None:
+    add_coastal_sea(tree)
+    edit(tree, "regions.topo.json", lambda d: d["objects"]["regions"]["geometries"].pop())
+    assert_rule(check(tree), 3, f"no geometry for region {SEA!r}")
+
+
 # -------------------------------------------------------------------- rule 1
 def test_rule1_schema_field(tree: Path) -> None:
     edit(tree, "variables.json", lambda d: d[0].update(units=""))

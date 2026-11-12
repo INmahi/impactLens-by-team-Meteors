@@ -27,7 +27,7 @@ You may only write files under `docs/datasets/`.
 - NSIDC-0793 ITS_LIVE Greenland monthly ice sheet extent masks; find out whether an equivalent Antarctic extent or ice shelf product exists
 - GRACE/GRACE-FO JPL mascons (map layer)
 - Temperature: NASA GISTEMP and MERRA-2, and ERA5 monthly means
-- Sea level: NASA satellite global mean sea level record and JPL_RECON_GMSL (1900-2018, with separate Greenland and Antarctic contributions)
+- Sea level: NASA satellite global mean sea level record, NASA-SSH gridded sea surface height for regional means over coastal seas, and JPL_RECON_GMSL (1900-2018, with separate Greenland and Antarctic contributions)
 - Longer ice mass records that could extend IMBIE back toward the 1970s
 - Vegetation and urban change: MODIS NDVI, VIIRS Black Marble, and longer-record options
 

@@ -22,7 +22,7 @@ You are the globe engineer for Trend Detective. The app is about Greenland and A
   - Ice mass: GRACE mascon frames (2002 onward). Blocky by nature; do not smooth it into false detail.
   - Ice extent: Greenland outline per time step drawn as a line, with the earliest outline kept as a ghost for comparison.
   - Temperature: anomaly frames over the full record.
-- Sea level is a global series with no polar map. In that mode keep the last map and show a label, or show nothing extra.
+- Sea level has no map layer. Global sea level has no outline; coastal seas (`kind: coastal_sea`) are outlined and pickable like any region. In sea level mode hide the map layer and show a label. The pole toggle frames ice regions only, never coastal seas.
 - Sub-regions (West Antarctica, East Antarctica, Peninsula) are outlined and pickable.
 - The time scroller covers the longest record on screen and shows where each layer has no data (for example ice mass before 2002).
 

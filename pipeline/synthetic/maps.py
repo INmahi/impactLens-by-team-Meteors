@@ -246,8 +246,10 @@ def write_layer(layer: LayerSpec, fields: LayerFields, layer_dir: Path) -> tuple
         rel = f"frames/atlas-{a:03d}.png"
         save_png(img, layer_dir / rel)
         atlases.append({"file": rel, "width": aw, "height": ah})
-    manifest = {
-        "variable": layer.id,
+    manifest: dict[str, Any] = {"variable": layer.id}
+    if layer.name:
+        manifest["name"] = layer.name
+    manifest.update({
         "units": layer.units,
         "grid": {"bbox": [-180, -90, 180, 90], "width": w, "height": h},
         "encoding": {"scale": layer.scale, "offset": layer.offset, "packing": PACKING},
@@ -257,7 +259,7 @@ def write_layer(layer: LayerSpec, fields: LayerFields, layer_dir: Path) -> tuple
         "missing": sorted(layer.missing),
         "source": layer.source,
         "synthetic": True,
-    }
+    })
     return manifest, clamped_total
 
 

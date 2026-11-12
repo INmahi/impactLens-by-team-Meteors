@@ -16,8 +16,8 @@
         "oneOf": [{ "$ref": "common.schema.json#/$defs/id" }, { "type": "null" }]
       },
       "kind": {
-        "description": "What the region is, for grouping in the picker. global means no outline geometry.",
-        "enum": ["ice_sheet", "ice_sheet_basin", "glacier_region", "global"]
+        "description": "What the region is, for grouping in the picker. global means no outline geometry. coastal_sea is a sea area whose mean sea level is reported.",
+        "enum": ["ice_sheet", "ice_sheet_basin", "glacier_region", "coastal_sea", "global"]
       },
       "variables": {
         "description": "Variables valid here. Must be the inverse of variables.json regions.",
@@ -25,6 +25,11 @@
         "items": { "$ref": "common.schema.json#/$defs/id" },
         "minItems": 1,
         "uniqueItems": true
+      },
+      "notes": {
+        "description": "Optional caveats shown only when this region is selected (added 2026-11-12).",
+        "type": "array",
+        "items": { "type": "string", "minLength": 1 }
       },
       "bbox": { "$ref": "common.schema.json#/$defs/bbox" },
       "camera": {

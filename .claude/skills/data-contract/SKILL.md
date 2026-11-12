@@ -26,7 +26,7 @@ media/{variable_id}_loop.webm (+ .mp4)
 - Variables: `ice_mass`, `ice_mass_rate` (annual), `ice_extent`, `temperature`, `sea_level`, and the long-record variants `ice_mass_long` and `sea_level_long` (`variantOf`, never joined). Group `ice_sheet` = `ice_mass`, `ice_mass_rate`, `ice_extent`.
 - Map-only layers (not in `variables.json`): `ice_mass_map`, plus `temperature` as a map. A layer is a folder with `manifest.json`, named by a variable's `mapMode`.
 - Regions: `greenland`, `antarctica`, `antarctica_west`, `antarctica_east`, `antarctica_peninsula`, `global`.
-- Valid pairs: see the table in [reference.md](reference.md#regions). `sea_level` is `global` only; `ice_extent` is `greenland` only.
+- Valid pairs: see the table in [reference.md](reference.md#regions). `sea_level` is `global` plus the coastal seas (`kind: coastal_sea`); `sea_level_long` is `global` only; `ice_extent` is `greenland` only.
 - These are the current regions, not a closed list. **Regions must be addable without code changes:** a new glacier region (for example `high_mountain_asia`, `alaska`) is added by (1) an entry in `regions.json` with `bbox` and `camera`, (2) its outline in `regions.topo.json`, (3) its id in each valid variable's `regions` list, (4) `series/{region_id}.json` and `stats/{region_id}__default.json`. Pipeline code reads its regions from a config list; app code reads them from `regions.json`. Region ids are lowercase snake_case.
 
 ## Rules that are easy to break

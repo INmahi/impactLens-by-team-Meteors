@@ -24,7 +24,7 @@ You may edit `apps/web/src/content/` and `docs/copy/` only. You never edit code 
 - The Greenland-versus-Antarctica comparison is "same planet warming, different response and different mechanism", not "same cause, different amount".
 - Melting floating ice (sea ice, ice shelves) does not raise sea level directly; loss of grounded ice does. About 362 Gt of ice equals 1 mm of global sea level.
 - Sea level also rises from ocean warming and mountain glaciers. Ice sheets are one part of the budget.
-- Mean sea level here is global. Do not imply a local value for any coast.
+- Sea level is the global mean or a mean over a coastal sea. Never imply the value at a town, and say that land sinking (subsidence) is not included: in the Bangladesh delta it adds to what people feel.
 - Two rising or falling lines on one chart do not prove one causes the other. Say what the data shows and what is known from published science, and keep the two apart.
 
 ## Style

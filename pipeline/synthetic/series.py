@@ -122,7 +122,8 @@ def make_series(var: VariableSpec, region: str, spec: SeriesSpec, seed: int) -> 
                 lower.append(_r(vals[i] - half[i], spec.decimals))
                 upper.append(_r(vals[i] + half[i], spec.decimals))
         doc["lower"], doc["upper"], doc["bounds"] = lower, upper, "5-95%"
-    doc["segments"] = [{"source": var.segment_source, "start": dates[0], "end": dates[-1], "offset": 0}]
+    source = spec.segment_source or var.segment_source
+    doc["segments"] = [{"source": source, "start": dates[0], "end": dates[-1], "offset": 0}]
     doc["synthetic"] = True
     doc["injected"] = {"slopePerYear": spec.slope, "ar1": spec.ar1, "noiseSd": spec.noise_sd}
     return doc

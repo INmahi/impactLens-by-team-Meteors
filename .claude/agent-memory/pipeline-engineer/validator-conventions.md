@@ -11,6 +11,8 @@ Choices made in pipeline/validate/checks.py where the contract README was silent
 - Segments must be contiguous on the date grid: first start = dates[0], last end = dates[-1], next.start = step after prev.end.
 - Unexpected files anywhere (root, series/, stats/, frames/ not in atlases, stray folders, unreferenced outlines, layer folders no variable uses as mapMode) are rule 3 problems.
 - PNG atlases/colormap: 8-bit colour type 6 (RGBA) only; iCCP/sRGB/gAMA/cHRM chunks are flagged. Pillow's default save writes none.
+- kind coastal_sea (2026-11-12): rule 2 rejects any variable other than sea_level on a coastal_sea region, from both regions.json and variables.json sides (COASTAL_SEA_VARIABLES in checks.py).
+- Optional regions.json `notes` and manifest `name` were added by main 2026-11-12; region-specific caveats go there, not in variable notes.
 - Stats parity calls analyzeTrend with {dates, values, frequency, kind} only (default alpha, no start/end).
 - Topology geometry is checked: arc indices, closed rings, lon/lat in range (after transform decoding).
 

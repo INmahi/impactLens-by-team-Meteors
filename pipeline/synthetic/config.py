@@ -19,6 +19,7 @@ measurements.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -71,20 +72,132 @@ ANTARCTICA_EAST: list[Ring] = [
 ]
 
 
+# Coastal seas (kind "coastal_sea"): the polygon IS the averaging polygon of the real
+# build (docs/datasets/sea-level-gridded-ssh.md: 0.5-degree NASA-SSH grid, cell centre
+# in polygon, cos-lat area weights). Altimetry degrades near land and the grid is
+# smoothed over about 100 km, so every polygon is drawn over open sea about 100 km
+# (roughly 1 degree of latitude) from the coast and from large islands. It covers the
+# sea the series averages, never the land or the shore.
+# Hand-drawn from coastline knowledge, not from a coastline dataset: the real build
+# must confirm the 100 km clearance with the grid's valid-cell mask.
+# Listed counter-clockwise (sea on the left).
+
+# Northern Bay of Bengal: deep Bay off the Indian east coast, the Ganges-Brahmaputra
+# delta and Myanmar; south edge along 13N, clear of the Andaman and Coco Islands.
+BAY_OF_BENGAL: Ring = [
+    (81.2, 13.0), (86.0, 13.0), (91.8, 13.0), (92.2, 15.0), (93.0, 16.0), (93.3, 17.0), (93.0, 18.0),
+    (92.4, 19.0), (91.6, 20.0), (91.0, 20.8), (90.0, 21.0), (89.0, 20.9), (88.0, 20.3), (86.9, 19.2),
+    (85.2, 18.1), (84.0, 17.0), (83.0, 15.9), (81.9, 15.1), (81.2, 14.6), (81.2, 13.5),
+]
+
+# Gulf of Mexico, closed north of the Yucatan Channel and the Florida Straits.
+GULF_OF_MEXICO: Ring = [
+    (-86.6, 22.8), (-85.0, 23.2), (-84.0, 24.4), (-83.7, 25.5), (-83.3, 26.5), (-83.8, 27.5),
+    (-84.0, 28.5), (-84.4, 28.7), (-85.6, 28.8), (-86.6, 29.4), (-87.8, 29.3), (-88.3, 28.2),
+    (-89.4, 27.9), (-90.5, 28.0), (-91.5, 28.4), (-92.5, 28.6), (-93.8, 28.7), (-94.6, 28.3),
+    (-95.5, 27.6), (-96.2, 27.0), (-96.2, 26.0), (-96.5, 24.5), (-96.8, 22.3), (-96.2, 21.0),
+    (-95.4, 19.9), (-94.6, 19.4), (-94.0, 19.1), (-92.5, 19.6), (-91.6, 20.0), (-91.4, 21.3),
+    (-90.0, 22.4), (-88.0, 22.6),
+]
+
+# US Atlantic coast: a band about 100-300 km offshore from Cape Canaveral to the Gulf
+# of Maine (upper slope and Gulf Stream edge; the shelf itself is mostly within 100 km
+# of land in the south). Starts north of the Bahamas. Not the open Atlantic.
+US_EAST_COAST: Ring = [
+    # outer edge, south to north
+    (-78.5, 28.5), (-78.2, 30.0), (-77.3, 31.3), (-75.6, 32.3), (-73.6, 33.5), (-72.6, 35.0),
+    (-72.6, 36.5), (-72.2, 37.6), (-71.0, 38.3), (-69.0, 38.9), (-67.0, 39.6), (-65.8, 41.0),
+    (-66.0, 42.4),
+    # inner edge (about 100 km offshore), north to south
+    (-67.4, 43.2), (-68.4, 43.0), (-68.7, 42.4), (-68.7, 40.7), (-70.6, 40.0), (-72.0, 39.9),
+    (-72.9, 39.6), (-73.8, 38.6), (-74.4, 37.7), (-74.5, 36.5), (-74.4, 35.0), (-75.8, 33.8),
+    (-77.6, 33.0), (-78.8, 32.4), (-79.8, 31.5), (-80.0, 30.0), (-79.5, 28.5),
+]
+
+# Western tropical Pacific warm pool: open sea east of the Philippines and north of
+# New Guinea and the Bismarck Archipelago; open edges along 15N, 160E and 4S.
+# Small islands inside (Palau, Guam, the Carolines) are masked per cell in the real build.
+WESTERN_TROPICAL_PACIFIC: Ring = [
+    (160.0, 15.0), (140.0, 15.0), (124.6, 15.0), (125.6, 14.0), (126.5, 12.6), (126.8, 11.2),
+    (127.3, 9.8), (127.5, 8.5), (127.8, 7.0), (128.0, 5.0), (130.0, 2.5), (131.5, 0.9),
+    (134.0, 0.6), (137.0, -0.3), (139.0, -1.0), (141.5, -1.4), (145.0, -2.5), (145.6, -1.4), (147.0, -0.9),
+    (149.6, -0.4), (151.0, -1.6), (153.5, -2.3), (155.0, -4.0), (160.0, -4.0), (160.0, 5.0),
+]
+
+# North Sea: the open central and northern North Sea. The 100 km clearance leaves out
+# the Southern Bight, the Wadden Sea coast, the Skagerrak and the Norwegian Trench edge.
+NORTH_SEA: Ring = [
+    (3.0, 53.6), (5.4, 54.5), (6.8, 54.8), (6.6, 55.3), (6.5, 56.5), (5.8, 57.2), (4.2, 58.0),
+    (3.4, 59.3), (3.0, 60.3), (2.9, 61.0), (1.0, 61.0), (0.9, 60.3), (0.6, 59.4), (0.0, 58.6),
+    (-0.2, 57.6), (-0.6, 56.6), (-0.2, 55.6), (1.0, 54.8), (1.6, 53.9),
+]
+
+# Mediterranean Sea: three open-sea parts (a MultiPolygon). The Adriatic, Aegean and
+# Alboran Sea are narrower than the 100 km clearance on both sides, and the parts keep
+# clear of the Balearics, Corsica, Sardinia, Sicily, Malta, Crete, Rhodes and Cyprus.
+MEDITERRANEAN: list[Ring] = [
+    # Algero-Provencal basin, east of the Balearics
+    [(5.5, 37.9), (7.2, 38.2), (7.2, 40.0), (7.2, 41.4), (7.3, 42.4), (5.5, 42.1), (4.8, 41.9),
+     (3.9, 41.0), (5.0, 41.0), (5.5, 40.3), (5.5, 39.0)],
+    # Tyrrhenian Sea
+    [(11.0, 39.0), (13.5, 39.1), (14.6, 39.3), (13.3, 39.8), (12.0, 40.4), (11.2, 41.3), (11.0, 40.0)],
+    # Central Mediterranean, Ionian Sea and Levantine basin (south of Crete and Cyprus)
+    [(13.0, 34.3), (14.0, 33.8), (16.0, 33.0), (18.5, 31.8), (19.3, 33.0), (21.8, 33.9), (23.0, 33.8),
+     (24.5, 33.1), (25.8, 32.8), (27.0, 32.4), (28.5, 32.2), (30.3, 32.4), (31.8, 32.5), (33.4, 32.2),
+     (33.8, 32.6), (34.2, 33.8), (32.5, 33.6), (31.2, 34.3), (31.0, 35.3), (29.0, 35.2), (28.0, 34.8),
+     (26.6, 34.0), (25.0, 34.0), (24.0, 34.1), (22.9, 34.3), (22.4, 35.4), (20.6, 36.4), (19.5, 37.3),
+     (19.2, 38.2), (19.0, 39.0), (18.2, 38.6), (17.2, 37.5), (16.4, 37.2), (16.2, 36.8), (15.8, 35.5),
+     (14.9, 35.0)],
+]
+
+
 @dataclass(frozen=True)
 class RegionSpec:
     id: str
     name: str
     parent: str | None
-    kind: str  # ice_sheet | ice_sheet_basin | glacier_region | global
+    kind: str  # ice_sheet | ice_sheet_basin | glacier_region | coastal_sea | global
     bbox: tuple[float, float, float, float]
     camera: dict[str, float]
     # None for kind "global"; one ring for a Polygon; a list of rings for a MultiPolygon.
     outline: Ring | list[Ring] | None
+    # Caveats shown only when this region is selected (regions.json `notes`, optional).
+    notes: tuple[str, ...] = ()
 
 
 def _cam(lon: float, lat: float, height: float) -> dict[str, float]:
     return {"lon": lon, "lat": lat, "height": height, "heading": 0, "pitch": -90}
+
+
+def _bbox(outline: Ring | list[Ring]) -> tuple[float, float, float, float]:
+    """West, south, east, north of a ring or MultiPolygon, rounded outward to whole degrees."""
+    rings = outline if isinstance(outline[0][0], (list, tuple)) else [outline]
+    pts = [p for r in rings for p in r]  # type: ignore[union-attr]
+    xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+    return (math.floor(min(xs)), math.floor(min(ys)), math.ceil(max(xs)), math.ceil(max(ys)))
+
+
+def _cam_fit(bbox: tuple[float, float, float, float], fill: float = 0.6) -> dict[str, float]:
+    """Straight-down camera over the bbox centre, high enough that the bbox fills about
+    `fill` of a 16:9 view. Cesium's 60-degree field of view spans the wider screen axis, so
+    the view is 2*tan(30deg)*h wide and (9/16) of that tall."""
+    w, s, e, n = bbox
+    lat = (s + n) / 2
+    width_m = (e - w) * 111_320 * math.cos(math.radians(lat))
+    height_m = (n - s) * 110_570
+    view_w = 2 * math.tan(math.radians(30))   # per metre of camera height
+    view_h = view_w * 9 / 16
+    h = max(width_m / (fill * view_w), height_m / (fill * view_h))
+    return _cam((w + e) / 2, lat, round(h, -5))
+
+
+_SEA_SYNTH = "SYNTHETIC DATA: the sea level series for this sea has a known injected trend; not a measurement."
+
+
+def _sea(rid: str, name: str, outline: Ring | list[Ring], *notes: str) -> "RegionSpec":
+    """A coastal sea. Every one carries the synthetic note first, then its own caveats."""
+    bbox = _bbox(outline)
+    return RegionSpec(rid, name, None, "coastal_sea", bbox, _cam_fit(bbox), outline, (_SEA_SYNTH, *notes))
 
 
 REGIONS: list[RegionSpec] = [
@@ -100,6 +213,33 @@ REGIONS: list[RegionSpec] = [
     RegionSpec("antarctica_peninsula", "Antarctic Peninsula", "antarctica", "ice_sheet_basin", (-76, -75, -55, -63),
                _cam(-63, -68, 2_500_000), ANTARCTICA_PENINSULA),
     RegionSpec("global", "Global", None, "global", (-180, -90, 180, 90), _cam(0, 20, 20_000_000), None),
+    # Coastal seas: sea_level only (contract: kind coastal_sea).
+    _sea("bay_of_bengal", "Bay of Bengal (northern)", BAY_OF_BENGAL,
+         "A mean over the open northern Bay, about 100 km from the coast; not the value at any town.",
+         "The Ganges-Brahmaputra delta is sinking, so the rise people feel there is larger than this; land "
+         "subsidence is not included.",
+         "Monsoon winds and river runoff make this sea swing strongly within the year and between years."),
+    _sea("gulf_of_mexico", "Gulf of Mexico", GULF_OF_MEXICO,
+         "A mean over the open Gulf, about 100 km from the coast; not the value at any town.",
+         "Land subsidence (for example around the Mississippi delta) is not included, so the local rise there "
+         "is larger than this."),
+    _sea("us_east_coast", "US Atlantic coast", US_EAST_COAST,
+         "A mean over a band about 100-300 km offshore from Florida to the Gulf of Maine; not the value at any "
+         "town or harbour.",
+         "Land subsidence along the coast is not included, so the local rise is larger in many places."),
+    _sea("western_tropical_pacific", "Western tropical Pacific", WESTERN_TROPICAL_PACIFIC,
+         "A mean over the open sea east of the Philippines and north of New Guinea; not the value at any "
+         "island or town.",
+         "Swings strongly with El Nino, so a trend over a few decades can reflect a long swing.",
+         "Land movement of the islands is not included."),
+    _sea("north_sea", "North Sea", NORTH_SEA,
+         "A mean over the open central and northern North Sea; the southern bight and the coasts are left out. "
+         "Not the value at any town.",
+         "Land movement (sinking or rising coasts) is not included."),
+    _sea("mediterranean", "Mediterranean Sea", MEDITERRANEAN,
+         "A mean over three open-sea parts (western basin, Tyrrhenian, and Ionian with the Levantine basin); the "
+         "Adriatic and Aegean are left out. Not the value at any town.",
+         "Land movement (sinking or rising coasts) is not included."),
 ]
 
 # --------------------------------------------------------------------------- series
@@ -122,6 +262,7 @@ class SeriesSpec:
     early_gaps: int = 0               # extra nulls in the first 25% of the record (sparse early imagery)
     decimals: int = 2
     baseline: tuple[int, int] | None = None  # re-centre to a zero mean over these years (anomalies)
+    segment_source: str | None = None        # overrides the variable's segment_source for this series
 
 
 @dataclass(frozen=True)
@@ -166,11 +307,13 @@ _MERRA2 = {
                 "temperature anomalies; contains no MERRA-2 values.",
 }
 _NASA_SSH = {
-    "name": "Synthetic, shaped like NASA-SSH GMSL indicator",
+    "name": "Synthetic, shaped like NASA-SSH (GMSL indicator and gridded sea surface height)",
     "url": "https://podaac.jpl.nasa.gov/dataset/NASA_SSH_GMSL_INDICATOR",
-    "citation": "Synthetic data from pipeline/synthetic (Trend Detective). Shaped like the NASA-SSH global "
-                "mean sea level indicator; contains no NASA-SSH values.",
+    "citation": "Synthetic data from pipeline/synthetic (Trend Detective). Global series shaped like the NASA-SSH "
+                "global mean sea level indicator; coastal-sea series shaped like area means of the NASA-SSH "
+                "gridded sea surface height (NASA_SSH_REF_SIMPLE_GRID_V1); contains no NASA-SSH values.",
 }
+_SSH_GRID_SEGMENT = "Synthetic (NASA-SSH gridded SSH area-mean shape)"
 _RECON = {
     "name": "Synthetic, shaped like NASA JPL_RECON_GMSL",
     "url": "https://podaac.jpl.nasa.gov/dataset/JPL_RECON_GMSL",
@@ -269,13 +412,47 @@ VARIABLES: list[VariableSpec] = [
         id="sea_level", name="Sea level", units="mm", kind="level", frequency="monthly",
         map_mode=None, chart_types=["series", "anomaly"],
         source=_NASA_SSH, segment_source="Synthetic (NASA-SSH GMSL indicator shape)",
-        describe={"what": "Global mean sea level measured by satellites since 1993.",
-                  "whyItMatters": "Rising seas threaten coasts worldwide."},
-        notes=[SYNTH_NOTE, "Global only; local sea level differs.",
-               "Not corrected for glacial isostatic adjustment.", "No per-point uncertainty in the source."],
+        describe={"what": "Sea level measured by satellites since 1993: the global mean, or the mean over "
+                          "one coastal sea.",
+                  "whyItMatters": "Rising seas threaten coasts worldwide, and some seas rise faster than "
+                                  "the global mean."},
+        notes=[SYNTH_NOTE,
+               "Global: the mean over the whole ocean, not the value at any place.",
+               "Coastal seas: the mean over the sea area drawn on the globe, not the value at a town or "
+               "harbour, and not the rise people feel on land.",
+               "Land subsidence is not included. Where the land sinks, the local rise is larger than shown.",
+               "Satellite (absolute) sea level. Satellite data are less reliable near land, so each coastal-sea "
+               "area keeps about 100 km away from the coast: it describes the open sea, not the shore.",
+               "Coastal seas swing more from year to year (El Nino, monsoon, winds) than the global mean, so a "
+               "trend there needs a longer record to stand out.",
+               "Each coastal sea has its own notes, shown when it is selected.",
+               "Global series not corrected for glacial isostatic adjustment.",
+               "No per-point uncertainty in the source."],
         series={
             "global": SeriesSpec("1993-01", "2026-10", slope=3.3, ar1=0.6, noise_sd=3.0, start_value=-20.0,
                                  seasonal_amp=2.0, gaps=2, decimals=2),
+            # Coastal seas: plausible SYNTHETIC rates, much larger interannual noise than
+            # global (El Nino, monsoon, wind). Gulf of Mexico vs Mediterranean is the
+            # clearly-different compare pair; North Sea vs global (same injected 3.3 mm/yr, decided
+            # by main 2026-11-12) the indistinguishable sea-vs-global pair.
+            "bay_of_bengal": SeriesSpec("1993-01", "2026-10", slope=3.9, ar1=0.7, noise_sd=12.0,
+                                        start_value=-40.0, seasonal_amp=80.0, gaps=2, decimals=2,
+                                        segment_source=_SSH_GRID_SEGMENT),
+            "gulf_of_mexico": SeriesSpec("1993-01", "2026-10", slope=4.6, ar1=0.65, noise_sd=10.0,
+                                         start_value=-45.0, seasonal_amp=70.0, gaps=2, decimals=2,
+                                         segment_source=_SSH_GRID_SEGMENT),
+            "us_east_coast": SeriesSpec("1993-01", "2026-10", slope=3.6, ar1=0.65, noise_sd=9.0,
+                                        start_value=-35.0, seasonal_amp=50.0, gaps=2, decimals=2,
+                                        segment_source=_SSH_GRID_SEGMENT),
+            "western_tropical_pacific": SeriesSpec("1993-01", "2026-10", slope=4.5, ar1=0.8, noise_sd=15.0,
+                                                   start_value=-45.0, seasonal_amp=30.0, gaps=2, decimals=2,
+                                                   segment_source=_SSH_GRID_SEGMENT),
+            "north_sea": SeriesSpec("1993-01", "2026-10", slope=3.3, ar1=0.6, noise_sd=12.0,
+                                    start_value=-30.0, seasonal_amp=40.0, gaps=2, decimals=2,
+                                    segment_source=_SSH_GRID_SEGMENT),
+            "mediterranean": SeriesSpec("1993-01", "2026-10", slope=2.6, ar1=0.75, noise_sd=9.0,
+                                        start_value=-25.0, seasonal_amp=60.0, gaps=2, decimals=2,
+                                        segment_source=_SSH_GRID_SEGMENT),
         },
     ),
     VariableSpec(
@@ -322,6 +499,7 @@ class LayerSpec:
     scale: float
     offset: float
     source: dict[str, str]
+    name: str | None = None  # manifest `name`: legend display name (optional)
 
 
 def _months(start: str, end: str) -> list[str]:
@@ -336,8 +514,9 @@ def _months(start: str, end: str) -> list[str]:
 MAP_LAYERS: list[LayerSpec] = [
     LayerSpec("ice_mass_map", "cm w.e.", "2002-04", "2026-09",
               missing=_months("2017-07", "2018-05") + ["2002-06", "2003-06", "2011-01"],
-              scale=0.05, offset=-1000.0, source=_GRACE),
-    LayerSpec("temperature", "degC", "1980-01", "2026-09", missing=[], scale=0.02, offset=-50.0, source=_MERRA2),
+              scale=0.05, offset=-1000.0, source=_GRACE, name="Ice mass change (GRACE-like, monthly)"),
+    LayerSpec("temperature", "degC", "1980-01", "2026-09", missing=[], scale=0.02, offset=-50.0, source=_MERRA2,
+              name="Air temperature anomaly (monthly)"),
 ]
 
 GRID_WIDTH, GRID_HEIGHT = 360, 180  # 1-degree global grid, row 0 = north edge

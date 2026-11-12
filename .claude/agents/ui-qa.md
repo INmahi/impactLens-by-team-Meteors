@@ -24,7 +24,7 @@ Start the dev server if it is not running (`pnpm dev`), then use the Playwright 
 3. With every drawer open, the globe still rotates and zooms.
 4. Drawers collapse and expand; the time scroller slides up with the bottom drawer.
 5. Variable picker shows the ice sheet group with its sub-variables (mass, loss rate, extent), plus temperature and sea level. Each Describe dialog plays its video and Understood closes it.
-6. Region picker follows the variable: ice extent offers Greenland only, sea level offers Global only, Antarctic sub-regions appear for ice mass.
+6. Region picker follows the variable: ice extent offers Greenland only, sea level offers Global and the coastal seas, Antarctic sub-regions appear for ice mass.
 7. Time range is limited to the real record of the chosen variable; the scroller shows where a layer has no data.
 8. Run analysis fills the right drawer: parameters, conclusion, stats report, interpretation, notes.
 9. Charts show uncertainty bands where the data has them, and mark any join between two sources.

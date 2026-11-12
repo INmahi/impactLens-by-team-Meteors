@@ -75,6 +75,53 @@ No licence field. PO.DAAC Data Use and Citation Guidelines (https://podaac.jpl.n
 - Not gridded: no manifest, no frames. Only `series/global.json` and `stats/global__default.json`.
 - Keep RECON in its own series per above.
 
+## Raw file layout (for synthetic stand-ins and ingest)
+
+Checked 2026-11-12, nothing downloaded. Sources: the provider's open-source pipeline on GitHub (`ssh-pipelines/altimetry-processing-pipeline`, `pipeline/other_products/indicators/`: header template `ref_files/txt_templates/NASA_SSH_GMSL_INDICATOR.txt`, writer `indicators/utils.py::generate_txt`, `compute_indicators.py`) and the CMR granule record. The template and writer were read through a summariser (paraphrase, not byte-exact), and **no real data row was seen**. Layout below is therefore VERIFIED-CODE (what the producer writes) and the data rows UNVERIFIED against a real file. Print the first 50 lines of the first download and compare.
+
+### Files (VERIFIED, CMR granule record, 84 granules)
+- Current file, overwritten weekly: `NASA_SSH_GMSL_INDICATOR.txt` (70,520 bytes at checking; CMR time 1993-01-05T00:03:56Z to 2026-11-03T05:01:48Z).
+- Dated snapshots kept since 2025: `NASA_SSH_GMSL_INDICATOR_<YYYYMMDD>.txt`, for example `NASA_SSH_GMSL_INDICATOR_20250414.txt` (67,358 bytes; to 2025-03-24). `<YYYYMMDD>` = date the snapshot was taken (inferred), not the data end date.
+- URL: `https://archive.podaac.earthdata.nasa.gov/podaac-ops-cumulus-protected/NASA_SSH_GMSL_INDICATOR/<file name>` (login needed).
+- The writer names files `NASA_SSH_{GMSL|ENSO|PDO|IOD}_INDICATOR.txt` (code). Only the GMSL one is in scope.
+
+### Layout (VERIFIED-CODE)
+1. **Header: 42 lines, every line starts with `HDR`** (an empty comment line is just `HDR`). Ends with a header-end marker line (text paraphrased as "Header_End"; exact string UNVERIFIED, so detect the header as "all leading lines starting with `HDR`", never by a fixed count). After the marker the writer emits **one blank line**, then data.
+2. Header content (paraphrase): title; GMSL in cm from reference missions (TOPEX/Poseidon, Jason, Sentinel-6), NASA-SSH **Version 1.1** gridded product; area-weighted average of each map; maps use 10 days of data every 7 days; 60-day smoothed version also given; **"zero-centered on the 1993 calendar year"**; "Experts: no GIA applied"; citation (NASA-SSH 2025, Version 1, DOI 10.5067/NSIND-GMSV1) with an access-date placeholder; "This file was created on <YYYY-MM-DD>" (`PLACEHOLDER_CREATION_DATE` replaced at write time); a section divider and title; column descriptions; missing value flag line.
+3. Column descriptions in the header (paraphrase of lines 36-38): `1 year plus fraction of year`, `2 GMSL in cm`, `3 GMSL in cm with 60-day smoothing`.
+4. Missing/bad value flag in the header: **`9.96921E36`**. (That is the NetCDF default float fill 9.96921e+36.) **Conflict:** the writer formats values straight with Python `f"{x:>12f}"` and sets no fill, so a missing value would print as `nan`, not 9.96921E36. Ingest must treat both `nan` and any value >= 1e30 as missing.
+5. **Data row format (VERIFIED-CODE, exact format string):** `f"{time:<12.7f} {gmsl:>12f} {smoothed_gmsl:>12f}\n"`. So three whitespace-separated columns, fixed width: time left-aligned in 12 characters with 7 decimals, then each value right-aligned in 12 characters with 6 decimals, single space separators, 39 bytes per row.
+   - col 1 `time`: decimal year (code attribute "Date in decimal year format"), for example `1993.0109...` (first row derived from CMR first time 1993-01-05T00:03:56Z, about 1993.011: derived, not read). 7 decimals.
+   - col 2 `gmsl`: **cm**, relative to the 1993 calendar-year mean of `raw_gmsl` (code: `gmsl = raw_gmsl - mean_1993`; rows before 1993 are skipped).
+   - col 3 `smoothed_gmsl`: cm, 60-day running mean (window +-28.1 days); `nan` where there is no data (start and end), per code.
+6. Ordering: ascending by time, one row per 7-day map.
+7. **Cross-checks (arithmetic, not reading):** header about 2.1 kB + 39 bytes/row: 70,520 bytes gives about 1,755 rows, against about 1,766 weekly maps between 1993-01-04 and 2026-11-03; the 2025-04-14 snapshot gives about 1,673 rows against about 1,680. Within 1% (header lengths are approximate). Expect **about 1,750-1,770 rows**.
+
+### Pseudo-listing for the stand-in
+```
+HDR NASA-SSH Global Mean Sea Level (GMSL) from Gridded Sea Surface Height ...
+HDR
+HDR ...(42 lines; mention "cm", "zero-centered on the 1993 calendar year", "no GIA")...
+HDR Column description:
+HDR   1 Year plus fraction of year
+HDR   2 GMSL (cm)
+HDR   3 GMSL (cm), 60-day smoothed
+HDR
+HDR Missing or bad value flag: 9.96921E36
+HDR
+HDR Header_End          <- exact text UNVERIFIED
+
+1993.0109589  -0.123456   -0.100000
+1993.0300000   0.010000    nan
+...
+```
+(Values are illustrative.) Parse with: `lines = [l for l in f if not l.startswith("HDR") and l.strip()]`, `np.loadtxt`-style split on whitespace, map `nan` and >=1e30 to missing, then `dt = datetime(int(y),1,1) + (y - int(y)) * (datetime(int(y)+1,1,1) - datetime(int(y),1,1))` (leap-aware). Round to the calendar month of the date for the monthly mean.
+
+### Items still UNVERIFIED
+Exact header text and the header-end marker string; whether `nan` or 9.96921E36 actually appears in data rows; actual first and last time values; whether `raw_gmsl` itself is detrended or deseasonalised (the indicators README says each grid is detrended and deseasonalised for the ENSO, PDO and IOD patterns; the GMSL template header says nothing about seasonal removal, so assume **not** removed); the indicator uses latitudes -66 to 66 and half-degree cell areas (VERIFIED-CODE) and, as read, a basin mask test that can never be true, so it probably masks nothing besides NaN (one reading of the code by a summariser, check before relying on it).
+
+URLs opened for this section: https://raw.githubusercontent.com/ssh-pipelines/altimetry-processing-pipeline/main/pipeline/other_products/indicators/ref_files/txt_templates/NASA_SSH_GMSL_INDICATOR.txt, `.../indicators/indicators/utils.py`, `.../indicators/indicators/compute_indicators.py`, `.../indicators/README.md`, https://cmr.earthdata.nasa.gov/search/granules.umm_json?short_name=NASA_SSH_GMSL_INDICATOR&page_size=5. Not available: CMR UMM-Var for this collection was not queried (text file, no variables); https://sealevel.nasa.gov page shows no sample.
+
 ## Verified
 Date checked: 2026-11-12. URLs opened:
 - https://cmr.earthdata.nasa.gov/search/collections.json?keyword=global%20mean%20sea%20level&provider=POCLOUD&page_size=30 (list: NASA_SSH_GMSL_INDICATOR v1, MERGED_TP_J1_OSTM_OST_GMSL_ASCII_V52 v5.2, JPL_RECON_GMSL, ECCO GMSL)

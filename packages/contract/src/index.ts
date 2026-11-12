@@ -43,7 +43,7 @@ export interface Variable {
   synthetic: boolean;
 }
 
-export type RegionKind = 'ice_sheet' | 'ice_sheet_basin' | 'glacier_region' | 'global';
+export type RegionKind = 'ice_sheet' | 'ice_sheet_basin' | 'glacier_region' | 'coastal_sea' | 'global';
 
 export interface Region {
   id: Id;
@@ -51,6 +51,8 @@ export interface Region {
   parent: Id | null;
   kind: RegionKind;
   variables: Id[];
+  /** Optional caveats shown only when this region is selected. */
+  notes?: string[];
   /** [west, south, east, north] in degrees. */
   bbox: [number, number, number, number];
   camera: { lon: number; lat: number; height: number; heading: number; pitch: number };
@@ -91,6 +93,8 @@ export interface Frame {
 
 export interface Manifest {
   variable: Id;
+  /** Optional legend display name; falls back to the variable name. */
+  name?: string;
   units: string;
   grid: { bbox: [number, number, number, number]; width: number; height: number };
   encoding: { scale: number; offset: number; packing: 'R=high byte, G=low byte, B=valid mask, A=255' };

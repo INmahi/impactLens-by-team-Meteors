@@ -7,6 +7,11 @@
   "required": ["variable", "units", "grid", "encoding", "valueRange", "atlases", "frames", "missing", "synthetic"],
   "properties": {
     "variable": { "$ref": "common.schema.json#/$defs/id" },
+    "name": {
+      "description": "Optional display name for the legend, e.g. \"Air temperature anomaly (monthly)\" (added 2026-11-12). Falls back to the variable name.",
+      "type": "string",
+      "minLength": 1
+    },
     "units": { "type": "string", "minLength": 1 },
     "grid": {
       "type": "object",

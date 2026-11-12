@@ -8,6 +8,10 @@ import pytest
 from .contract_tree import build_tree
 
 
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line("markers", "slow: long-running (deselect with -m 'not slow'); runs by default")
+
+
 @pytest.fixture(scope="session")
 def template_tree(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """Built once per session (one Node call for the stats)."""

@@ -1,6 +1,6 @@
 # Trend Detective
 
-NASA Space Apps 2026 entry for the "Earth System Trend Detective" challenge. A web app with a 3D globe where users pick an ice sheet, temperature or sea level variable, a region (Greenland, Antarctica or its sub-regions, or global for sea level) and a time range, and get a Mann-Kendall trend test, Sen's slope with a 95% interval and a plain-English verdict. Two regions or several variables can be compared.
+NASA Space Apps 2026 entry for the "Earth System Trend Detective" challenge. A web app with a 3D globe where users pick an ice sheet, temperature or sea level variable, a region (Greenland, Antarctica or its sub-regions; for sea level the global mean or a coastal sea such as the Bay of Bengal) and a time range, and get a Mann-Kendall trend test, Sen's slope with a 95% interval and a plain-English verdict. Two regions or several variables can be compared.
 
 - Challenge, judging and decisions: `docs/COMPETITION_CONTEXT.md`
 - Spec, data contract, milestones and agent workflow: `docs/TECH_BUILD_PLAN.md`
@@ -43,7 +43,7 @@ Node 22.18 or later. Python 3.12 or later with `uv`.
 - Never call Cesium ion. Never keep Cesium objects in React state.
 - Show the true record length of every variable. Never pad or extrapolate a series.
 - Never state a cause from a correlation. Never say warm air is melting Antarctica.
-- Sea level is global only. Never imply a local value.
+- Sea level is a global mean (`global`) or a regional mean over a coastal sea (`kind: coastal_sea`). Regional values are satellite (absolute) sea level averaged over the sea area: never present them as the value at a town or as the rise people feel on land (land subsidence is not included), and never present the global mean as a local value.
 - Show "SYNTHETIC DATA" whenever `synthetic` is true.
 - Regions are data, not code. The app, globe, pickers, compare mode and pipeline read regions from `regions.json`, `regions.topo.json` and each variable's `regions` list. Never hard-code a region id, name, outline or camera in components or shaders. Adding a glacier region (for example High Mountain Asia or Alaska) must need only new data files and a pipeline config entry, with no app code change.
 
@@ -77,6 +77,7 @@ Node 22.18 or later. Python 3.12 or later with `uv`.
 | M1 Dataset cards | Done 2026-11-12 | 8 cards in `docs/datasets/`. Decisions in plan sections 2 and 16: IMBIE 2026 primary; ice_mass_rate annual; ice_extent Greenland only; MERRA-2 temperature, baseline 1991-2020; NASA-SSH sea level (no GIA); long records as separate ids `sea_level_long`, `ice_mass_long`, never joined |
 | M2 Contract + synthetic | Done 2026-11-12 | Schemas + types + rules + conventions in `packages/contract/README.md`. Validator and generator in `pipeline/` (84 tests). Gate: 47 files, 0 problems; all 17 injected slopes inside their 95% interval (seed 20261112, not tuned); 50-seed coverage 0.948. `data/public/` is generated (`pnpm data`, 26 MB) and gitignored |
 | M3 Globe | Done 2026-11-12 | Cesium 1.146 without ion, GIBS Blue Marble (custom EPSG:4326 tiling), outlines + picking + cameras from data, data-derived polar views, atlas data layer (one sampler per atlas, 0 texture uploads while scrubbing), legend, data-driven SYNTHETIC watermark, temporary `LayerDebugControls` (delete in M4/M6). Synthetic maps made smooth on the sphere (no polar wedges, no 180° seam). Gate (`qa/reports/M3.md`): 0 cesium.com requests, both poles clean, ~7 ms frames on RTX 5060 Ti; focus ring and muted text contrast fixed after QA |
+| Reframe: regional sea level | Done 2026-11-12 | Sea level is the global mean or a coastal-sea mean (`kind: coastal_sea`): test one sea, compare two. Six synthetic seas (offshore polygons, ~100 km), per-region `notes`, manifest `name`. Source for real data: NASA-SSH grid V1.1 (`docs/datasets/sea-level-gridded-ssh.md`); `global` to be computed from the same grids, indicator as cross-check; averages use our polygons, not `basin_flag`. Synthetic gate is now statistical: misses at seed 20261112 within Binomial(N, 0.05) 99th pct (1 of 23), 50-seed coverage 0.952 in [0.93, 0.97] |
 
 Open follow-ups:
 - stats-lead: `packages/stats/package.json` `golden` script calls bare `python` (not on PATH here); use root `pnpm golden`. The usage comment in `src/worker.ts` uses `new URL('@trend/stats/worker', ...)`, which Vite does not resolve; the app uses `import StatsWorker from '@trend/stats/worker?worker'` (`apps/web/src/lib/stats.ts`).
@@ -85,6 +86,7 @@ Open follow-ups:
 - Extensible glacier regions (decided 2026-11-12): M2 validator and generator must accept any region listed in `regions.json`; M3/M6 must build pickers, outlines and camera presets from it. Candidate future sources for mountain glaciers: GRACE mascons (already carded) and a glacier mass change product per RGI region; data-scout to card one when we add a region.
 - Globe: legend title comes from the first variable using a layer (e.g. "Summer air temperature" over monthly frames); consider a display `name` in `manifest.json`. Credit bar shows the local Cesium logo (no network). `ice_mass_map` looks near-white over land at the start of the record (opacity 0.85, white = 0).
 - Globe (M3b): no WebGL error boundary or static fallback yet (decide in M6); main bundle is 4.4 MB (Cesium) — consider code-splitting the globe later; fps not yet measured on a real desktop GPU (ui-qa at end of M3).
+- Synthetic data must be plug-compatible with real downloads (boss, 2026-11-12): stand-in RAW files in the real formats (NASA-SSH V1.1 netCDF, GMSL text, IMBIE CSV; layouts in the dataset cards) go through the real ingest code. Remaining UNVERIFIED layout items need one real file of each (Earthdata login).
 - Glass tokens exist twice: `.claude/skills/glass-ui/tokens.css` and `apps/web/src/styles/glass.css`. Keep them identical.
 
 ## Gotchas (Windows dev machine)

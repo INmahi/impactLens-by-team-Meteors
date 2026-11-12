@@ -27,6 +27,8 @@ MAX_SCHEMA_ERRORS = 20
 ROOT_FILES = ("variables.json", "regions.json", "regions.topo.json")
 STATS_NAME = re.compile(r"^([a-z][a-z0-9]*(?:_[a-z0-9]+)*)__default\.json$")
 REPORT_ONLY_KEYS = ("variable", "region", "synthetic")
+# Contract README, Clarifications: only sea_level is valid for a kind "coastal_sea" region.
+COASTAL_SEA_VARIABLES = frozenset({"sea_level"})
 
 
 @dataclass(frozen=True)
@@ -340,6 +342,21 @@ class Validator:
             if extra:
                 self.add("regions.json", 2, f"{rid}: variables lists {_fmt(extra)}, "
                          "but their variables.json regions do not include this region")
+        # Coastal seas carry sea level only (checked on both sides, so a fault shows where it is).
+        allowed = _fmt(COASTAL_SEA_VARIABLES)
+        for rid, r in self.regions.items():
+            if r["kind"] == "coastal_sea":
+                wrong = set(r["variables"]) - COASTAL_SEA_VARIABLES
+                if wrong:
+                    self.add("regions.json", 2, f"{rid}: kind coastal_sea allows only {allowed}, "
+                             f"but variables lists {_fmt(wrong)}")
+        for vid, v in self.variables.items():
+            if vid in COASTAL_SEA_VARIABLES:
+                continue
+            seas = [rid for rid in v["regions"] if self.regions.get(rid, {}).get("kind") == "coastal_sea"]
+            if seas:
+                self.add("variables.json", 2, f"{vid}: regions {_fmt(seas)} are kind coastal_sea, "
+                         f"where only {allowed} is valid")
         geoms = self._region_topo_geometries()
         if geoms is not None:
             for g in geoms:

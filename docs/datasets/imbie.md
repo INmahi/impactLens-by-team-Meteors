@@ -41,7 +41,7 @@ Time series only. No maps. Drainage-basin sets are on imbie.org but not used.
 ## Format and size
 ASCII CSV. 2021: 12 files (2 per location x 6 locations), about 156 kB total (BAS). 2026: 10 files, 877 kB total (BAS). File names:
 - 2021: `imbie_<location>_2021_Gt.csv` and `imbie_<location>_2021_mm.csv`; locations `all`, `antarctica`, `antarctic_peninsula`, `east_antarctica`, `west_antarctica`, `greenland`. The Greenland `_Gt.csv` was read directly; the other names are inferred from the pattern.
-- 2026: `imbie3_<location>_partitioned_Gt.csv` and `_mm.csv`; locations `antarctic_peninsula`, `antarctica`, `east_antarctica`, `greenland`, `west_antarctica`. Names are from the BAS record, not tested.
+- 2026: **`imbie3_<location>_<Gt|mm>_partitioned.csv`** (corrected 2026-11-12 from the RAMADDA listing; the earlier `_partitioned_Gt` order was wrong); locations `antarctic_peninsula`, `antarctica`, `east_antarctica`, `greenland`, `west_antarctica`. See "Raw file layout".
 
 ## Access
 Direct HTTPS, no account. Landing pages (open in a browser; the file listing is a dynamic RAMADDA page):
@@ -80,6 +80,57 @@ Series files only (no manifest, no frames). Recommendations for main to decide:
 2. **`ice_mass` frequency.** The monthly cumulative is an interpolation of annual information. Keeping it monthly is allowed by the contract but the stats notes should say the monthly steps are interpolated. Alternative: annual values from December.
 3. **Which release is primary.** IMBIE 2026 gives longer records (Greenland about 52 years, Antarctica 45) and the SMB/dynamics split; IMBIE 2021 is the IPCC AR6 reference. `variables.json` `period` would change from 1992-2020 to 1972-2023 (Greenland) and 1979-2023 (Antarctica), so `period` would differ by region, which the contract currently has as a single `period` per variable. This needs a decision by main.
 4. 2026 time step must be confirmed from the file before building (UNVERIFIED).
+
+## Raw file layout (for synthetic stand-ins and ingest)
+
+Checked 2026-11-12, nothing downloaded. **The 2026 CSV headers could NOT be read verbatim**: the RAMADDA file view only lists metadata, and a direct fetch of the CSV was blocked by the permission system, so I did not retry. Column list below is from the BAS catalogue record (public), not from a file.
+
+### IMBIE 2026 file names (VERIFIED, RAMADDA JSON listing of the dataset entry, 10 children)
+**These differ from the names in the "Format and size" section above (`imbie3_<loc>_partitioned_Gt.csv` was wrong). The real order is `<unit>_partitioned`.** Pattern: `imbie3_<location>_<unit>_partitioned.csv`, `<unit>` is `Gt` or `mm`. One region per file, no combined "all" file.
+
+| Region (our id) | Gt file (bytes) | mm file (bytes) |
+|---|---|---|
+| `greenland` | `imbie3_greenland_Gt_partitioned.csv` (101,046) | `imbie3_greenland_mm_partitioned.csv` (104,333) |
+| `antarctica` | `imbie3_antarctica_Gt_partitioned.csv` (83,257) | `imbie3_antarctica_mm_partitioned.csv` (89,834) |
+| `antarctica_east` | `imbie3_east_antarctica_Gt_partitioned.csv` (81,531) | `imbie3_east_antarctica_mm_partitioned.csv` (88,966) |
+| `antarctica_west` | `imbie3_west_antarctica_Gt_partitioned.csv` (82,665) | `imbie3_west_antarctica_mm_partitioned.csv` (89,875) |
+| `antarctica_peninsula` | `imbie3_antarctic_peninsula_Gt_partitioned.csv` (82,196) | `imbie3_antarctic_peninsula_mm_partitioned.csv` (90,021) |
+
+Total 893,724 bytes (BAS says 877 kB; the small gap is unit rounding, not investigated). Note `antarctic_peninsula` (not `antarctica_peninsula`) and `east_antarctica`/`west_antarctica` (not `antarctica_east`). Files created 2026-07-06 (RAMADDA). Direct URL pattern (RAMADDA "synth" entry; the id is base64 of `/<file name>`, for example `L2ltYmllM19ncmVlbmxhbmRfR3RfcGFydGl0aW9uZWQuY3N2` = `/imbie3_greenland_Gt_partitioned.csv`): `https://ramadda.data.bas.ac.uk/repository/entry/get/<file name>?entryid=synth:128c5e33-5224-4197-82f0-19dcc95b80a0:<base64>`. Not tested; the listing call `.../entry/show?entryid=128c5e33-5224-4197-82f0-19dcc95b80a0&output=json` works without login and gives the file names and sizes, so the ingest should resolve names from it.
+
+### Columns (BAS record, UNVERIFIED against the CSV; 13 columns in this order)
+1. Date
+2. Mass balance (Gt/yr or mm/yr)
+3. Mass balance uncertainty
+4. Cumulative mass balance anomaly (Gt or mm)
+5. Cumulative mass balance anomaly uncertainty
+6. Surface mass balance anomaly (rate)
+7. Surface mass balance anomaly uncertainty
+8. Cumulative surface mass balance anomaly
+9. Cumulative surface mass balance anomaly uncertainty
+10. Dynamics mass balance anomaly (rate)
+11. Dynamics mass balance anomaly uncertainty
+12. Cumulative dynamics mass balance anomaly
+13. Cumulative dynamics mass balance anomaly uncertainty
+
+Exact header strings (capitalisation, units in brackets as in the 2021 file, for example `Mass balance (Gt/yr)`): **UNVERIFIED**. The 2021 file header (VERIFIED earlier, Greenland Gt) is `Year, Mass balance (Gt/yr), Mass balance uncertainty (Gt/yr), Cumulative mass balance (Gt), Cumulative mass balance uncertainty (Gt)`; the 2026 names probably follow with "anomaly" added. **Ingest: match columns by lower-case keyword (`cumulative` and `uncertainty` and `surface|dynamics`), not by exact string or position**, and fail loudly if a required one is missing. Units: Gt and Gt/yr in the `Gt` file; mm of sea-level equivalent in the `mm` file (360 Gt = 1 mm); uncertainties are one-sigma (BAS).
+
+### Time step and date format
+- **Monthly, inferred from file sizes (strong evidence):** Greenland 101,046 bytes over about 630 months (1971-07 to 2023-12) is about 160 bytes per row, Antarctica 83,257 over 540 months (1979-01 to 2023-12) is about 154 bytes per row, which fits 13 numeric columns at about 12 characters. Annual rows would give files under 10 kB. This settles the BAS "monthly" versus imbie.org "annual" conflict in favour of **monthly rows** (BAS lists "Temporal resolution: monthly"). Whether the rate columns are still constant within each year, as in the 2021 file: **UNVERIFIED**; test on the first download (count distinct values per calendar year) before choosing the ice_mass_rate frequency.
+- BAS coverage fields: Greenland **1971-07-01 to 2023-12-01**, Antarctica (all four files) **1979-01-01 to 2023-12-01**. Greenland starts 1971-07, not 1972 (the abstract says 1972).
+- **Date column format: UNVERIFIED.** 2021 used decimal year in 1/12 steps (`1992`, `1992.0833`, ...). The 2026 BAS coverage dates look like first-of-month ISO dates (`2023-12-01`), but that is the catalogue, not the file. Ingest must accept both: if the value parses as a float in 1970-2030 treat it as decimal year (month = round((y - floor(y)) * 12) + 1, floor first, matching the 2021 rule), else parse ISO `YYYY-MM-DD`. Expect 630 rows (Greenland) and 540 rows (Antarctic files): UNVERIFIED, count them.
+- Reference epoch of the cumulative anomaly: UNVERIFIED (the 2021 file started at the first-month value, not zero).
+- Header comment lines or quoting: UNVERIFIED (2021 file was a plain comma-separated file with one header row).
+
+### Region split and consistency
+Antarctica = West + East + Peninsula (sum should hold to within the uncertainties; check on first download). `greenland` has the longer start (1971-07). Antarctic files all start 1979-01.
+
+### Corrections to this card
+- The 2026 record says **45 independent estimates** (21 Antarctica, 24 Greenland), the ESA press piece says 42 estimates from 27 missions; the card above uses the press number. Prefer the BAS record (45) and cite the paper when printing.
+- 2026 reference paper: Otosaka et al. 2026, Scientific Data, https://doi.org/10.1038/s41597-026-08088-0 (full text behind a login redirect on nature.com; the ORBi PDF copy is unreadable by my tools). Software: IMBIE v3.1, https://doi.org/10.5281/zenodo.14217193.
+- The task named a CEDA catalogue record; IMBIE 2026 is hosted by the UK Polar Data Centre (BAS), not CEDA. No CEDA record was found by search.
+
+URLs opened for this section: https://data.bas.ac.uk/full-record.php?id=GB/NERC/BAS/PDC/02074 (columns, coverage, 877 kB, 10 files); https://ramadda.data.bas.ac.uk/repository/entry/show?entryid=128c5e33-5224-4197-82f0-19dcc95b80a0&output=json (file names and byte sizes); the file page for `imbie3_greenland_Gt_partitioned.csv` (metadata only: 101 KB, created 2026-07-06, OGL-UK-3.0); https://zenodo.org/records/14217193 (software, no output description); https://orbi.uliege.be/bitstream/2268/349024/1/s41597-026-08088-0.pdf (unreadable). Direct CSV fetch: blocked, not retried.
 
 ## Verified
 Date checked: 2026-11-12. URLs opened:

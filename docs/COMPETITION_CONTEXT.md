@@ -50,22 +50,23 @@ His demo: monthly MODIS aerosol optical depth over Wisconsin, built in NASA Giov
 | Ice mass loss rate | How fast the mass is changing each year | Same |
 | Ice extent | The area the ice covers | Greenland |
 | Temperature | Air temperature over each ice sheet | Greenland, Antarctica |
-| Mean sea level | Global mean sea level | Global |
+| Mean sea level | Is sea level rise in this region significant? How does it compare with another region? | Global mean, and coastal seas (Bay of Bengal and others) |
 
 Ice mass, loss rate and extent are three views of one thing and sit together as sub-variables of "Ice sheet".
 
 **What makes it fit the challenge**
 - **Same planet, opposite poles, different response.** Greenland loses ice largely through summer surface melt. Antarctica loses ice mainly through warm ocean water thinning West Antarctic glaciers; most of its surface stays below freezing. This is the brief's "one way in one region, another way in another" in its clearest form.
 - **Compare two or more variables.** Time against ice mass; ice mass against temperature; ice loss against sea level rise.
+- **Compare two regions' sea level.** Is the rise in the Bay of Bengal significant, and is it faster than the global mean or another coastal sea? (Decided 2026-11-12: sea level is regional, not global only.)
 - **Every answer is tested.** Every series goes through the Mann-Kendall test with Sen's slope, the method the brief names.
 - **Honest results.** Short records are flagged, and "not significant" is explained as "cannot tell yet".
 
-**Why this matters to Bangladesh.** Sea level rise is the link between polar ice and a delta country. That is our story for local judges: what happens at the poles arrives at our coast.
+**Why this matters to Bangladesh.** Sea level rise is the link between polar ice and a delta country. That is our story for local judges: what happens at the poles arrives at our coast, and the user can test the Bay of Bengal directly.
 
 **Science lines we must not cross**
 - Never say warm air is melting Antarctica.
 - Two lines that move together do not prove cause. Trending series always correlate.
-- Mean sea level here is global, not a local coastal value.
+- Regional sea level is satellite sea level averaged over a sea area, not the value at a town. It leaves out land sinking (subsidence), which in the Bangladesh delta can add several mm per year to the rise people feel. The global mean is never shown as a local value.
 - Ice loss is one part of sea level rise; ocean warming and mountain glaciers are the rest.
 
 **A second, lower-priority story:** vegetation loss and urban growth in South and East Asia (MODIS NDVI and VIIRS night lights). Build it only if the ice story is finished.

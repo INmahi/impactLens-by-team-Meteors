@@ -96,10 +96,13 @@ def _regions_doc(variables: list[C.VariableSpec]) -> list[dict[str, Any]]:
         used = [v.id for v in variables if r.id in v.series]
         if not used:
             continue  # a region with no variable would break rule 2 (variables must be non-empty)
-        out.append({
+        entry: dict[str, Any] = {
             "id": r.id, "name": r.name, "parent": r.parent, "kind": r.kind, "variables": used,
             "bbox": list(r.bbox), "camera": dict(r.camera),
-        })
+        }
+        if r.notes:
+            entry["notes"] = list(r.notes)
+        out.append(entry)
     return out
 
 

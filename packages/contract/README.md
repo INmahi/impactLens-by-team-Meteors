@@ -36,6 +36,8 @@ The data contract: JSON Schemas (`schemas/`, draft 2020-12) and TypeScript types
 
 ### Clarifications (after the validator was built, 2026-11-12)
 - Region `kind` is required; `kind: "global"` regions have no geometry, every other region has one.
+- Optional fields added 2026-11-12: `regions.json` entries may carry `notes` (caveats shown only for that region, e.g. land subsidence for `bay_of_bengal`); `manifest.json` may carry `name` (legend display name, e.g. a monthly anomaly layer whose variable is a summer mean).
+- `kind: "coastal_sea"` (added 2026-11-12): a sea area whose area-mean sea level is a `sea_level` series. Its polygon covers the sea it averages, not the land. Only `sea_level` is valid for it.
 - `period` must equal the span of `periods` (earliest start, latest end); checked under rule 5.
 - `baseline` is always years, `["YYYY", "YYYY"]`, even for monthly variables.
 - Segments are contiguous on the date grid: first start = first date, last end = last date, each start follows the previous end. Gaps inside a segment are nulls.
