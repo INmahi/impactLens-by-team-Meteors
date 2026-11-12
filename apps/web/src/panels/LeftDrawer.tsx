@@ -4,6 +4,7 @@ import { useEffect, useId, useMemo, useState } from 'react'
 import type { Region, Variable } from '@trend/contract'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
+import DescribeDialog from '@/panels/DescribeDialog'
 import { mapModeForVariable, mapModes } from '@/globe'
 import { runStats, runTrend } from '@/lib/stats'
 import { dateSteps, formatStep, getSeriesCached, spanYears, useRegionsData, useVariablesData } from '@/lib/useData'
@@ -124,13 +125,13 @@ function VariablePicker({
   }
 
   const option = (v: Variable, sub = false) => (
+    <div key={v.id} className={cn('flex items-center gap-1', sub && 'ml-4')}>
     <label
-      key={v.id}
       className={cn(
-        'flex cursor-pointer items-baseline justify-between gap-2 rounded-lg border px-2 py-1.5 text-sm',
+        'flex flex-1 cursor-pointer items-baseline justify-between gap-2 rounded-lg border px-2 py-1.5 text-sm',
         'has-focus-visible:outline-2 has-focus-visible:outline-offset-1 has-focus-visible:outline-ring',
         selected === v.id ? 'border-sky-300/70 bg-sky-300/15 text-white' : 'border-transparent text-white/90 hover:bg-white/10',
-        sub && 'ml-4 text-[13px]',
+        sub && 'text-[13px]',
       )}
     >
       <span className="flex items-baseline gap-2">
@@ -148,6 +149,8 @@ function VariablePicker({
         {v.period[0].slice(0, 4)}–{v.period[1].slice(0, 4)}
       </span>
     </label>
+    <DescribeDialog variable={v} />
+    </div>
   )
 
   return (
