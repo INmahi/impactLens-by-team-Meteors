@@ -1,5 +1,9 @@
 """Write a complete synthetic data contract tree (uv run python -m pipeline build --synthetic).
 
+sea_level, ice_mass and ice_mass_rate come through the real ingest code from
+stand-in raw files (see assemble.py); the rest from make_series. Contract files are
+written by pipeline.writers, the same writers the ingest overlay uses.
+
 Deterministic for a given seed: every random stream is keyed on (seed, name),
 JSON is written with fixed key order and formatting, and PNGs carry no
 timestamps.
@@ -7,32 +11,21 @@ timestamps.
 
 from __future__ import annotations
 
-import json
 import shutil
+import tempfile
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 
-from ..validate import run_analyze, stats_file_content
+from .. import writers as W
+from ..writers import BuildError
 from . import config as C
+from .assemble import synthetic_series
 from .geometry import TopoWriter, scale_ring
 from .maps import LAYER_MODELS, colormap, save_png, write_layer
-from .series import all_series, trend_input
 
-
-class BuildError(RuntimeError):
-    pass
-
-
-def _dump(path: Path, doc: Any, pretty: bool = False) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if pretty:
-        text = json.dumps(doc, indent=2, allow_nan=False, ensure_ascii=False) + "\n"
-    else:
-        text = json.dumps(doc, separators=(",", ":"), allow_nan=False, ensure_ascii=False)
-    with open(path, "w", encoding="utf-8", newline="\n") as fh:
-        fh.write(text)
+__all__ = ["BuildError", "build_synthetic", "clear_root"]
 
 
 def clear_root(root: Path) -> None:
@@ -50,74 +43,6 @@ def clear_root(root: Path) -> None:
             shutil.rmtree(p)
         else:
             p.unlink()
-
-
-def _period(docs: list[dict[str, Any]]) -> tuple[dict[str, list[str]], list[str]]:
-    periods = {}
-    for d in docs:
-        present = [dt for dt, v in zip(d["dates"], d["values"]) if v is not None]
-        periods[d["region"]] = [present[0], present[-1]]
-    span = [min(p[0] for p in periods.values()), max(p[1] for p in periods.values())]
-    return periods, span
-
-
-def _variable_entry(v: C.VariableSpec, docs: list[dict[str, Any]]) -> dict[str, Any]:
-    periods, span = _period(docs)
-    e: dict[str, Any] = {"id": v.id}
-    if v.group:
-        e["group"] = v.group
-    if v.variant_of:
-        e["variantOf"] = v.variant_of
-    e.update({
-        "name": v.name, "units": v.units, "kind": v.kind, "frequency": v.frequency,
-        "period": span, "periods": periods, "regions": list(v.series),
-    })
-    if v.baseline:
-        e["baseline"] = list(v.baseline)
-    e["mapMode"] = v.map_mode
-    if v.outlines:
-        e["outlines"] = f"{v.id}/outlines.topo.json"
-    e.update({
-        "chartTypes": v.chart_types, "source": v.source,
-        "describe": {"video": f"/media/{v.id}_loop.webm", **v.describe},
-        "notes": v.notes, "synthetic": True,
-    })
-    return e
-
-
-def _regions_doc(variables: list[C.VariableSpec]) -> list[dict[str, Any]]:
-    known = {r.id for r in C.REGIONS}
-    for v in variables:
-        for rid in v.series:
-            if rid not in known:
-                raise BuildError(f"{v.id}: region {rid!r} is not in config.REGIONS")
-    out = []
-    for r in C.REGIONS:
-        used = [v.id for v in variables if r.id in v.series]
-        if not used:
-            continue  # a region with no variable would break rule 2 (variables must be non-empty)
-        entry: dict[str, Any] = {
-            "id": r.id, "name": r.name, "parent": r.parent, "kind": r.kind, "variables": used,
-            "bbox": list(r.bbox), "camera": dict(r.camera),
-        }
-        if r.notes:
-            entry["notes"] = list(r.notes)
-        out.append(entry)
-    return out
-
-
-def _regions_topo(regions: list[dict[str, Any]]) -> dict[str, Any]:
-    by_id = {r.id: r for r in C.REGIONS}
-    tw = TopoWriter()
-    geoms = []
-    for r in regions:
-        spec = by_id[r["id"]]
-        if spec.kind == "global":
-            continue
-        if spec.outline is None:
-            raise BuildError(f"region {spec.id!r} needs an outline (only kind 'global' has none)")
-        geoms.append(tw.geometry(spec.outline, id=spec.id, properties={"name": spec.name}))
-    return tw.topology("regions", geoms)
 
 
 def _extent_outlines(v: C.VariableSpec, docs: list[dict[str, Any]]) -> dict[str, Any]:
@@ -146,27 +71,21 @@ def build_synthetic(root: Path | str, seed: int = C.DEFAULT_SEED, log: Any = pri
     clear_root(root)
     variables = C.VARIABLES
 
-    # Series and stats (stats only through the real engine, one Node call).
-    series = all_series(variables, seed)
-    keys = list(series)
-    results = run_analyze([trend_input(series[k]) for k in keys])
-    for (vid, rid), res in zip(keys, results):
-        if not res.get("ok"):
-            raise BuildError(f"analyzeTrend() failed on {vid}/{rid}: {res.get('error')}")
-        _dump(root / vid / "series" / f"{rid}.json", series[(vid, rid)])
-        _dump(root / vid / "stats" / f"{rid}__default.json", stats_file_content(vid, rid, True, res["report"]))
+    with tempfile.TemporaryDirectory(prefix="trend-standin-") as work:
+        series, info = synthetic_series(seed, Path(work))
+    reports = W.write_series_and_stats(root, series)
 
     entries = []
     for v in variables:
         docs = [series[(v.id, rid)] for rid in v.series]
-        entries.append(_variable_entry(v, docs))
+        entries.append(W.variable_entry(v, docs, synthetic=True))
         if v.outlines:
-            _dump(root / v.id / "outlines.topo.json", _extent_outlines(v, docs))
-    _dump(root / "variables.json", entries, pretty=True)
+            W.dump(root / v.id / "outlines.topo.json", _extent_outlines(v, docs))
+    W.dump(root / "variables.json", entries, pretty=True)
 
-    regions = _regions_doc(variables)
-    _dump(root / "regions.json", regions, pretty=True)
-    _dump(root / "regions.topo.json", _regions_topo(regions))
+    regions = W.regions_doc({e["id"]: e["regions"] for e in entries}, {e["id"]: True for e in entries})
+    W.dump(root / "regions.json", regions, pretty=True)
+    W.dump(root / "regions.topo.json", W.regions_topo([r["id"] for r in regions]))
 
     # Map layers named by mapMode.
     used_layers = {v.map_mode for v in variables if v.map_mode}
@@ -177,7 +96,7 @@ def build_synthetic(root: Path | str, seed: int = C.DEFAULT_SEED, log: Any = pri
         manifest, clamped = write_layer(layer, fields, root / layer.id)
         if clamped:
             log(f"warning: {layer.id}: {clamped} valid cells clamped by the 16-bit packing")
-        _dump(root / layer.id / "manifest.json", manifest)
+        W.dump(root / layer.id / "manifest.json", manifest)
         # ice_mass_map: red (loss) on the left; temperature: blue (cold) on the left.
         save_png(colormap(reverse=layer.id == "ice_mass_map"), root / layer.id / "colormap.png")
         log(f"{layer.id}: {len(manifest['frames'])} frames in {len(manifest['atlases'])} atlases, "
@@ -186,6 +105,12 @@ def build_synthetic(root: Path | str, seed: int = C.DEFAULT_SEED, log: Any = pri
     if missing_layers:
         raise BuildError(f"no map layer config for mapMode {sorted(missing_layers)}")
 
+    cc = info.get("crosscheck")
+    log(f"sea_level: {info['weeks']} stand-in weekly grids through the ingest; failed-grid months "
+        f"{info['gap_months']}; 0.5-deg cells {info['cells']}")
+    if cc:
+        log(f"cross-check: grid global {cc['grid_slope']:.3f} mm/yr vs GMSL indicator stand-in "
+            f"{cc['indicator_slope']:.3f} mm/yr ({cc['start']}..{cc['end']}), difference {cc['difference']:+.4f}")
     log(f"wrote {len(series)} series and stats, {len(entries)} variables, {len(regions)} regions "
         f"to {root.as_posix()} (seed {seed})")
-    return {"series": series, "reports": {k: r["report"] for k, r in zip(keys, results)}}
+    return {"series": series, "reports": reports, "info": info}

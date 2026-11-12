@@ -11,6 +11,8 @@ pooled interval coverage lies in [0.93, 0.97].
 from __future__ import annotations
 
 import json
+import os
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import numpy as np
@@ -20,8 +22,8 @@ from scipy.stats import binom
 
 from pipeline.synthetic import BuildError, build_synthetic
 from pipeline.synthetic import config as C
+from pipeline.synthetic.assemble import seed_trend_inputs
 from pipeline.synthetic.maps import pack, unpack
-from pipeline.synthetic.series import all_series, trend_input
 from pipeline.validate import run_analyze, validate
 
 ZERO_SLOPE = ("ice_mass_rate", "antarctica_east")
@@ -30,13 +32,6 @@ N_SEEDS = 50
 
 def _quiet(*_args: object) -> None:
     pass
-
-
-@pytest.fixture(scope="module")
-def built(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    root = tmp_path_factory.mktemp("synthetic") / "public"
-    build_synthetic(root, seed=C.DEFAULT_SEED, log=_quiet)
-    return root
 
 
 def _read(root: Path, rel: str) -> dict:
@@ -204,7 +199,7 @@ def test_coastal_seas_in_every_file(built: Path) -> None:
         stats = _read(built, f"sea_level/stats/{r.id}__default.json")
         assert series["region"] == stats["region"] == r.id
         assert series["frequency"] == "monthly" and series["synthetic"] is True
-        assert "NASA-SSH gridded" in series["segments"][0]["source"]
+        assert "NASA-SSH V1.1 grid stand-in" in series["segments"][0]["source"]
         # Regional series swing far more than the global mean.
         glob = _read(built, "sea_level/series/global.json")["injected"]["noiseSd"]
         assert series["injected"]["noiseSd"] >= 2.5 * glob
@@ -239,16 +234,33 @@ def _interval(root: Path, rid: str) -> tuple[float, float, float]:
     return sl["lower"], sl["perYear"], sl["upper"]
 
 
+def _paired_difference_interval(root: Path, a: str, b: str) -> tuple[float, float, float]:
+    """analyzeTrend() on the monthly difference a - b (months where both exist)."""
+    sa, sb = (_read(root, f"sea_level/series/{r}.json") for r in (a, b))
+    vb = dict(zip(sb["dates"], sb["values"]))
+    dates = [d for d in sa["dates"] if d in vb]
+    vals = [None if (x is None or vb[d] is None) else x - vb[d] for d, x in zip(sa["dates"], sa["values"]) if d in vb]
+    (res,) = run_analyze([{"dates": dates, "values": vals, "frequency": "monthly", "kind": "level"}])
+    s = res["report"]["slope"]
+    return s["lower"], s["perYear"], s["upper"]
+
+
 def test_compare_demo_has_both_outcomes(built: Path) -> None:
-    """Proxy on the analyzeTrend() intervals until the M5 compare test exists:
-    gulf_of_mexico vs mediterranean is clearly different (disjoint 95% intervals);
-    north_sea vs global is not distinguishable (same injected 3.3 mm/yr; each interval
-    holds the other's Sen's slope)."""
+    """Proxy until the M5 compare test (paired moving-block bootstrap) exists. The seas now
+    SHARE the global signal (stand-in grids), so the pairs are judged on the paired monthly
+    difference, which removes the shared signal as the M5 test will:
+    gulf_of_mexico vs mediterranean is clearly different (disjoint 95% intervals, and the
+    difference trend excludes 0); north_sea vs global is not distinguishable (same injected
+    3.3 mm/yr; the difference trend's interval contains 0)."""
     sl = {v.id: v for v in C.VARIABLES}["sea_level"].series
     assert sl["north_sea"].slope == sl["global"].slope
-    gulf, med, ns, glob = (_interval(built, r) for r in ("gulf_of_mexico", "mediterranean", "north_sea", "global"))
+    gulf, med = (_interval(built, r) for r in ("gulf_of_mexico", "mediterranean"))
     assert med[2] < gulf[0], (gulf, med)
-    assert ns[0] <= glob[1] <= ns[2] and glob[0] <= ns[1] <= glob[2], (ns, glob)
+    lo, mid, hi = _paired_difference_interval(built, "gulf_of_mexico", "mediterranean")
+    assert lo > 0, (lo, mid, hi)
+    lo, mid, hi = _paired_difference_interval(built, "north_sea", "global")
+    print(f"\nnorth_sea - global trend {mid:.3f} [{lo:.3f}, {hi:.3f}] mm/yr")
+    assert lo <= 0 <= hi, (lo, mid, hi)
 
 
 def test_refuses_to_clear_a_folder_that_is_not_a_data_tree(tmp_path: Path) -> None:
@@ -281,11 +293,13 @@ def test_gate_default_seed_misses_within_binomial_bound(built: Path) -> None:
 def test_gate_coverage_over_many_seeds() -> None:
     """Pooled 95% interval coverage over N_SEEDS seeds x all series lies in [0.93, 0.97]."""
     keys, inputs, injected = [], [], []
-    for seed in range(1, N_SEEDS + 1):
-        for (vid, rid), doc in all_series(C.VARIABLES, seed).items():
-            keys.append((seed, vid, rid))
-            inputs.append(trend_input(doc))
-            injected.append(doc["injected"]["slopePerYear"])
+    workers = max(1, min(8, (os.cpu_count() or 2) - 1))
+    with ProcessPoolExecutor(max_workers=workers) as pool:  # each seed runs the stand-ins through the ingest
+        for seed, rows in zip(range(1, N_SEEDS + 1), pool.map(seed_trend_inputs, range(1, N_SEEDS + 1))):
+            for vid, rid, ti, inj in rows:
+                keys.append((seed, vid, rid))
+                inputs.append(ti)
+                injected.append(inj)
     results = run_analyze(inputs)
     hits = []
     for res, inj in zip(results, injected):

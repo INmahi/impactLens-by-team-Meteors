@@ -1,4 +1,4 @@
-"""Command line: uv run python -m pipeline {validate,build} ..."""
+"""Command line: uv run python -m pipeline {validate,build,ingest,standin} ..."""
 
 from __future__ import annotations
 
@@ -35,6 +35,40 @@ def _cmd_build(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_ingest(args: argparse.Namespace) -> int:
+    from .ingest import IngestError, ingest_imbie, ingest_sea_level
+    from .writers import BuildError
+
+    try:
+        if args.dataset == "sea_level":
+            ingest_sea_level(args.raw, args.root)
+        else:
+            ingest_imbie(args.raw, args.root)
+    except (IngestError, BuildError, FileNotFoundError) as exc:
+        print(f"ingest: {exc}", file=sys.stderr)
+        return 1
+    print(f"ingest: wrote {args.dataset} into {args.root.as_posix()}; run `python -m pipeline validate`")
+    return 0
+
+
+def _cmd_standin(args: argparse.Namespace) -> int:
+    import json
+    from datetime import date
+
+    from .standin import write_imbie_standins, write_sea_level_standins
+    from .synthetic.assemble import config_topo
+
+    if args.dataset == "imbie":
+        write_imbie_standins(args.out, args.seed, date_format=args.date_format)
+        print(f"standin: IMBIE CSVs written to {args.out.as_posix()}")
+        return 0
+    topo = config_topo() if args.topo is None else json.loads(args.topo.read_text(encoding="utf-8"))
+    first, last = date.fromisoformat(args.first), date.fromisoformat(args.last)
+    paths = write_sea_level_standins(args.out, topo, args.seed, first, last)
+    print(f"standin: {len(paths)} weekly grids + GMSL text written to {args.out.as_posix()}")
+    return 0
+
+
 def make_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="python -m pipeline", description="Trend Detective data pipeline")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -53,6 +87,25 @@ def make_parser() -> argparse.ArgumentParser:
     p_build.add_argument("--seed", type=int, default=DEFAULT_SEED,
                          help=f"random seed for --synthetic (default: {DEFAULT_SEED})")
     p_build.set_defaults(func=_cmd_build)
+
+    p_ing = sub.add_parser("ingest", help="raw downloads (or stand-ins) -> contract files, overlaid on --root")
+    p_ing.add_argument("dataset", choices=["sea_level", "imbie"],
+                       help="sea_level: NASA-SSH V1.1 weekly grids (+ GMSL indicator cross-check); "
+                            "imbie: IMBIE 2026 Gt CSVs -> ice_mass and ice_mass_rate")
+    p_ing.add_argument("--raw", type=Path, required=True, help="folder with the downloaded files")
+    p_ing.add_argument("--root", type=Path, default=DEFAULT_ROOT, help="data tree to update (default: data/public)")
+    p_ing.set_defaults(func=_cmd_ingest)
+
+    p_si = sub.add_parser("standin", help="write synthetic stand-in raw files in the real layouts")
+    p_si.add_argument("dataset", choices=["sea_level", "imbie"])
+    p_si.add_argument("--out", type=Path, required=True, help="output folder (not data/public)")
+    p_si.add_argument("--seed", type=int, default=DEFAULT_SEED)
+    p_si.add_argument("--first", default="2020-01-06", help="sea_level: first weekly label (a Monday)")
+    p_si.add_argument("--last", default="2020-03-30",
+                      help="sea_level: last weekly label; about 2-3 MB per week as netCDF-3, so keep spans short")
+    p_si.add_argument("--topo", type=Path, default=None, help="sea_level: regions.topo.json (default: from config)")
+    p_si.add_argument("--date-format", choices=["iso", "decimal"], default="iso", help="imbie: Date column format")
+    p_si.set_defaults(func=_cmd_standin)
     return parser
 
 

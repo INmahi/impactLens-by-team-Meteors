@@ -191,13 +191,10 @@ def _cam_fit(bbox: tuple[float, float, float, float], fill: float = 0.6) -> dict
     return _cam((w + e) / 2, lat, round(h, -5))
 
 
-_SEA_SYNTH = "SYNTHETIC DATA: the sea level series for this sea has a known injected trend; not a measurement."
-
-
 def _sea(rid: str, name: str, outline: Ring | list[Ring], *notes: str) -> "RegionSpec":
-    """A coastal sea. Every one carries the synthetic note first, then its own caveats."""
+    """A coastal sea with its own caveats (the writer adds a SYNTHETIC DATA note while its data are synthetic)."""
     bbox = _bbox(outline)
-    return RegionSpec(rid, name, None, "coastal_sea", bbox, _cam_fit(bbox), outline, (_SEA_SYNTH, *notes))
+    return RegionSpec(rid, name, None, "coastal_sea", bbox, _cam_fit(bbox), outline, tuple(notes))
 
 
 REGIONS: list[RegionSpec] = [
@@ -307,13 +304,14 @@ _MERRA2 = {
                 "temperature anomalies; contains no MERRA-2 values.",
 }
 _NASA_SSH = {
-    "name": "Synthetic, shaped like NASA-SSH (GMSL indicator and gridded sea surface height)",
-    "url": "https://podaac.jpl.nasa.gov/dataset/NASA_SSH_GMSL_INDICATOR",
-    "citation": "Synthetic data from pipeline/synthetic (Trend Detective). Global series shaped like the NASA-SSH "
-                "global mean sea level indicator; coastal-sea series shaped like area means of the NASA-SSH "
-                "gridded sea surface height (NASA_SSH_REF_SIMPLE_GRID_V1); contains no NASA-SSH values.",
+    "name": "Synthetic, shaped like NASA-SSH gridded sea surface height V1.1",
+    "url": "https://doi.org/10.5067/NSREF-SG0V11",
+    "citation": "Synthetic data from pipeline/synthetic (Trend Detective). Weekly stand-in grids in the layout of "
+                "NASA_SSH_REF_SIMPLE_GRID_V11, averaged by the real ingest code: the global mean over all ocean "
+                "cells and each coastal sea over its polygon. Contains no NASA-SSH values.",
 }
-_SSH_GRID_SEGMENT = "Synthetic (NASA-SSH gridded SSH area-mean shape)"
+_SSH_GRID_SEGMENT = "Synthetic (NASA-SSH V1.1 grid stand-in, area mean over the sea polygon)"
+_SSH_GLOBAL_SEGMENT = "Synthetic (NASA-SSH V1.1 grid stand-in, global area mean)"
 _RECON = {
     "name": "Synthetic, shaped like NASA JPL_RECON_GMSL",
     "url": "https://podaac.jpl.nasa.gov/dataset/JPL_RECON_GMSL",
@@ -340,10 +338,10 @@ VARIABLES: list[VariableSpec] = [
         source=_IMBIE, segment_source="Synthetic (IMBIE 2026 shape)",
         describe={"what": "How much ice an ice sheet holds, compared with the start of its record.",
                   "whyItMatters": "Ice lost from the ice sheets raises sea level; about 360 Gt is 1 mm."},
-        notes=[SYNTH_NOTE, "Record starts in 1972 for Greenland and 1979 for Antarctica.",
+        notes=[SYNTH_NOTE, "Record starts in July 1971 for Greenland and 1979 for Antarctica.",
                "Uncertainty (1-sigma) is larger early in the record.", _ICE_REGIONS_NOTE],
         series={
-            "greenland": SeriesSpec("1972-01", "2023-12", slope=-120.0, ar1=0.6, noise_sd=40.0,
+            "greenland": SeriesSpec("1971-07", "2023-12", slope=-120.0, ar1=0.6, noise_sd=40.0,
                                     seasonal_amp=60.0, sigma=(250.0, 30.0), gaps=4, decimals=1),
             "antarctica": SeriesSpec("1979-01", "2023-12", slope=-90.0, ar1=0.6, noise_sd=60.0,
                                      seasonal_amp=30.0, sigma=(400.0, 50.0), decimals=1),
@@ -411,7 +409,7 @@ VARIABLES: list[VariableSpec] = [
     VariableSpec(
         id="sea_level", name="Sea level", units="mm", kind="level", frequency="monthly",
         map_mode=None, chart_types=["series", "anomaly"],
-        source=_NASA_SSH, segment_source="Synthetic (NASA-SSH GMSL indicator shape)",
+        source=_NASA_SSH, segment_source=_SSH_GRID_SEGMENT,
         describe={"what": "Sea level measured by satellites since 1993: the global mean, or the mean over "
                           "one coastal sea.",
                   "whyItMatters": "Rising seas threaten coasts worldwide, and some seas rise faster than "
@@ -429,8 +427,9 @@ VARIABLES: list[VariableSpec] = [
                "Global series not corrected for glacial isostatic adjustment.",
                "No per-point uncertainty in the source."],
         series={
+            # gaps on global = number of months with failed grids (null in EVERY sea_level series).
             "global": SeriesSpec("1993-01", "2026-10", slope=3.3, ar1=0.6, noise_sd=3.0, start_value=-20.0,
-                                 seasonal_amp=2.0, gaps=2, decimals=2),
+                                 seasonal_amp=2.0, gaps=2, decimals=2, segment_source=_SSH_GLOBAL_SEGMENT),
             # Coastal seas: plausible SYNTHETIC rates, much larger interannual noise than
             # global (El Nino, monsoon, wind). Gulf of Mexico vs Mediterranean is the
             # clearly-different compare pair; North Sea vs global (same injected 3.3 mm/yr, decided
