@@ -108,3 +108,9 @@ See [viewer.md](viewer.md).
 4. 16-bit PNGs are reduced to 8 bits by browsers: data is packed into R and G.
 5. Linear filtering on packed data mixes bytes into garbage: NEAREST only.
 11. Glass blur over WebGL costs GPU every frame the globe draws: render on demand keeps it idle.
+
+## Time-stepped geometry (M4)
+To show or hide geometry per time step (for example dated ice-extent outlines), build one Primitive per step once and toggle its `show`. Toggling polylines or per-instance attributes re-uploads a small Cesium batch-table texture on every change, which breaks the "no uploads while scrubbing" rule. See `apps/web/src/globe/outlineLayer.ts`.
+
+## Map modes (M4)
+Modes come from `variables.json`: gridded layers are the distinct `mapMode` values; outline layers are variables with `outlines`. `store.mapLayer` holds the mode id; `frameIndex` indexes that mode's timeline (frames plus missing dates; outline modes step monthly over the variable's period, showing that year's outline). A variable with neither `mapMode` nor `outlines` (sea level) hides all layers. Pole views use ice region kinds only (`POLAR_KINDS` in `globe/regions.ts`), so coastal seas never change them.

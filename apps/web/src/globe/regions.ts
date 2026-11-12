@@ -3,13 +3,13 @@
 // Pure lon/lat maths only; no Cesium objects.
 import { feature } from 'topojson-client'
 import type { GeometryCollection } from 'topojson-specification'
-import type { Region } from '@trend/contract'
+import type { Region, RegionKind } from '@trend/contract'
 import { loadRegions, loadRegionsTopo } from '@/lib/data'
 import type { Pole } from '@/state/store'
 
 type Geometry = GeoJSON.Geometry
 
-type LonLat = [number, number]
+export type LonLat = [number, number]
 type Ring = LonLat[]
 /** One polygon = outer ring + holes, in plain lon/lat (contract: CCW, MultiPolygons split at 180). */
 type PolygonRings = Ring[]
@@ -90,7 +90,7 @@ function buildRegionsData(regions: Region[], topo: Awaited<ReturnType<typeof loa
   return { regions, byId, shapes }
 }
 
-function toPolygons(g: Geometry | null): PolygonRings[] {
+export function toPolygons(g: Geometry | null): PolygonRings[] {
   if (!g) return []
   if (g.type === 'Polygon') return [g.coordinates as PolygonRings]
   if (g.type === 'MultiPolygon') return g.coordinates as PolygonRings[]
@@ -112,7 +112,7 @@ function isArtificial(a: LonLat, b: LonLat): boolean {
 }
 
 /** Splits a closed ring into the runs of real edges. */
-function drawablePaths(ring: Ring): LonLat[][] {
+export function drawablePaths(ring: Ring): LonLat[][] {
   const pts = ring.length > 1 && samePoint(ring[0], ring[ring.length - 1]) ? ring.slice(0, -1) : ring.slice()
   const n = pts.length
   if (n < 2) return []
@@ -170,12 +170,19 @@ export function regionAt(data: RegionsData, lon: number, lat: number): string | 
 }
 
 /**
- * Top-level outlined regions whose bbox lies entirely in the hemisphere.
+ * Region kinds the pole toggle frames (contract vocabulary): ice regions only. Coastal seas
+ * and the global region never move the polar views, even though coastal seas are outlined
+ * and pickable. A new glacier region (kind glacier_region) joins automatically.
+ */
+export const POLAR_KINDS: ReadonlySet<RegionKind> = new Set<RegionKind>(['ice_sheet', 'ice_sheet_basin', 'glacier_region'])
+
+/**
+ * Top-level outlined ice regions (POLAR_KINDS) whose bbox lies entirely in the hemisphere.
  * North: bbox south >= 0. South: bbox north <= 0.
  */
 export function hemisphereRegions(data: RegionsData, pole: Pole): Region[] {
   return data.shapes
-    .filter((s) => s.region.parent === null)
+    .filter((s) => s.region.parent === null && POLAR_KINDS.has(s.region.kind))
     .map((s) => s.region)
     .filter((r) => (pole === 'north' ? r.bbox[1] >= 0 : r.bbox[3] <= 0))
 }

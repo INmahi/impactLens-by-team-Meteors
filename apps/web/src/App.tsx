@@ -1,9 +1,10 @@
-// M3 layout: full-screen globe, controls, legend and data-driven SYNTHETIC watermark. The drawers and pickers start in M6.
+// M4 layout: full-screen globe, controls, map mode picker, legend, time scroller and data-driven SYNTHETIC watermark. Drawers and pickers start in M6.
 // The stats check card (from M0) stays in a corner until the real analysis panel replaces it.
 import { useState } from 'react'
 import type { TrendReport } from '@trend/stats'
 import { Button } from '@/components/ui/button'
-import { Globe, GlobeControls, LayerDebugControls, MapLegend, SyntheticWatermark } from '@/globe'
+import TimeScroller from '@/components/TimeScroller'
+import { Globe, GlobeControls, MapLegend, MapModePicker, SyntheticWatermark } from '@/globe'
 import { runTrend } from '@/lib/stats'
 import { useAppStore } from '@/state/store'
 
@@ -74,13 +75,17 @@ export default function App() {
           <GlobeControls />
         </div>
         <SyntheticWatermark className="absolute left-1/2 top-3 -translate-x-1/2" />
-        <div className="absolute bottom-10 right-3">
+        {/* Left column: map mode picker; the stats check card stays until the M6 panels replace it. */}
+        <div className="absolute left-3 top-16 flex flex-col gap-3">
+          <MapModePicker />
+          <StatsCheck />
+        </div>
+        {/* Legend sits under the globe controls so it never overlaps the bottom-centre scroller. */}
+        <div className="absolute right-3 top-32">
           <MapLegend />
         </div>
-        {/* Temporary until the time scroller (M4) and pickers (M6). */}
-        <div className="absolute bottom-10 left-3 flex flex-col gap-3">
-          <LayerDebugControls />
-          <StatsCheck />
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
+          <TimeScroller />
         </div>
       </div>
     </main>

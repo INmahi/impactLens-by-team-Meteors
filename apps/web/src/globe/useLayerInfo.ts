@@ -1,8 +1,21 @@
-// React hooks over layerData: plain JSON only (manifest, variables), never Cesium objects.
-import { useEffect, useState } from 'react'
+// React hooks over layerData / mapModes: plain JSON only (manifest, variables, outlines),
+// never Cesium objects.
+import { useEffect, useMemo, useState } from 'react'
 import type { Manifest, Variable } from '@trend/contract'
 import { useAppStore } from '@/state/store'
-import { clampIndex, getManifest, getVariables, layerIsSynthetic, layerTimeline, type TimelineStep } from './layerData'
+import { clampIndex, getManifest, getVariables, layerIsSynthetic } from './layerData'
+import {
+  getOutlines,
+  gridSteps,
+  mapModes,
+  modeVariable,
+  outlineSteps,
+  resolveMapMode,
+  variableWithoutMap,
+  type MapMode,
+  type ModeStep,
+  type OutlinesData,
+} from './mapModes'
 
 /** variables.json, or null while loading / on error. */
 export function useVariables(): Variable[] | null {
@@ -17,6 +30,12 @@ export function useVariables(): Variable[] | null {
     }
   }, [])
   return variables
+}
+
+/** Map modes from variables.json (grid layers, then outline layers), or null while loading. */
+export function useMapModes(): MapMode[] | null {
+  const variables = useVariables()
+  return useMemo(() => (variables ? mapModes(variables) : null), [variables])
 }
 
 /** The manifest of `layer`, or null while loading, on error, or for a null layer. */
@@ -35,33 +54,80 @@ export function useManifest(layer: string | null): Manifest | null {
   return layer && state?.layer === layer ? state.manifest : null
 }
 
-export interface ActiveLayer {
-  layer: string
-  manifest: Manifest
-  timeline: TimelineStep[]
+/** Parsed outlines file at `path` (under data/public), or null. */
+export function useOutlines(path: string | null): OutlinesData | null {
+  const [state, setState] = useState<{ path: string; data: OutlinesData } | null>(null)
+  useEffect(() => {
+    if (!path) return
+    let alive = true
+    getOutlines(path)
+      .then((data) => alive && setState({ path, data }))
+      .catch((err: unknown) => console.error(`Globe: failed to load outlines "${path}"`, err))
+    return () => {
+      alive = false
+    }
+  }, [path])
+  return path && state?.path === path ? state.data : null
+}
+
+export interface ActiveMode {
+  mode: MapMode
+  /** The variable that names the mode (legend title, source). */
+  variable: Variable | null
+  manifest: Manifest | null
+  outlines: OutlinesData | null
+  /** The timeline the store's frameIndex indexes. */
+  steps: ModeStep[]
   /** Integer step shown (the store index clamped and floored). */
   index: number
-  step: TimelineStep
+  step: ModeStep
 }
 
-/** The store's map layer with its manifest and the current timeline step, or null. */
-export function useActiveLayer(): ActiveLayer | null {
-  const layer = useAppStore((s) => s.mapLayer)
+/**
+ * The map mode drawn on the globe (store `mapLayer`, unless the selected variable has no map)
+ * with its data and the current step, or null when nothing is drawn or still loading.
+ */
+export function useActiveMode(): ActiveMode | null {
+  const mapLayer = useAppStore((s) => s.mapLayer)
+  const variableId = useAppStore((s) => s.variable)
   const frameIndex = useAppStore((s) => s.frameIndex)
-  const manifest = useManifest(layer)
-  if (!layer || !manifest) return null
-  const timeline = layerTimeline(manifest)
-  if (timeline.length === 0) return null
-  const index = Math.floor(clampIndex(frameIndex, timeline.length))
-  return { layer, manifest, timeline, index, step: timeline[index] }
+  const variables = useVariables()
+  const modes = useMapModes()
+  const mode = variables && modes ? resolveMapMode(modes, variables, mapLayer, variableId) : null
+  const manifest = useManifest(mode?.kind === 'grid' ? mode.id : null)
+  const outlines = useOutlines(mode?.kind === 'outline' ? mode.outlines : null)
+  if (!mode || !variables) return null
+  let steps: ModeStep[] | null = null
+  if (mode.kind === 'grid' && manifest) steps = gridSteps(manifest)
+  if (mode.kind === 'outline' && outlines) steps = outlineSteps(mode, outlines)
+  if (!steps || steps.length === 0) return null
+  const index = Math.floor(clampIndex(frameIndex, steps.length))
+  return {
+    mode,
+    variable: modeVariable(variables, mode),
+    manifest: mode.kind === 'grid' ? manifest : null,
+    outlines: mode.kind === 'outline' ? outlines : null,
+    steps,
+    index,
+    step: steps[index],
+  }
 }
 
-/** True when the data on screen is synthetic: the active layer (manifest or a variable using it) or the selected variable. */
-export function useShowsSyntheticData(): boolean {
-  const layer = useAppStore((s) => s.mapLayer)
+/** The selected variable when it has no map layer (e.g. sea level), else null. Data-driven. */
+export function useVariableWithoutMap(): Variable | null {
   const variableId = useAppStore((s) => s.variable)
   const variables = useVariables()
-  const manifest = useManifest(layer)
+  return variables ? variableWithoutMap(variables, variableId) : null
+}
+
+/** True when the data on screen is synthetic: the active mode (manifest or a variable using it) or the selected variable. */
+export function useShowsSyntheticData(): boolean {
+  const variableId = useAppStore((s) => s.variable)
+  const variables = useVariables()
+  const active = useActiveMode()
   const variableSynthetic = !!variableId && !!variables?.find((v) => v.id === variableId)?.synthetic
-  return variableSynthetic || layerIsSynthetic(manifest, variables, layer)
+  if (variableSynthetic) return true
+  if (!active) return false
+  if (active.mode.kind === 'grid') return layerIsSynthetic(active.manifest, variables, active.mode.id)
+  return !!active.variable?.synthetic
 }

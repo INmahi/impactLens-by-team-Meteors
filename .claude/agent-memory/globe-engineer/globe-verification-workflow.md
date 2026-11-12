@@ -15,4 +15,6 @@ Process hygiene: stop only the PID you started (`netstat -ano | grep :PORT`, the
 
 Do not edit files under apps/web/src while a CDP run is in progress: Vite HMR reloads the page and the run's store handle goes stale (M3c: a scrub reported 0 uniform updates). Instrument texture uploads by wrapping WebGL texImage2D/texSubImage2D/texStorage2D in an inline head script of the preview page; long scrubs (561 steps x ~350 ms on swiftshader) take minutes, so run them in the background.
 
+M4 additions (2026-11-12): headless Chrome can take more than 10 s to expose `/json/list`, so poll for about 40 s. Real keyboard input via `Input.dispatchKeyEvent` (rawKeyDown/keyUp; Space also needs a `char` event) and mouse drags via `Input.dispatchMouseEvent` drive the TimeScroller like a user would. Pass Windows-style output paths (`pwd -W`) to node. The preview page's missing favicon logs a 404 "error": ignore it, the app has its own.
+
 Related: [[gibs-epsg4326-tiling]], [[cesium-material-texture-gotchas]]

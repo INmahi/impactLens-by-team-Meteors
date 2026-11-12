@@ -9,6 +9,8 @@ import 'cesium/Build/Cesium/Widgets/widgets.css'
 import { useAppStore } from '@/state/store'
 import { registerEngine } from './controller'
 import { GlobeEngine } from './engine'
+import { getVariables } from './layerData'
+import { mapModes, resolveMapMode, type MapMode } from './mapModes'
 import { getRegionsData } from './regions'
 
 export default function Globe() {
@@ -26,14 +28,33 @@ export default function Globe() {
     let unsubscribe: (() => void) | null = null
     let cancelled = false
 
-    // Map layer: independent of the region data. Plain id and index in, uniforms out.
-    const initial = useAppStore.getState()
-    engine.setMapLayer(initial.mapLayer)
-    engine.setFrame(initial.frameIndex)
-    const unsubscribeLayer = useAppStore.subscribe((state, prev) => {
-      if (state.mapLayer !== prev.mapLayer) engine.setMapLayer(state.mapLayer)
-      if (state.mapLayer !== prev.mapLayer || state.frameIndex !== prev.frameIndex) engine.setFrame(state.frameIndex)
-    })
+    // Map mode: independent of the region data. The store holds a mode id (mapLayer) and the
+    // selected variable; modes come from variables.json. A variable without a map (sea level)
+    // hides every layer. Plain ids and an index in; uniforms / visibility out.
+    let unsubscribeLayer: (() => void) | null = null
+    getVariables()
+      .then((variables) => {
+        if (cancelled || engine.isDestroyed()) return
+        const modes = mapModes(variables)
+        let current: MapMode | null = null
+        const sync = (mapLayer: string | null, variable: string | null, frameIndex: number, force: boolean) => {
+          const mode = resolveMapMode(modes, variables, mapLayer, variable)
+          if (mode !== current) {
+            current = mode
+            engine.setMapMode(mode)
+            force = true
+          }
+          if (force) engine.setFrame(frameIndex)
+        }
+        const s = useAppStore.getState()
+        sync(s.mapLayer, s.variable, s.frameIndex, true)
+        unsubscribeLayer = useAppStore.subscribe((state, prev) => {
+          if (state.mapLayer !== prev.mapLayer || state.variable !== prev.variable || state.frameIndex !== prev.frameIndex) {
+            sync(state.mapLayer, state.variable, state.frameIndex, state.frameIndex !== prev.frameIndex)
+          }
+        })
+      })
+      .catch((err: unknown) => console.error('Globe: failed to load variables.json', err))
 
     getRegionsData()
       .then((data) => {
@@ -61,7 +82,7 @@ export default function Globe() {
     return () => {
       cancelled = true
       unsubscribe?.()
-      unsubscribeLayer()
+      unsubscribeLayer?.()
       registerEngine(null)
       engine.destroy()
       engineRef.current = null

@@ -10,6 +10,7 @@ import {
   ColorMaterialProperty,
   ConstantProperty,
   Credit,
+  CreditDisplay,
   CustomDataSource,
   EllipsoidTerrainProvider,
   Entity,
@@ -21,9 +22,12 @@ import {
   Viewer,
   WebMapTileServiceImageryProvider,
 } from 'cesium'
+import type { RegionKind } from '@trend/contract'
 import type { Pole } from '@/state/store'
 import { DataLayer, LAYER_HEIGHT } from './dataLayer'
 import { GibsGeographicTilingScheme } from './gibsTilingScheme'
+import type { MapMode } from './mapModes'
+import { OutlineLayer } from './outlineLayer'
 import { polarView, regionAt, type CameraView, type RegionsData } from './regions'
 
 /** NASA GIBS, EPSG:4326 "best" endpoint, static Blue Marble (no {Time}). */
@@ -32,15 +36,36 @@ const GIBS_URL =
 export const GIBS_CREDIT = 'Imagery: NASA GIBS, Blue Marble Shaded Relief and Bathymetry'
 
 type Role = 'base' | 'hover' | 'compare' | 'selected'
+type LineStyle = { color: Color; width: number; dashed: boolean; height: number }
 
 /** Outline styles. Selected and compare differ in colour AND pattern (solid vs dashed).
  *  Heights sit above the data layer so outlines are never hidden under it. */
-const STYLE: Record<Role, { color: Color; width: number; dashed: boolean; height: number }> = {
+const STYLE: Record<Role, LineStyle> = {
   base: { color: Color.WHITE.withAlpha(0.55), width: 1.5, dashed: false, height: LAYER_HEIGHT + 500 },
   hover: { color: Color.WHITE.withAlpha(0.95), width: 2.5, dashed: false, height: LAYER_HEIGHT + 1000 },
   compare: { color: Color.fromCssColorString('#f59e0b'), width: 3, dashed: true, height: LAYER_HEIGHT + 1500 },
   selected: { color: Color.fromCssColorString('#38bdf8'), width: 3.5, dashed: false, height: LAYER_HEIGHT + 2000 },
 }
+
+/** Base style per region kind (data-driven): coastal seas get a subtle sea-blue line so they
+ *  read as sea areas, not land. Hover, compare and selected look the same for every kind. */
+const BASE_BY_KIND: Partial<Record<RegionKind, LineStyle>> = {
+  coastal_sea: { ...STYLE.base, color: Color.fromCssColorString('#93c5fd').withAlpha(0.7), width: 1.5 },
+}
+
+function styleFor(role: Role, kind: RegionKind | undefined): LineStyle {
+  return role === 'base' && kind ? (BASE_BY_KIND[kind] ?? STYLE.base) : STYLE[role]
+}
+
+/**
+ * Replace the default "Cesium ion" logo credit with a plain-text CesiumJS credit: this app never
+ * uses ion, and the ion logo suggested it did. Static setter, read when a Viewer is created.
+ * The GIBS imagery credit is separate and stays visible.
+ */
+CreditDisplay.cesiumCredit = new Credit(
+  '<a href="https://cesium.com/platform/cesiumjs/" target="_blank" rel="noopener noreferrer">CesiumJS</a>',
+  true,
+)
 
 const FLY_SECONDS = 1.6
 
@@ -55,6 +80,7 @@ export class GlobeEngine {
   private hovered: string | null = null
   private handler: ScreenSpaceEventHandler
   private dataLayer: DataLayer
+  private outlineLayer: OutlineLayer
   private removePreUpdate: () => void
   onPick: ((regionId: string) => void) | null = null
 
@@ -98,12 +124,15 @@ export class GlobeEngine {
     viewer.imageryLayers.addImageryProvider(createGibsProvider())
     void viewer.dataSources.add(this.outlines)
     this.dataLayer = new DataLayer(scene)
+    this.outlineLayer = new OutlineLayer(scene)
 
     // Entity geometry is batched asynchronously. In request-render mode nobody asks for the
     // frame that shows the finished batch, so keep asking until the data sources are ready.
     // preUpdate fires every tick even when no frame is rendered.
     this.removePreUpdate = scene.preUpdate.addEventListener(() => {
-      if (!viewer.dataSourceDisplay.ready || this.dataLayer.needsRender()) scene.requestRender()
+      if (!viewer.dataSourceDisplay.ready || this.dataLayer.needsRender() || this.outlineLayer.needsRender()) {
+        scene.requestRender()
+      }
     })
 
     this.handler = new ScreenSpaceEventHandler(scene.canvas)
@@ -127,6 +156,7 @@ export class GlobeEngine {
     this.removePreUpdate()
     if (!this.handler.isDestroyed()) this.handler.destroy()
     this.dataLayer.destroy() // before the viewer, while the GL context is alive
+    this.outlineLayer.destroy()
     if (!this.viewer.isDestroyed()) this.viewer.destroy()
   }
 
@@ -139,15 +169,16 @@ export class GlobeEngine {
     this.outlines.entities.suspendEvents()
     for (const shape of data.shapes) {
       const list: Entity[] = []
+      const base = styleFor('base', shape.region.kind)
       shape.paths.forEach((path, i) => {
         list.push(
           this.outlines.entities.add({
             id: `region-outline:${shape.region.id}:${i}`,
             name: shape.region.name,
             polyline: {
-              positions: toPositions(path, STYLE.base.height),
-              width: STYLE.base.width,
-              material: new ColorMaterialProperty(STYLE.base.color),
+              positions: toPositions(path, base.height),
+              width: base.width,
+              material: new ColorMaterialProperty(base.color),
               // Rhumb edges = straight lines in lon/lat, the same space the polygons and
               // the point-in-polygon picking use. Fine granularity so chords stay above ground.
               arcType: ArcType.RHUMB,
@@ -163,14 +194,17 @@ export class GlobeEngine {
     this.restyle()
   }
 
-  /** Map layer by id (a variable's mapMode) or null for none. Loads once, then reuses. */
-  setMapLayer(layer: string | null): void {
-    this.dataLayer.setLayer(layer)
+  /** Map mode (see mapModes.ts) or null for none. Each layer loads once per selection. */
+  setMapMode(mode: MapMode | null): void {
+    this.dataLayer.setLayer(mode?.kind === 'grid' ? mode.id : null)
+    this.outlineLayer.setMode(mode?.kind === 'outline' ? mode : null)
   }
 
-  /** Index into the active layer's timeline (see layerData.layerTimeline). Uniforms only. */
+  /** Index into the active mode's timeline (mapModes.gridSteps / outlineSteps). Uniforms or
+   *  primitive visibility only; never creates or uploads a texture. */
   setFrame(index: number): void {
     this.dataLayer.setFrame(index)
+    this.outlineLayer.setFrame(index)
   }
 
   setHighlight(selected: string | null, compare: string | null): void {
@@ -194,8 +228,8 @@ export class GlobeEngine {
       if (this.roles.get(id) === role) continue
       this.roles.set(id, role)
       changed = true
-      const s = STYLE[role]
       const shape = this.data?.shapes.find((sh) => sh.region.id === id)
+      const s = styleFor(role, shape?.region.kind)
       entities.forEach((entity, i) => {
         const line = entity.polyline
         if (!line || !shape) return
