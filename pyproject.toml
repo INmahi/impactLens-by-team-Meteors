@@ -1,0 +1,31 @@
+[project]
+name = "trend-detective"
+version = "0.1.0"
+description = "Trend Detective data pipeline and statistics reference (NASA Space Apps 2026)"
+requires-python = ">=3.12"
+dependencies = [
+    "cdsapi>=0.7.7",
+    "earthaccess>=0.19.0",
+    "numpy>=2.5.4",
+    "pillow>=13.0.0",
+    "regionmask>=0.13.0",
+    "rioxarray>=0.23.0",
+    "xarray>=2026.9.0",
+]
+
+[dependency-groups]
+dev = [
+    "jsonschema>=4.26.0",
+    "pytest>=9.2.0",
+]
+stats = [
+    "arch>=8.0.0",
+    "pymannkendall==1.4.3",
+    "scipy>=1.18.1",
+    "statsmodels>=0.15.0",
+]
+
+[tool.uv]
+# The repo root is not an installable package; `python -m pipeline` runs from the root.
+package = false
+default-groups = ["dev", "stats"]

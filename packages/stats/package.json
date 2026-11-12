@@ -1,0 +1,17 @@
+{
+  "name": "@trend/stats",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Mann-Kendall trend tests and Sen's slope for the Trend Detective app. No dependencies.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./worker": "./src/worker.ts"
+  },
+  "scripts": {
+    "golden": "python ../../pipeline/stats/make_golden.py 1000",
+    "test": "node test/golden.test.ts && node test/analyze.test.ts",
+    "simulate": "node test/simulate.ts 1000 > test/simulation-results.md"
+  },
+  "engines": { "node": ">=22.18" }
+}

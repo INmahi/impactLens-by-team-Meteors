@@ -1,0 +1,50 @@
+/* Glass tokens for Trend Detective (plan section 7).
+   The app copy lives at apps/web/src/styles/glass.css; keep the two identical. */
+
+:root {
+  --glass-blur: 14px;
+  --glass-radius: 18px;
+  --glass-tint: rgba(12, 16, 24, 0.62);
+  --glass-tint-strong: rgba(12, 16, 24, 0.78);
+  --glass-border-color: rgba(255, 255, 255, 0.12);
+  --glass-solid: rgb(14, 18, 27);
+  --glass-gap: 12px;
+}
+
+@utility glass {
+  background: var(--glass-tint);
+  border: 1px solid var(--glass-border-color);
+  border-radius: var(--glass-radius);
+  backdrop-filter: blur(var(--glass-blur)) saturate(120%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(120%);
+  pointer-events: auto;
+}
+
+@utility glass-strong {
+  background: var(--glass-tint-strong);
+  border: 1px solid var(--glass-border-color);
+  border-radius: var(--glass-radius);
+  backdrop-filter: blur(var(--glass-blur)) saturate(120%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(120%);
+  pointer-events: auto;
+}
+
+@utility overlay-root {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --glass-tint: var(--glass-solid);
+    --glass-tint-strong: var(--glass-solid);
+  }
+}
+
+/* Solid mode: set data-glass="solid" on <html> (low-power toggle). */
+:root[data-glass='solid'] {
+  --glass-tint: var(--glass-solid);
+  --glass-tint-strong: var(--glass-solid);
+  --glass-blur: 0px;
+}

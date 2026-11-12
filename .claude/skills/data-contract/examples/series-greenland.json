@@ -1,0 +1,12 @@
+{
+  "variable": "ice_mass",
+  "region": "greenland",
+  "units": "Gt",
+  "frequency": "monthly",
+  "kind": "cumulative",
+  "dates": ["1992-01", "1992-02", "1992-03", "1992-04", "1992-05", "1992-06"],
+  "values": [0.0, -3.1, null, -9.8, -12.4, -20.6],
+  "sigma": [12.0, 12.1, null, 12.3, 12.4, 12.5],
+  "segments": [{ "source": "IMBIE", "start": "1992-01", "end": "2020-12", "offset": 0 }],
+  "synthetic": true
+}

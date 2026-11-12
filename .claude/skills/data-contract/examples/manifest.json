@@ -1,0 +1,12 @@
+{
+  "variable": "temperature",
+  "grid": { "bbox": [-180, -90, 180, 90], "width": 720, "height": 360 },
+  "encoding": { "scale": 0.001, "offset": -40, "packing": "R=high byte, G=low byte, B=valid mask, A=255" },
+  "valueRange": [-5, 5],
+  "frames": [
+    { "date": "1980-01", "atlas": 0, "x": 0, "y": 0, "w": 720, "h": 360 },
+    { "date": "1980-02", "atlas": 0, "x": 720, "y": 0, "w": 720, "h": 360 }
+  ],
+  "missing": [],
+  "synthetic": true
+}

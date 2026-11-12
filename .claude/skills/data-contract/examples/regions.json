@@ -1,0 +1,18 @@
+[
+  {
+    "id": "greenland",
+    "name": "Greenland",
+    "parent": null,
+    "variables": ["ice_mass", "ice_mass_rate", "ice_extent", "ice_mass_map", "temperature"],
+    "bbox": [-74, 59, -10, 84],
+    "camera": { "lon": -42, "lat": 72, "height": 4500000, "heading": 0, "pitch": -90 }
+  },
+  {
+    "id": "antarctica_west",
+    "name": "West Antarctica",
+    "parent": "antarctica",
+    "variables": ["ice_mass", "ice_mass_rate"],
+    "bbox": [-180, -90, -30, -60],
+    "camera": { "lon": -100, "lat": -80, "height": 4000000, "heading": 0, "pitch": -90 }
+  }
+]
