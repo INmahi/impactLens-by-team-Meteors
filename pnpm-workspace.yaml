@@ -1,3 +1,9 @@
 packages:
   - apps/*
   - packages/*
+
+# cesium 1.146.0 accepts ^26.4.0 / ^16.3.0, which resolve to the 1.147 builds
+# (engine 26.5.0 dropped glTF exports that cesium/Source/Cesium.js re-exports).
+overrides:
+  '@cesium/engine': 26.4.0
+  '@cesium/widgets': 16.3.0

@@ -1,15 +1,17 @@
-// M0 placeholder: proves Tailwind, shadcn (Base UI) and the stats worker are wired.
-// The real interface starts in M6.
+// M3 layout: full-screen globe with its controls. The drawers and pickers start in M6.
+// The stats check card (from M0) stays in a corner until the real analysis panel replaces it.
 import { useState } from 'react'
 import type { TrendReport } from '@trend/stats'
 import { Button } from '@/components/ui/button'
+import { Globe, GlobeControls } from '@/globe'
 import { runTrend } from '@/lib/stats'
+import { useAppStore } from '@/state/store'
 
 // 30 annual points: a slope of -2 per year plus fixed pseudo-noise.
 const DEMO_DATES = Array.from({ length: 30 }, (_, i) => String(1991 + i))
 const DEMO_VALUES = DEMO_DATES.map((_, i) => -2 * i + 6 * Math.sin(i * 1.7))
 
-export default function App() {
+function StatsCheck() {
   const [report, setReport] = useState<TrendReport | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -29,42 +31,52 @@ export default function App() {
   }
 
   return (
-    <main className="min-h-dvh bg-background px-4 py-10 text-foreground">
-      <div className="mx-auto flex max-w-xl flex-col gap-6">
-        <header className="flex items-center justify-between gap-4">
-          <h1 className="text-2xl font-semibold">Trend Detective</h1>
-          <span className="rounded-md border border-amber-400/40 px-2 py-1 text-xs font-medium tracking-wide text-amber-300">
-            SYNTHETIC DATA
-          </span>
+    <div className="glass pointer-events-auto flex w-72 flex-col gap-3 p-4 text-sm">
+      <p className="text-muted-foreground">Stats worker check (demo series, slope -2 per year).</p>
+      <Button onClick={run} disabled={busy} size="sm">
+        {busy ? 'Running…' : 'Run analysis'}
+      </Button>
+      {error && <p className="text-destructive">{error}</p>}
+      {report && (
+        <dl data-testid="report" className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 tabular-nums">
+          <dt className="text-muted-foreground">Trend</dt>
+          <dd>{report.test.trend}</dd>
+          <dt className="text-muted-foreground">p</dt>
+          <dd>{report.test.p.toExponential(2)}</dd>
+          <dt className="text-muted-foreground">Sen's slope</dt>
+          <dd>
+            {report.slope.perYear.toFixed(3)}/yr ({report.slope.lower.toFixed(2)} to {report.slope.upper.toFixed(2)})
+          </dd>
+          <dt className="text-muted-foreground">n</dt>
+          <dd>{report.n}</dd>
+        </dl>
+      )}
+    </div>
+  )
+}
+
+export default function App() {
+  const region = useAppStore((s) => s.region)
+
+  return (
+    <main className="fixed inset-0 overflow-hidden bg-black text-foreground">
+      <Globe />
+      <div className="pointer-events-none absolute inset-0">
+        <header className="absolute left-3 top-3 flex items-center gap-3">
+          <h1 className="glass pointer-events-auto px-3 py-1.5 text-base font-semibold">Trend Detective</h1>
+          <span className="glass px-2 py-1 text-xs font-medium tracking-wide text-amber-300">SYNTHETIC DATA</span>
+          {region && (
+            <span data-testid="selected-region" className="glass px-2 py-1 text-xs">
+              {region}
+            </span>
+          )}
         </header>
-        <p className="text-sm text-muted-foreground">
-          M0 scaffold check: runs <code>analyzeTrend()</code> in the stats worker on a 30-year demo series
-          with an injected slope of -2 per year.
-        </p>
-        <div>
-          <Button onClick={run} disabled={busy}>
-            {busy ? 'Running…' : 'Run analysis'}
-          </Button>
+        <div className="pointer-events-auto absolute right-3 top-3">
+          <GlobeControls />
         </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        {report && (
-          <dl
-            data-testid="report"
-            className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 rounded-xl border p-4 text-sm tabular-nums"
-          >
-            <dt className="text-muted-foreground">Trend</dt>
-            <dd>{report.test.trend}</dd>
-            <dt className="text-muted-foreground">p-value</dt>
-            <dd>{report.test.p.toExponential(2)}</dd>
-            <dt className="text-muted-foreground">Sen's slope</dt>
-            <dd>
-              {report.slope.perYear.toFixed(3)} per year (95%: {report.slope.lower.toFixed(3)} to{' '}
-              {report.slope.upper.toFixed(3)})
-            </dd>
-            <dt className="text-muted-foreground">n</dt>
-            <dd>{report.n}</dd>
-          </dl>
-        )}
+        <div className="absolute bottom-10 left-3">
+          <StatsCheck />
+        </div>
       </div>
     </main>
   )

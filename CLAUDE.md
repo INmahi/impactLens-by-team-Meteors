@@ -76,13 +76,14 @@ Node 22.18 or later. Python 3.12 or later with `uv`.
 | M0 Scaffold | Done 2026-11-12 | Build, golden (40,475 checks) and analyze tests pass; worker verified in browser |
 | M1 Dataset cards | Done 2026-11-12 | 8 cards in `docs/datasets/`. Decisions in plan sections 2 and 16: IMBIE 2026 primary; ice_mass_rate annual; ice_extent Greenland only; MERRA-2 temperature, baseline 1991-2020; NASA-SSH sea level (no GIA); long records as separate ids `sea_level_long`, `ice_mass_long`, never joined |
 | M2 Contract + synthetic | Done 2026-11-12 | Schemas + types + rules + conventions in `packages/contract/README.md`. Validator and generator in `pipeline/` (84 tests). Gate: 47 files, 0 problems; all 17 injected slopes inside their 95% interval (seed 20261112, not tuned); 50-seed coverage 0.948. `data/public/` is generated (`pnpm data`, 26 MB) and gitignored |
-| M3 Globe | Part a done 2026-11-12 | (a) Cesium 1.146.0 + asset copy script, CESIUM_BASE_URL, `/data` and `/media` served by `repoStatic` in `vite.config.ts`, Zustand store `src/state/store.ts`, loaders `src/lib/data.ts`. Next: (b) base globe, (c) data layer + legend (globe-engineer), then ui-qa |
+| M3 Globe | Parts a, b done 2026-11-12 | (a) Cesium 1.146.0 + asset copy script, CESIUM_BASE_URL, `/data` and `/media` served by `repoStatic` in `vite.config.ts`, Zustand store `src/state/store.ts`, loaders `src/lib/data.ts`. (b) `src/globe/`: Viewer without ion, GIBS Blue Marble (custom EPSG:4326 tiling scheme, `gibsTilingScheme.ts`), outlines + click/hover picking + region cameras from data, polar view derived from regions' bboxes, `GlobeControls` (pole toggle, zoom); mounted full screen in `App.tsx`. Browser check: only localhost + GIBS requests, both poles clean, click selects `antarctica_east`, 0 console errors. Next: (c) atlas data layer + legend + watermark (globe-engineer), then ui-qa |
 
 Open follow-ups:
 - stats-lead: `packages/stats/package.json` `golden` script calls bare `python` (not on PATH here); use root `pnpm golden`. The usage comment in `src/worker.ts` uses `new URL('@trend/stats/worker', ...)`, which Vite does not resolve; the app uses `import StatsWorker from '@trend/stats/worker?worker'` (`apps/web/src/lib/stats.ts`).
 - `lowPower` (engine: under 30 years or under 30 points) never fires on full records, which are all 45+ years. It only appears when the user picks a short time range; the UI and demo must show that case. temperature/antarctica is the realistic hard case (about 19% power).
 - Synthetic data is not physically consistent: maps and series are independent, Antarctic sub-regions do not add up, ice_mass and ice_mass_rate are independent.
 - Extensible glacier regions (decided 2026-11-12): M2 validator and generator must accept any region listed in `regions.json`; M3/M6 must build pickers, outlines and camera presets from it. Candidate future sources for mountain glaciers: GRACE mascons (already carded) and a glacier mass change product per RGI region; data-scout to card one when we add a region.
+- Globe (M3b): no WebGL error boundary or static fallback yet (decide in M6); main bundle is 4.4 MB (Cesium) — consider code-splitting the globe later; fps not yet measured on a real desktop GPU (ui-qa at end of M3).
 - Glass tokens exist twice: `.claude/skills/glass-ui/tokens.css` and `apps/web/src/styles/glass.css`. Keep them identical.
 
 ## Gotchas (Windows dev machine)
@@ -103,6 +104,7 @@ Installed at M0 (2026-11-12). Check before upgrading; the lockfiles (`pnpm-lock.
 | typescript | 7.0.2 | Native compiler; `baseUrl` is gone, use `paths` only |
 | tailwindcss, @tailwindcss/vite | 4.3.5 | Config in CSS (`@theme`), no `tailwind.config.js` |
 | cesium | 1.146.0 | 1.147.0 was under 2 weeks old at install; assets copied by `apps/web/scripts/copy-cesium.mjs` |
+| @cesium/engine, @cesium/widgets | 26.4.0, 16.3.0 | Pinned by `overrides` in `pnpm-workspace.yaml`: cesium 1.146's `^` ranges pull the 1.147 builds, and engine 26.5.0 drops exports that `cesium/Source/Cesium.js` re-exports (build fails). Remove the override when upgrading cesium |
 | zustand | 5.0.16 | 5.1.0 was under 2 weeks old at install |
 | topojson-client | 3.1.0 | with `@types/topojson-client`, `@types/topojson-specification` |
 | shadcn CLI / style | 4.23.0 / `base-nova` | Base UI primitives (`@base-ui/react` 1.9); `render` prop, not `asChild`; `cn` comes from the `cn` package |

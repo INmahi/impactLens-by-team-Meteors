@@ -1,0 +1,2 @@
+- [Globe verification workflow](globe-verification-workflow.md) — headless Chrome via CDP + swiftshader, temp preview page, kill only own PIDs
+- [GIBS EPSG:4326 tiling](gibs-epsg4326-tiling.md) — default and over-wide-rectangle schemes both fail; use globe/gibsTilingScheme.ts
