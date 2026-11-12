@@ -46,7 +46,7 @@ viewer.imageryLayers.addImageryProvider(gibs);
 Static layer, no `{Time}`. If the tile URL 404s, check the GIBS capabilities document (`.../epsg4326/best/wmts.cgi?SERVICE=WMTS&REQUEST=GetCapabilities`) for the exact layer and TileMatrixSet names.
 
 ## Camera presets
-From `regions.json` `camera`: `viewer.camera.flyTo({ destination: Cartesian3.fromDegrees(lon, lat, height), orientation: { heading: toRadians(heading), pitch: toRadians(pitch), roll: 0 }, duration: 1.5 })`. Pole toggle flies between the `greenland` and `antarctica` presets. Zoom buttons call `camera.zoomIn/zoomOut(camera.positionCartographic.height * 0.3)` then `requestRender()`.
+From `regions.json` `camera`: `viewer.camera.flyTo({ destination: Cartesian3.fromDegrees(lon, lat, height), orientation: { heading: toRadians(heading), pitch: toRadians(pitch), roll: 0 }, duration: 1.5 })`. Pole toggle flies to a polar view derived from data (`polarView()` in `globe/regions.ts`: top-level outlined regions in that hemisphere), never hard-coded ids. Zoom buttons call `camera.zoomIn/zoomOut(camera.positionCartographic.height * 0.3)` then `requestRender()`.
 
 ## Atlas UV maths
 Atlas size `W x H` pixels; frame rect `{ x, y, w, h }` in pixels, origin top-left (as in `manifest.frames`). WebGL texture v runs bottom-up, so:
@@ -57,17 +57,19 @@ v0 = 1 - (y + h) / H
 v1 = 1 - y / H
 rect = vec4(u0, v0, u1, v1)
 ```
-In the shader, map the rectangle's `materialInput.st` (0..1 across the geometry, s west to east, t south to north) into the rect: `uv = mix(rect.xy, rect.zw, st)`. Sample at pixel centres to avoid bleeding between neighbouring frames: shrink the rect by half a pixel on each side (`u0 += 0.5/W`, `u1 -= 0.5/W`, same for v).
+In the shader, map the rectangle's `materialInput.st` (0..1 across the geometry, s west to east, t south to north) into the rect: `uv = mix(rect.xy, rect.zw, st)`. Do not shrink the rect by half a pixel (it shifts cells by up to half a cell). Instead clamp `uv` to the frame's outermost texel centres (`bounds` uniform) so `st = 1` never reads the neighbouring frame.
 
-If current and next frames are in different atlas files, bind them as `atlasA` and `atlasB`; otherwise bind the same texture twice.
+Each atlas gets its own sampler uniform (`atlas0..atlasN-1`), bound once at load; current and next frame select theirs with `indexA`/`indexB`. Never reassign a sampler uniform to another atlas: Cesium 1.146's Material destroys the previously bound texture. Max atlases per layer is limited by texture units (the app refuses above 15).
 
 ## Material uniforms
 | Uniform | Type | Meaning |
 |---|---|---|
-| `atlasA`, `atlasB` | sampler2D (Texture, NEAREST, no mipmaps) | Atlas holding the current / next frame |
+| `atlas0..atlasN-1` | sampler2D (Texture, NEAREST, no mipmaps) | One per atlas file, bound once |
+| `indexA`, `indexB` | float | Atlas index of current / next frame |
 | `rectA`, `rectB` | vec4 | UV rects of current / next frame |
+| `boundsA`, `boundsB` | vec4 | Outermost texel centres of each frame (uv clamp) |
 | `fade` | float | 0 = current, 1 = next |
-| `colormap` | sampler2D (256x1, LINEAR is fine here) | |
+| `colormap` | sampler2D (256x1) | Sample texel centre `round(x*255)` so map matches legend |
 | `scale`, `offset` | float | From `manifest.encoding` |
 | `vmin`, `vmax` | float | From `manifest.valueRange` |
 | `opacity` | float | Layer opacity |
@@ -89,7 +91,7 @@ const primitive = new Primitive({
 });
 viewer.scene.primitives.add(primitive);
 ```
-Polar caps: a global rectangle with fine granularity covers both poles. If a seam or pinch appears at a pole, split into a polar-cap rectangle per hemisphere.
+Polar caps: a rectangle that reaches exactly ±90° makes Cesium collapse the pole row into one vertex, twisting the innermost cells into a spiral. Stop the geometry 1e-7° short of each pole (as `globe/dataLayer.ts` does); the shader still maps the full grid.
 
 ## Outlines and picking
 - `topojson-client` `feature(topo, topo.objects.regions)` gives GeoJSON; load with `GeoJsonDataSource.load(geojson, { stroke, fill: Color.TRANSPARENT, clampToGround: false })`.

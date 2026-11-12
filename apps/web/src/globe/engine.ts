@@ -22,6 +22,7 @@ import {
   WebMapTileServiceImageryProvider,
 } from 'cesium'
 import type { Pole } from '@/state/store'
+import { DataLayer, LAYER_HEIGHT } from './dataLayer'
 import { GibsGeographicTilingScheme } from './gibsTilingScheme'
 import { polarView, regionAt, type CameraView, type RegionsData } from './regions'
 
@@ -32,12 +33,13 @@ export const GIBS_CREDIT = 'Imagery: NASA GIBS, Blue Marble Shaded Relief and Ba
 
 type Role = 'base' | 'hover' | 'compare' | 'selected'
 
-/** Outline styles. Selected and compare differ in colour AND pattern (solid vs dashed). */
+/** Outline styles. Selected and compare differ in colour AND pattern (solid vs dashed).
+ *  Heights sit above the data layer so outlines are never hidden under it. */
 const STYLE: Record<Role, { color: Color; width: number; dashed: boolean; height: number }> = {
-  base: { color: Color.WHITE.withAlpha(0.55), width: 1.5, dashed: false, height: 500 },
-  hover: { color: Color.WHITE.withAlpha(0.95), width: 2.5, dashed: false, height: 1000 },
-  compare: { color: Color.fromCssColorString('#f59e0b'), width: 3, dashed: true, height: 1500 },
-  selected: { color: Color.fromCssColorString('#38bdf8'), width: 3.5, dashed: false, height: 2000 },
+  base: { color: Color.WHITE.withAlpha(0.55), width: 1.5, dashed: false, height: LAYER_HEIGHT + 500 },
+  hover: { color: Color.WHITE.withAlpha(0.95), width: 2.5, dashed: false, height: LAYER_HEIGHT + 1000 },
+  compare: { color: Color.fromCssColorString('#f59e0b'), width: 3, dashed: true, height: LAYER_HEIGHT + 1500 },
+  selected: { color: Color.fromCssColorString('#38bdf8'), width: 3.5, dashed: false, height: LAYER_HEIGHT + 2000 },
 }
 
 const FLY_SECONDS = 1.6
@@ -52,6 +54,7 @@ export class GlobeEngine {
   private compare: string | null = null
   private hovered: string | null = null
   private handler: ScreenSpaceEventHandler
+  private dataLayer: DataLayer
   private removePreUpdate: () => void
   onPick: ((regionId: string) => void) | null = null
 
@@ -94,12 +97,13 @@ export class GlobeEngine {
 
     viewer.imageryLayers.addImageryProvider(createGibsProvider())
     void viewer.dataSources.add(this.outlines)
+    this.dataLayer = new DataLayer(scene)
 
     // Entity geometry is batched asynchronously. In request-render mode nobody asks for the
     // frame that shows the finished batch, so keep asking until the data sources are ready.
     // preUpdate fires every tick even when no frame is rendered.
     this.removePreUpdate = scene.preUpdate.addEventListener(() => {
-      if (!viewer.dataSourceDisplay.ready) scene.requestRender()
+      if (!viewer.dataSourceDisplay.ready || this.dataLayer.needsRender()) scene.requestRender()
     })
 
     this.handler = new ScreenSpaceEventHandler(scene.canvas)
@@ -122,6 +126,7 @@ export class GlobeEngine {
     this.onPick = null
     this.removePreUpdate()
     if (!this.handler.isDestroyed()) this.handler.destroy()
+    this.dataLayer.destroy() // before the viewer, while the GL context is alive
     if (!this.viewer.isDestroyed()) this.viewer.destroy()
   }
 
@@ -156,6 +161,16 @@ export class GlobeEngine {
     }
     this.outlines.entities.resumeEvents()
     this.restyle()
+  }
+
+  /** Map layer by id (a variable's mapMode) or null for none. Loads once, then reuses. */
+  setMapLayer(layer: string | null): void {
+    this.dataLayer.setLayer(layer)
+  }
+
+  /** Index into the active layer's timeline (see layerData.layerTimeline). Uniforms only. */
+  setFrame(index: number): void {
+    this.dataLayer.setFrame(index)
   }
 
   setHighlight(selected: string | null, compare: string | null): void {
@@ -259,7 +274,7 @@ function createGibsProvider(): WebMapTileServiceImageryProvider {
     tileWidth: 512,
     tileHeight: 512,
     tilingScheme: new GibsGeographicTilingScheme(),
-    maximumLevel: 8,
+    maximumLevel: 7, // the 500m TileMatrixSet has levels 0-7; level 8 returns HTTP 400
     credit: new Credit(GIBS_CREDIT, true),
   })
 }

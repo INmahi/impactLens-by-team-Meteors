@@ -26,44 +26,93 @@ PACKING = "R=high byte, G=low byte, B=valid mask, A=255"
 
 
 # --------------------------------------------------------------------------- smooth fields
-def _interp_matrix(targets: np.ndarray, nodes: np.ndarray) -> np.ndarray:
-    """Linear interpolation weights, shape (len(targets), len(nodes)); nodes ascending."""
-    m = np.zeros((len(targets), len(nodes)))
-    idx = np.clip(np.searchsorted(nodes, targets) - 1, 0, len(nodes) - 2)
-    w = (targets - nodes[idx]) / (nodes[idx + 1] - nodes[idx])
-    m[np.arange(len(targets)), idx] = 1 - w
-    m[np.arange(len(targets)), idx + 1] = w
-    return m
+# Every spatial pattern is a function of the 3D unit vector of the cell centre, not
+# of raw lon/lat, so the fields are continuous at both poles (nearly constant around
+# the +-89.5 rows) and across the 180 meridian.
+def unit_vectors(lon: np.ndarray, lat: np.ndarray) -> np.ndarray:
+    """(..., 3) unit vectors x = cos lat cos lon, y = cos lat sin lon, z = sin lat (degrees in)."""
+    lo, la = np.radians(lon), np.radians(lat)
+    return np.stack([np.cos(la) * np.cos(lo), np.cos(la) * np.sin(lo), np.sin(la)], axis=-1)
+
+
+def great_circle_deg(p: np.ndarray, q: np.ndarray) -> np.ndarray:
+    """Angle in degrees between unit vectors p (..., 3) and q (3,)."""
+    return np.degrees(np.arccos(np.clip(p @ q, -1.0, 1.0)))
+
+
+def fibonacci_sphere(n: int) -> np.ndarray:
+    """n nearly uniform unit vectors (Fibonacci lattice), shape (n, 3)."""
+    i = np.arange(n) + 0.5
+    z = 1.0 - 2.0 * i / n
+    r = np.sqrt(1.0 - z * z)
+    th = np.pi * (3.0 - np.sqrt(5.0)) * i
+    return np.stack([r * np.cos(th), r * np.sin(th), z], axis=1)
 
 
 class SmoothNoise:
-    """Spatially smooth random fields: random values on a coarse node grid, bilinear
-    interpolation to the 1-degree grid (periodic in longitude), AR(1) in time."""
+    """Spatially smooth, isotropic random fields on the sphere, AR(1) in time.
+
+    Standard-normal weights on about 4*pi/step^2 nearly uniform nodes (Fibonacci
+    lattice), spread to the grid by a Gaussian kernel of the chord distance with
+    width step_deg. The kernel is shifted down by its value at 4 widths and clipped
+    at 0, so it reaches 0 continuously; each cell is then scaled to unit variance.
+    """
+
+    CUT = 4.0  # kernel support in kernel widths
 
     def __init__(self, rng: np.random.Generator, step_deg: float, phi: float) -> None:
         self.rng, self.phi = rng, phi
-        lon_nodes = np.arange(-180, 180 + step_deg / 2, step_deg)
-        lat_nodes = np.arange(-90, 90 + step_deg / 2, step_deg)
-        lon = -180 + (np.arange(GRID_WIDTH) + 0.5)
-        lat = 90 - (np.arange(GRID_HEIGHT) + 0.5)
-        self.ly = _interp_matrix(lat, lat_nodes)            # (H, nlat)
-        self.lx = _interp_matrix(lon, lon_nodes)            # (W, nlon)
-        self.nlat, self.nlon = len(lat_nodes), len(lon_nodes) - 1  # last lon node repeats the first
+        step = np.radians(step_deg)
+        nodes = fibonacci_sphere(int(round(4 * np.pi / step ** 2)))
+        lon, lat = cell_centres(GRID_WIDTH, GRID_HEIGHT)
+        cells = unit_vectors(lon, lat).reshape(-1, 3)
+        cut = np.exp(-0.5 * self.CUT ** 2)
+        cap = 2 * np.sin(self.CUT * step / 2)  # chord at CUT kernel widths
+        k = int(len(nodes) * np.sin(self.CUT * step / 2) ** 2 * 1.5) + 8  # >= nodes inside the cap
+        idx = np.empty((len(cells), k), dtype=np.int64)
+        w = np.empty((len(cells), k))
+        for a in range(0, len(cells), 4096):
+            d2 = 2.0 - 2.0 * (cells[a:a + 4096] @ nodes.T)        # squared chord distance
+            near = np.argsort(d2, axis=1, kind="stable")[:, :k]
+            if not (np.take_along_axis(d2, near[:, -1:], axis=1) > cap ** 2).all():
+                raise ValueError("SmoothNoise: too few neighbours kept; raise k")
+            idx[a:a + 4096] = near
+            w[a:a + 4096] = np.clip(np.exp(-0.5 * np.take_along_axis(d2, near, axis=1) / step ** 2) - cut, 0, None)
+        w /= np.sqrt((w ** 2).sum(axis=1, keepdims=True))
+        self.idx, self.w = idx, w
+        self.n = len(nodes)
         self.state = self._draw()
 
     def _draw(self) -> np.ndarray:
-        return self.rng.standard_normal((self.nlat, self.nlon))
+        return self.rng.standard_normal(self.n)
 
     def step(self) -> np.ndarray:
         self.state = self.phi * self.state + np.sqrt(1 - self.phi ** 2) * self._draw()
-        nodes = np.concatenate([self.state, self.state[:, :1]], axis=1)
-        return self.ly @ nodes @ self.lx.T
+        return (self.w * self.state[self.idx]).sum(axis=1).reshape(GRID_HEIGHT, GRID_WIDTH)
 
 
-def _bump(lon: np.ndarray, lat: np.ndarray, lon0: float, lat0: float, sigma: float) -> np.ndarray:
-    dlon = (lon - lon0 + 180) % 360 - 180
-    d2 = (lat - lat0) ** 2 + (dlon * np.cos(np.radians(lat0))) ** 2
-    return np.exp(-d2 / (2 * sigma ** 2))
+def _bump(cells: np.ndarray, lon0: float, lat0: float, sigma: float) -> np.ndarray:
+    """Gaussian of the great-circle distance (degrees) from (lon0, lat0)."""
+    d = great_circle_deg(cells, unit_vectors(np.float64(lon0), np.float64(lat0)))
+    return np.exp(-d ** 2 / (2 * sigma ** 2))
+
+
+def smooth_on_sphere(field: np.ndarray, sigma_deg: float) -> np.ndarray:
+    """Gaussian blur of a (H, W) grid that stays continuous at the poles and the 180 meridian.
+
+    Latitude blur first (rows), then a periodic longitude blur whose width in
+    degrees of longitude is sigma / cos(lat), so the polar rows end up nearly
+    constant around the circle.
+    """
+    lat = 90 - (np.arange(GRID_HEIGHT) + 0.5) * 180 / GRID_HEIGHT
+    off = np.arange(-int(4 * sigma_deg), int(4 * sigma_deg) + 1)
+    kern = np.exp(-0.5 * (off / sigma_deg) ** 2)
+    rows = np.clip(np.arange(GRID_HEIGHT)[:, None] + off[None, :], 0, GRID_HEIGHT - 1)
+    out = (field[rows] * kern[None, :, None]).sum(axis=1) / kern.sum()
+    freq = np.fft.rfftfreq(GRID_WIDTH, d=360 / GRID_WIDTH)                  # cycles per degree
+    sig_lon = sigma_deg / np.maximum(np.cos(np.radians(lat)), 1e-3)
+    gain = np.exp(-2 * (np.pi * freq[None, :] * sig_lon[:, None]) ** 2)
+    return np.fft.irfft(np.fft.rfft(out, axis=1) * gain, n=GRID_WIDTH, axis=1)
 
 
 # --------------------------------------------------------------------------- layer models
@@ -92,15 +141,16 @@ ICE_MASS_SEASONAL = [
 def ice_mass_map_fields(layer: LayerSpec, seed: int) -> LayerFields:
     rng = stream(seed, "map", layer.id)
     lon, lat = cell_centres(GRID_WIDTH, GRID_HEIGHT)
+    cells = unit_vectors(lon, lat)
     valid = land_mask(GRID_WIDTH, GRID_HEIGHT)
     trend = np.zeros(lon.shape)
     for lo, la, rate, sig in ICE_MASS_TRENDS:
-        trend += rate * _bump(lon, lat, lo, la, sig)
+        trend += rate * _bump(cells, lo, la, sig)
     amp = np.zeros(lon.shape)
     phase = np.zeros(lon.shape)
     weight = np.zeros(lon.shape)
     for lo, la, a, sig, ph in ICE_MASS_SEASONAL:
-        b = _bump(lon, lat, lo, la, sig)
+        b = _bump(cells, lo, la, sig)
         amp += a * b
         phase += ph * b
         weight += b
@@ -124,7 +174,9 @@ def ice_mass_map_fields(layer: LayerSpec, seed: int) -> LayerFields:
 def temperature_fields(layer: LayerSpec, seed: int) -> LayerFields:
     rng = stream(seed, "map", layer.id)
     lon, lat = cell_centres(GRID_WIDTH, GRID_HEIGHT)
-    land = land_mask(GRID_WIDTH, GRID_HEIGHT)
+    # Land fraction blurred on the sphere: anomaly fields have no sharp coastline
+    # steps, and the crude mask's coast along the 180 meridian (64.5N) leaves no seam.
+    land = smooth_on_sphere(land_mask(GRID_WIDTH, GRID_HEIGHT).astype(float), 3.0)
     s = np.sin(np.radians(lat))
     # Warming trend in degC per year: about 0.02 in the tropics, Arctic amplification
     # to about 0.07 near Greenland, weaker over the Southern Ocean and Antarctica.

@@ -13,4 +13,6 @@ Verify the globe with headless Chrome driven over the DevTools protocol, not `ch
 
 Process hygiene: stop only the PID you started (`netstat -ano | grep :PORT`, then `taskkill //F //PID n //T`). A blanket `taskkill /IM node.exe` was denied by the permission system: it would kill the user's other node processes.
 
-Related: [[gibs-epsg4326-tiling]]
+Do not edit files under apps/web/src while a CDP run is in progress: Vite HMR reloads the page and the run's store handle goes stale (M3c: a scrub reported 0 uniform updates). Instrument texture uploads by wrapping WebGL texImage2D/texSubImage2D/texStorage2D in an inline head script of the preview page; long scrubs (561 steps x ~350 ms on swiftshader) take minutes, so run them in the background.
+
+Related: [[gibs-epsg4326-tiling]], [[cesium-material-texture-gotchas]]

@@ -13,7 +13,7 @@ export interface AppState {
   compareRegion: string | null
   /** Map layer id shown on the globe (a variable's mapMode), or null for none. */
   mapLayer: string | null
-  /** Index into the active map layer's manifest frames. */
+  /** Index into the active map layer's timeline: manifest frame dates plus `missing` dates, sorted. A missing date hides the layer. */
   frameIndex: number
   playing: boolean
   pole: Pole

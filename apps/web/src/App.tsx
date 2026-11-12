@@ -1,9 +1,9 @@
-// M3 layout: full-screen globe with its controls. The drawers and pickers start in M6.
+// M3 layout: full-screen globe, controls, legend and data-driven SYNTHETIC watermark. The drawers and pickers start in M6.
 // The stats check card (from M0) stays in a corner until the real analysis panel replaces it.
 import { useState } from 'react'
 import type { TrendReport } from '@trend/stats'
 import { Button } from '@/components/ui/button'
-import { Globe, GlobeControls } from '@/globe'
+import { Globe, GlobeControls, LayerDebugControls, MapLegend, SyntheticWatermark } from '@/globe'
 import { runTrend } from '@/lib/stats'
 import { useAppStore } from '@/state/store'
 
@@ -64,7 +64,6 @@ export default function App() {
       <div className="pointer-events-none absolute inset-0">
         <header className="absolute left-3 top-3 flex items-center gap-3">
           <h1 className="glass pointer-events-auto px-3 py-1.5 text-base font-semibold">Trend Detective</h1>
-          <span className="glass px-2 py-1 text-xs font-medium tracking-wide text-amber-300">SYNTHETIC DATA</span>
           {region && (
             <span data-testid="selected-region" className="glass px-2 py-1 text-xs">
               {region}
@@ -74,7 +73,13 @@ export default function App() {
         <div className="pointer-events-auto absolute right-3 top-3">
           <GlobeControls />
         </div>
-        <div className="absolute bottom-10 left-3">
+        <SyntheticWatermark className="absolute left-1/2 top-3 -translate-x-1/2" />
+        <div className="absolute bottom-10 right-3">
+          <MapLegend />
+        </div>
+        {/* Temporary until the time scroller (M4) and pickers (M6). */}
+        <div className="absolute bottom-10 left-3 flex flex-col gap-3">
+          <LayerDebugControls />
           <StatsCheck />
         </div>
       </div>

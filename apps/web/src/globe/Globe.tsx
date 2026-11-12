@@ -26,6 +26,15 @@ export default function Globe() {
     let unsubscribe: (() => void) | null = null
     let cancelled = false
 
+    // Map layer: independent of the region data. Plain id and index in, uniforms out.
+    const initial = useAppStore.getState()
+    engine.setMapLayer(initial.mapLayer)
+    engine.setFrame(initial.frameIndex)
+    const unsubscribeLayer = useAppStore.subscribe((state, prev) => {
+      if (state.mapLayer !== prev.mapLayer) engine.setMapLayer(state.mapLayer)
+      if (state.mapLayer !== prev.mapLayer || state.frameIndex !== prev.frameIndex) engine.setFrame(state.frameIndex)
+    })
+
     getRegionsData()
       .then((data) => {
         if (cancelled || engine.isDestroyed()) return
@@ -52,6 +61,7 @@ export default function Globe() {
     return () => {
       cancelled = true
       unsubscribe?.()
+      unsubscribeLayer()
       registerEngine(null)
       engine.destroy()
       engineRef.current = null

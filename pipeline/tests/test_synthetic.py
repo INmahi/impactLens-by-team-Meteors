@@ -176,3 +176,51 @@ def test_zero_slope_series_is_not_significant(built: Path) -> None:
     assert _read(built, f"{vid}/series/{rid}.json")["injected"]["slopePerYear"] == 0
     st = _read(built, f"{vid}/stats/{rid}__default.json")
     assert st["test"]["significant"] is False, st["test"]
+
+
+# --------------------------------------------------------------------------- 5. smooth on the sphere
+def _layer_frames(root: Path, layer: str) -> tuple[np.ndarray, float]:
+    """All frames of a map layer decoded from the shipped atlases, (n, H, W) with NaN = missing."""
+    man = _read(root, f"{layer}/manifest.json")
+    atlases = [np.asarray(Image.open(root / layer / a["file"])) for a in man["atlases"]]
+    enc = man["encoding"]
+    frames = [unpack(atlases[f["atlas"]][f["y"]:f["y"] + f["h"], f["x"]:f["x"] + f["w"]],
+                     enc["scale"], enc["offset"]) for f in man["frames"]]
+    lo, hi = man["valueRange"]
+    return np.stack(frames), hi - lo
+
+
+@pytest.mark.parametrize("layer", ["ice_mass_map", "temperature"])
+def test_map_is_continuous_at_the_poles(built: Path, layer: str) -> None:
+    """All 360 cells of a +-89.5 row lie within 1 degree of the pole, so a field that is
+    smooth on the sphere is nearly constant around them (no radial wedges on the globe).
+    The bound: under 6% of valueRange in every frame (synthetic fields have realistic
+    1-degree texture; before the fix temperature spanned over 100%), under 2.5% in the
+    median frame, and at most 1.5x the biggest difference between meridionally adjacent
+    cells elsewhere in the same frame (the pole is no rougher than the rest)."""
+    v, span = _layer_frames(built, layer)
+    checked = 0
+    for row in (0, -1):
+        ring = v[:, row, :]
+        has = np.isfinite(ring).any(axis=1)
+        if not has.any():
+            continue  # ice_mass_map: Arctic Ocean row is all invalid
+        assert has.all(), f"{layer}: polar row {row} valid in some frames only"
+        spread = np.nanmax(ring, axis=1) - np.nanmin(ring, axis=1)
+        merid = np.nanmax(np.abs(np.diff(v[:, 1:-1, :], axis=1)), axis=(1, 2))
+        assert (spread < 0.06 * span).all(), f"{layer}: max polar spread {spread.max():.3g}"
+        assert (spread <= 1.5 * merid).all(), f"{layer}: pole rougher than the rest of the field"
+        assert np.median(spread) < 0.025 * span
+        checked += 1
+    assert checked >= 1
+
+
+@pytest.mark.parametrize("layer", ["ice_mass_map", "temperature"])
+def test_map_has_no_seam_at_180(built: Path, layer: str) -> None:
+    """Columns at -179.5 and 179.5 are neighbours; their difference must look like any
+    other pair of adjacent columns, not a seam."""
+    v, span = _layer_frames(built, layer)
+    seam = np.nanmax(np.abs(v[:, :, 0] - v[:, :, -1]), axis=1)
+    inner = np.nanmax(np.abs(np.diff(v, axis=2)), axis=(1, 2))
+    assert (seam < 0.03 * span).all(), f"{layer}: max seam difference {seam.max():.3g}"
+    assert (seam <= 1.5 * inner).all()

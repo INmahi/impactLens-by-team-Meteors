@@ -1,0 +1,74 @@
+// Fabric material source for a packed-atlas data layer, generated for the layer's atlas count.
+// Based on .claude/skills/cesium-data-layer/material.glsl, with three changes:
+//
+// 1. Atlas selection by index. Each atlas is its own sampler uniform (atlas0..atlasN-1),
+//    bound once at load. Cesium's Material destroys the previous texture when a sampler
+//    uniform is reassigned, so swapping atlasA/atlasB between atlases would destroy them;
+//    instead the current and next frame pick their atlas with `indexA` / `indexB` (floats).
+//    GLSL ES 3.00 cannot index a sampler array with a uniform, hence the if-chain.
+// 2. Exact cell mapping. `st` maps linearly onto the frame rect (no half-pixel shrink, which
+//    would shift cells by up to half a cell); the result is clamped to the frame's outermost
+//    texel centres (`boundsA` / `boundsB`) so st = 1 never reads the neighbouring frame.
+// 3. No emission. With a flat appearance the output is diffuse + emission, so emission would
+//    brighten the colours away from the legend; diffuse alone equals the colormap colour.
+//
+// Packing (data-contract): R = high byte, G = low byte, B = valid mask (255 valid), A = 255.
+// value = (R * 256 + G) * scale + offset
+
+export function buildLayerShader(atlasCount: number): string {
+  if (atlasCount < 1) throw new Error('data layer needs at least one atlas')
+  const samplers = Array.from({ length: atlasCount }, (_, i) => `uniform sampler2D atlas${i};`).join('\n')
+  const branches = Array.from({ length: atlasCount - 1 }, (_, i) => `  if (index < ${i}.5) return texture(atlas${i}, uv);`)
+  branches.push(`  return texture(atlas${atlasCount - 1}, uv);`)
+
+  return `${samplers}
+uniform sampler2D colormap;  // 256x1, left = vmin, right = vmax
+uniform vec4 rectA;          // (u west, v south, u east, v north) of the current frame
+uniform vec4 rectB;          // same for the next frame
+uniform vec4 boundsA;        // (min u, min v, max u, max v): outermost texel centres of the frame
+uniform vec4 boundsB;
+uniform float indexA;        // atlas holding the current frame
+uniform float indexB;        // atlas holding the next frame
+uniform float fade;          // 0 = current frame, 1 = next frame
+uniform float scale;
+uniform float offset;
+uniform float vmin;
+uniform float vmax;
+uniform float opacity;
+
+vec4 sampleAtlas(float index, vec2 uv) {
+${branches.join('\n')}
+}
+
+// Returns (value, valid). Texture values are 0..1, so multiply by 255 and round.
+vec2 decodeFrame(float index, vec4 rect, vec4 bounds, vec2 st) {
+  vec2 uv = clamp(mix(rect.xy, rect.zw, st), bounds.xy, bounds.zw);
+  vec4 t = sampleAtlas(index, uv);
+  float hi = floor(t.r * 255.0 + 0.5);
+  float lo = floor(t.g * 255.0 + 0.5);
+  float valid = step(0.5, t.b);
+  return vec2((hi * 256.0 + lo) * scale + offset, valid);
+}
+
+czm_material czm_getMaterial(czm_materialInput materialInput) {
+  czm_material material = czm_getDefaultMaterial(materialInput);
+  vec2 st = materialInput.st;
+
+  vec2 a = decodeFrame(indexA, rectA, boundsA, st);
+  vec2 b = decodeFrame(indexB, rectB, boundsB, st);
+
+  // Cross-fade only where both frames are valid; otherwise show whichever is valid.
+  float bothValid = a.y * b.y;
+  float value = mix(a.x, b.x, fade * bothValid + (1.0 - a.y) * b.y);
+  float valid = max(a.y, b.y);
+
+  float x = clamp((value - vmin) / (vmax - vmin), 0.0, 1.0);
+  // Centre of colormap texel round(x * 255): the same 256 colours the legend shows.
+  vec3 color = texture(colormap, vec2((floor(x * 255.0 + 0.5) + 0.5) / 256.0, 0.5)).rgb;
+
+  material.diffuse = color;
+  material.alpha = opacity * valid;
+  return material;
+}
+`
+}
