@@ -8,7 +8,9 @@ import { formatP, type CompareReport, type MannKendallResult } from '@trend/stat
 import { formatStep, formatUnitsText, spanYears, useRegionsData, useVariablesData } from '@/lib/useData'
 import { compareVerdict, correlationText, detectText, fmt, interpretation, rateUnits, trendVerdict, uncertaintyText } from '@/lib/verdict'
 import { useAppStore, type AnalysisResult } from '@/state/store'
+import { FileDown } from 'lucide-react'
 import { cn } from 'cn'
+import { downloadReport } from '@/lib/report'
 import DataSourceCard from './DataSourceCard'
 
 export default function RightDrawer({
@@ -37,6 +39,17 @@ export default function RightDrawer({
       <header className="flex items-center justify-between gap-2 px-4 pt-3 pb-2">
         <h2 className="text-sm font-semibold tracking-wide">Results</h2>
         <span className="flex items-center gap-1">
+          {analysis && (
+            <button
+              type="button"
+              onClick={() => void downloadReport(analysis)}
+              aria-label="Download the report (HTML, prints to PDF)"
+              title="Download report"
+              className={iconBtn}
+            >
+              <FileDown className="size-4" aria-hidden />
+            </button>
+          )}
           {onToggleWide && (
             <button type="button" onClick={onToggleWide} aria-pressed={!!wide} aria-label={wide ? 'Make results narrower' : 'Make results wider'} title={wide ? 'Narrower' : 'Wider'} className={iconBtn}>
               {wide ? '⇥' : '⇤'}
