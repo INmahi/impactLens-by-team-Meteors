@@ -254,6 +254,7 @@ def write_layer(layer: LayerSpec, fields: LayerFields, layer_dir: Path) -> tuple
         "grid": {"bbox": [-180, -90, 180, 90], "width": w, "height": h},
         "encoding": {"scale": layer.scale, "offset": layer.offset, "packing": PACKING},
         "valueRange": list(fields.value_range),
+        **({"fadeNearZero": True} if layer.fade_near_zero else {}),
         "atlases": atlases,
         "frames": frames,
         "missing": sorted(layer.missing),

@@ -499,6 +499,7 @@ class LayerSpec:
     offset: float
     source: dict[str, str]
     name: str | None = None  # manifest `name`: legend display name (optional)
+    fade_near_zero: bool = False  # manifest `fadeNearZero`: values near 0 drawn transparent (mass change maps)
 
 
 def _months(start: str, end: str) -> list[str]:
@@ -513,7 +514,8 @@ def _months(start: str, end: str) -> list[str]:
 MAP_LAYERS: list[LayerSpec] = [
     LayerSpec("ice_mass_map", "cm w.e.", "2002-04", "2026-09",
               missing=_months("2017-07", "2018-05") + ["2002-06", "2003-06", "2011-01"],
-              scale=0.05, offset=-1000.0, source=_GRACE, name="Ice mass change (GRACE-like, monthly)"),
+              scale=0.05, offset=-1000.0, source=_GRACE, name="Ice mass change (GRACE-like, monthly)",
+              fade_near_zero=True),
     LayerSpec("temperature", "degC", "1980-01", "2026-09", missing=[], scale=0.02, offset=-50.0, source=_MERRA2,
               name="Air temperature anomaly (monthly)"),
 ]

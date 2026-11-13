@@ -35,6 +35,7 @@ uniform float offset;
 uniform float vmin;
 uniform float vmax;
 uniform float opacity;
+uniform float fadeNearZero;  // 1 = values near 0 fade to transparent (manifest fadeNearZero)
 
 vec4 sampleAtlas(float index, vec2 uv) {
 ${branches.join('\n')}
@@ -67,7 +68,13 @@ czm_material czm_getMaterial(czm_materialInput materialInput) {
   vec3 color = texture(colormap, vec2((floor(x * 255.0 + 0.5) + 0.5) / 256.0, 0.5)).rgb;
 
   material.diffuse = color;
-  material.alpha = opacity * valid;
+  // Layers that ask for it (manifest fadeNearZero, e.g. the GRACE mass map): values near 0 fade to
+  // transparent, so only real change is coloured and quiet land shows the base map (no white sheet over
+  // every continent). Full colour from 15% of the half-range; transparent below 3%. The legend says so.
+  float centre = 0.5 * (vmin + vmax);
+  float halfRange = max(0.5 * (vmax - vmin), 1e-6);
+  float strength = mix(1.0, smoothstep(0.03, 0.15, abs(value - centre) / halfRange), fadeNearZero);
+  material.alpha = opacity * valid * strength;
   return material;
 }
 `

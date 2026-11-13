@@ -100,6 +100,10 @@ export interface Manifest {
   variable: Id;
   /** Optional legend display name; falls back to the variable name. */
   name?: string;
+  /** Optional one-line legend note about what the layer shows. */
+  note?: string;
+  /** Optional: draw values near 0 transparent (for layers where 0 means "no change", e.g. mass change). */
+  fadeNearZero?: boolean;
   units: string;
   grid: { bbox: [number, number, number, number]; width: number; height: number };
   encoding: { scale: number; offset: number; packing: 'R=high byte, G=low byte, B=valid mask, A=255' };

@@ -93,8 +93,10 @@ function GridLegend({ active, className }: { active: ActiveMode; className?: str
 
       <p className="text-xs text-white/80">
         Fixed colour range in {units}; values beyond it show the end colours.
+        {manifest.fadeNearZero && ' Values near 0 are left uncoloured, so the map underneath shows.'}
         {variable?.baseline && ` Anomaly relative to ${variable.baseline[0]}–${variable.baseline[1]}.`}
       </p>
+      {manifest.note && <p className="text-xs text-white/90">{manifest.note}</p>}
       {manifest.source && <p className="text-xs text-white/80">Source: {manifest.source.name}</p>}
     </section>
   )

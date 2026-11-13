@@ -12,6 +12,15 @@
       "type": "string",
       "minLength": 1
     },
+    "fadeNearZero": {
+      "description": "Optional: draw values near 0 transparent, for layers where 0 means no change (added 2026-11-13).",
+      "type": "boolean"
+    },
+    "note": {
+      "description": "Optional one-line legend note about what the layer shows (added 2026-11-13).",
+      "type": "string",
+      "minLength": 1
+    },
     "units": { "type": "string", "minLength": 1 },
     "grid": {
       "type": "object",

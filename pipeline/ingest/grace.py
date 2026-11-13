@@ -130,12 +130,14 @@ def write_grace_layer(raw: Path, root: Path, accessed: str, log: Any = print) ->
         raise IngestError(f"GRACE values span {vals.min():.0f}..{vals.max():.0f} cm; too wide for the 16-bit encoding")
     layer = LayerSpec("ice_mass_map", "cm w.e.", all_months[0], all_months[-1], missing=missing, scale=0.05,
                       offset=offset, source={**SOURCE, "accessed": accessed},
-                      name="Ice mass change (GRACE/GRACE-FO, monthly)")
+                      name="Ice and water mass change (GRACE/GRACE-FO, monthly)", fade_near_zero=True)
     fields = LayerFields(all_months, frames, frame_months, (-lim, lim))
     layer_dir = Path(root) / "ice_mass_map"
     shutil.rmtree(layer_dir / "frames", ignore_errors=True)
     manifest, clamped = write_layer(layer, fields, layer_dir)
     manifest["synthetic"] = False
+    manifest["note"] = ("GRACE weighs all mass: over the ice sheets and glaciers this is mostly ice; elsewhere it is "
+                        "groundwater, lakes, snow and soil moisture. About 300 km resolution.")
     from .. import writers as W
 
     W.dump(layer_dir / "manifest.json", manifest)
