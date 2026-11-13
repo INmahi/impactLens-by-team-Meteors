@@ -255,6 +255,7 @@ def write_layer(layer: LayerSpec, fields: LayerFields, layer_dir: Path) -> tuple
         "encoding": {"scale": layer.scale, "offset": layer.offset, "packing": PACKING},
         "valueRange": list(fields.value_range),
         **({"fadeNearZero": True} if layer.fade_near_zero else {}),
+        **({"glow": True} if layer.glow else {}),
         "atlases": atlases,
         "frames": frames,
         "missing": sorted(layer.missing),
@@ -262,6 +263,22 @@ def write_layer(layer: LayerSpec, fields: LayerFields, layer_dir: Path) -> tuple
         "synthetic": True,
     })
     return manifest, clamped_total
+
+
+def melt_colormap() -> np.ndarray:
+    """256x1 "melt" ramp for mass-change maps; left = valueRange[0] (most loss), centre = 0, right = most gain.
+    Loss glows yellow -> orange -> red -> deep red with size; gain is a cool blue (M12, item 7)."""
+    xs = [0.0, 0.12, 0.27, 0.40, 0.47, 0.5, 0.53, 0.70, 1.0]
+    stops = np.array([
+        [120, 0, 25], [200, 20, 30], [245, 90, 20], [255, 170, 30], [255, 215, 80],
+        [255, 230, 140], [190, 225, 255], [110, 175, 240], [35, 85, 190],
+    ], dtype=float)
+    x = np.linspace(0, 1, 256)
+    rgb = np.stack([np.interp(x, xs, stops[:, c]) for c in range(3)], axis=1)
+    out = np.empty((1, 256, 4), dtype=np.uint8)
+    out[0, :, :3] = np.rint(rgb).astype(np.uint8)
+    out[0, :, 3] = 255
+    return out
 
 
 def colormap(reverse: bool) -> np.ndarray:

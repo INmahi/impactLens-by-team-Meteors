@@ -35,7 +35,8 @@ uniform float offset;
 uniform float vmin;
 uniform float vmax;
 uniform float opacity;
-uniform float fadeNearZero;  // 1 = values near 0 fade to transparent (manifest fadeNearZero)
+uniform float fadeNearZero;
+uniform float glow;          // 1 = mass-change display: losses glow (manifest glow)  // 1 = values near 0 fade to transparent (manifest fadeNearZero)
 
 vec4 sampleAtlas(float index, vec2 uv) {
 ${branches.join('\n')}
@@ -55,7 +56,9 @@ vec2 decodeTexel(float index, vec2 uv) {
 // Returns (value, valid).
 vec2 decodeFrame(float index, vec4 rect, vec4 bounds, vec2 st) {
   vec2 uv = mix(rect.xy, rect.zw, st);
-  vec2 texel = 2.0 * abs(bounds.xy - rect.xy);          // bounds are inset by half a texel
+  // bounds.xy = smallest texel centre (min u, min v); the rect corner may be either end (v runs north to south
+  // in the atlas), so measure the half texel from the smaller corner.
+  vec2 texel = 2.0 * abs(bounds.xy - min(rect.xy, rect.zw));
   vec2 f = (uv - bounds.xy) / max(texel, vec2(1e-9));
   vec2 i0 = floor(f);
   vec2 w = clamp(f - i0, 0.0, 1.0);
@@ -97,8 +100,16 @@ czm_material czm_getMaterial(czm_materialInput materialInput) {
   // every continent). Full colour from 15% of the half-range; transparent below 3%. The legend says so.
   float centre = 0.5 * (vmin + vmax);
   float halfRange = max(0.5 * (vmax - vmin), 1e-6);
-  float strength = mix(1.0, smoothstep(0.03, 0.15, abs(value - centre) / halfRange), fadeNearZero);
+  // Glow layers fade in a little later (5%..25%), so places stay clear until real loss builds up over the years.
+  float fadeLo = mix(0.03, 0.05, glow);
+  float fadeHi = mix(0.15, 0.25, glow);
+  float strength = mix(1.0, smoothstep(fadeLo, fadeHi, abs(value - centre) / halfRange), fadeNearZero);
   material.alpha = opacity * valid * strength;
+  // Losses glow: emissive light grows with the size of the loss (left half of the scale), so melting areas
+  // shine yellow to red as the time scroller plays. Gains stay plain.
+  float loss = clamp(1.0 - 2.0 * x, 0.0, 1.0);
+  material.emission = color * glow * (0.3 + 0.7 * loss) * loss * 1.1;
+  material.alpha = min(1.0, material.alpha + glow * loss * strength * 0.15);
   return material;
 }
 `

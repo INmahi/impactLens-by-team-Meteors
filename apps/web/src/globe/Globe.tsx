@@ -24,6 +24,8 @@ export default function Globe() {
     const engine = new GlobeEngine(container)
     engineRef.current = engine
     registerEngine(engine)
+    // Development only: inspect the live globe from the browser console (window.__engine). Not in builds.
+    if (import.meta.env.DEV) (window as unknown as { __engine?: GlobeEngine }).__engine = engine
     // Clicks select a region only while a Region step is open in the left drawer (store decides).
     engine.onPick = (id) => useAppStore.getState().pickFromGlobe(id)
     // Hover: region name follows the cursor; DOM written directly (no React render per move).

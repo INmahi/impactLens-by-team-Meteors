@@ -12,6 +12,10 @@
       "type": "string",
       "minLength": 1
     },
+    "glow": {
+      "description": "Optional: mass-change display, losses glow (melt colour map, emissive) (added 2026-11-13).",
+      "type": "boolean"
+    },
     "fadeNearZero": {
       "description": "Optional: draw values near 0 transparent, for layers where 0 means no change (added 2026-11-13).",
       "type": "boolean"

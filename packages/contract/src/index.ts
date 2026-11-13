@@ -104,6 +104,8 @@ export interface Manifest {
   note?: string;
   /** Optional: draw values near 0 transparent (for layers where 0 means "no change", e.g. mass change). */
   fadeNearZero?: boolean;
+  /** Optional: mass-change display where losses glow (melt colour map, emissive). */
+  glow?: boolean;
   units: string;
   grid: { bbox: [number, number, number, number]; width: number; height: number };
   encoding: { scale: number; offset: number; packing: 'R=high byte, G=low byte, B=valid mask, A=255' };

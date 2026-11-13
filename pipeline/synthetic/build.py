@@ -23,7 +23,7 @@ from ..writers import BuildError
 from . import config as C
 from .assemble import synthetic_series
 from .geometry import TopoWriter, scale_ring
-from .maps import LAYER_MODELS, colormap, save_png, write_layer
+from .maps import LAYER_MODELS, colormap, melt_colormap, save_png, write_layer
 
 __all__ = ["BuildError", "build_synthetic", "clear_root"]
 
@@ -98,7 +98,7 @@ def build_synthetic(root: Path | str, seed: int = C.DEFAULT_SEED, log: Any = pri
             log(f"warning: {layer.id}: {clamped} valid cells clamped by the 16-bit packing")
         W.dump(root / layer.id / "manifest.json", manifest)
         # ice_mass_map: red (loss) on the left; temperature: blue (cold) on the left.
-        save_png(colormap(reverse=layer.id == "ice_mass_map"), root / layer.id / "colormap.png")
+        save_png(melt_colormap() if layer.glow else colormap(reverse=False), root / layer.id / "colormap.png")
         log(f"{layer.id}: {len(manifest['frames'])} frames in {len(manifest['atlases'])} atlases, "
             f"{len(manifest['missing'])} missing")
     missing_layers = used_layers - {layer.id for layer in C.MAP_LAYERS}

@@ -197,6 +197,7 @@ export class DataLayer {
       vmin: manifest.valueRange[0],
       vmax: manifest.valueRange[1],
       fadeNearZero: manifest.fadeNearZero ? 1 : 0,
+      glow: manifest.glow ? 1 : 0,
       opacity: 0,
     }
     manifest.atlases.forEach((_, i) => (uniforms[`atlas${i}`] = Material.DefaultImageId))
