@@ -3,6 +3,7 @@
 // see plain ids and numbers.
 import {
   ArcType,
+  CallbackProperty,
   Cartesian2,
   Cartesian3,
   Cartographic,
@@ -16,6 +17,7 @@ import {
   Entity,
   Math as CesiumMath,
   PerspectiveFrustum,
+  PolygonHierarchy,
   PolylineDashMaterialProperty,
   type Request as CesiumRequest,
   ScreenSpaceEventHandler,
@@ -81,6 +83,17 @@ CreditDisplay.cesiumCredit = new Credit(
 
 const FLY_SECONDS = 1.6
 
+const HOVER_FILL = Color.fromCssColorString('#7dd3fc')
+const HOVER_FILL_ALPHA = 0.28
+const HOVER_FADE_MS = 180
+/** 0..1 opacity of a hover fill at time `now` (ease in, ease out; instant under reduced motion). */
+function fadeLevel(f: { start: number; fadingOut: boolean }, now: number): number {
+  const reduced = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
+  const t = reduced ? 1 : Math.min(1, Math.max(0, (now - f.start) / HOVER_FADE_MS))
+  const eased = t * (2 - t)
+  return f.fadingOut ? 1 - eased : eased
+}
+
 export class GlobeEngine {
   readonly viewer: Viewer
   private data: RegionsData | null = null
@@ -90,6 +103,9 @@ export class GlobeEngine {
   private selected: string | null = null
   private compare: string | null = null
   private hovered: string | null = null
+  /** Translucent fill of the hovered region: entities, fade direction and start time. */
+  private hoverFills: { entities: Entity[]; start: number; fadingOut: boolean }[] = []
+  private fadeFrame = 0
   private handler: ScreenSpaceEventHandler
   private dataLayer: DataLayer
   private outlineLayer: OutlineLayer
@@ -235,6 +251,56 @@ export class GlobeEngine {
     this.hovered = id
     this.viewer.scene.canvas.style.cursor = id ? 'pointer' : ''
     this.restyle()
+    this.updateHoverFill(id)
+  }
+
+  /**
+   * Hovered region gets a soft translucent fill that fades in (and the previous one fades out), so the whole
+   * area reads at a glance, not only its border. Regions whose outline wraps the pole or spans every longitude
+   * (Antarctica) keep the border highlight only: a lon/lat polygon cannot fill them cleanly.
+   */
+  private updateHoverFill(id: string | null): void {
+    const now = performance.now()
+    for (const f of this.hoverFills) if (!f.fadingOut) Object.assign(f, { fadingOut: true, start: now })
+    const shape = id ? this.data?.shapes.find((sh) => sh.region.id === id) : undefined
+    const [w, , e] = shape?.region.bbox ?? [0, 0, 0, 0]
+    if (shape && e - w < 300 && shape.paths.length) {
+      const fill: { entities: Entity[]; start: number; fadingOut: boolean } = { entities: [], start: now, fadingOut: false }
+      const color = new CallbackProperty(() => HOVER_FILL.withAlpha(HOVER_FILL_ALPHA * fadeLevel(fill, performance.now())), false)
+      for (const path of shape.paths) {
+        if (path.length < 4) continue
+        const flat: number[] = []
+        for (const [lon, lat] of path) flat.push(lon, lat)
+        fill.entities.push(
+          this.outlines.entities.add({
+            polygon: {
+              hierarchy: new PolygonHierarchy(Cartesian3.fromDegreesArray(flat)),
+              height: LAYER_HEIGHT + 200,
+              material: new ColorMaterialProperty(color),
+              arcType: ArcType.RHUMB,
+            },
+          }),
+        )
+      }
+      this.hoverFills.push(fill)
+    }
+    this.animateFills()
+  }
+
+  private animateFills(): void {
+    cancelAnimationFrame(this.fadeFrame)
+    const tick = () => {
+      if (this.viewer.isDestroyed()) return
+      const now = performance.now()
+      this.hoverFills = this.hoverFills.filter((f) => {
+        const gone = f.fadingOut && now - f.start >= HOVER_FADE_MS
+        if (gone) f.entities.forEach((en) => this.outlines.entities.remove(en))
+        return !gone
+      })
+      this.viewer.scene.requestRender()
+      if (this.hoverFills.some((f) => now - f.start < HOVER_FADE_MS)) this.fadeFrame = requestAnimationFrame(tick)
+    }
+    this.fadeFrame = requestAnimationFrame(tick)
   }
 
   private restyle(): void {
