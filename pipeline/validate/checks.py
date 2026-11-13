@@ -677,6 +677,11 @@ class Validator:
                     rels.append(f"{layer}/manifest.json")
             for rel in sorted(set(rels)):
                 doc = self.raw.get(rel)
+                # A map layer can still be synthetic while the variable's series are real (M10 runs one
+                # source at a time). Allowed only in that direction: the globe watermark reads the manifest,
+                # so the synthetic map is still labelled. A real map under a synthetic variable is an error.
+                if rel.endswith("/manifest.json") and isinstance(doc, dict) and doc.get("synthetic") is True and want is False:
+                    continue
                 if isinstance(doc, dict) and isinstance(doc.get("synthetic"), bool) and doc["synthetic"] != want:
                     self.add(rel, 8, f"synthetic is {str(doc['synthetic']).lower()}, but variables.json says "
                              f"{str(want).lower()} for {vid}")

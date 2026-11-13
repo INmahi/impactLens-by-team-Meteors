@@ -121,13 +121,20 @@ export function useVariableWithoutMap(): Variable | null {
 }
 
 /** True when the data on screen is synthetic: the active mode (manifest or a variable using it) or the selected variable. */
-export function useShowsSyntheticData(): boolean {
+/** What on screen is synthetic: the selected variable's data, only the map layer, or nothing.
+ *  'map' happens while real series arrive one source at a time (M10) and the map is still a stand-in. */
+export function useSyntheticScope(): 'data' | 'map' | null {
   const variableId = useAppStore((s) => s.variable)
   const variables = useVariables()
   const active = useActiveMode()
   const variableSynthetic = !!variableId && !!variables?.find((v) => v.id === variableId)?.synthetic
-  if (variableSynthetic) return true
-  if (!active) return false
-  if (active.mode.kind === 'grid') return layerIsSynthetic(active.manifest, variables, active.mode.id)
-  return !!active.variable?.synthetic
+  if (variableSynthetic) return 'data'
+  if (!active) return null
+  const layerSynthetic = active.mode.kind === 'grid' ? layerIsSynthetic(active.manifest, variables, active.mode.id) : !!active.variable?.synthetic
+  if (!layerSynthetic) return null
+  return variableId ? 'map' : 'data'
+}
+
+export function useShowsSyntheticData(): boolean {
+  return useSyntheticScope() != null
 }

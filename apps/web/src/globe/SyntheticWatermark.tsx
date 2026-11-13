@@ -3,10 +3,11 @@
 // variable (variables.json `synthetic`). Read from data, never assumed. Never captures the
 // pointer, so the globe stays draggable underneath.
 import { cn } from 'cn'
-import { useShowsSyntheticData } from './useLayerInfo'
+import { useSyntheticScope } from './useLayerInfo'
 
 export default function SyntheticWatermark({ className }: { className?: string }) {
-  if (!useShowsSyntheticData()) return null
+  const scope = useSyntheticScope()
+  if (!scope) return null
   return (
     <div
       role="note"
@@ -14,8 +15,10 @@ export default function SyntheticWatermark({ className }: { className?: string }
       className={cn('glass-strong flex select-none flex-col items-center px-4 py-1.5 text-center', className)}
       style={{ pointerEvents: 'none' }}
     >
-      <span className="text-lg font-bold tracking-[0.25em] text-amber-300">SYNTHETIC DATA</span>
-      <span className="text-xs text-white/85">Generated test values, not observations</span>
+      <span className="text-lg font-bold tracking-[0.25em] text-amber-300">{scope === 'map' ? 'SYNTHETIC MAP' : 'SYNTHETIC DATA'}</span>
+      <span className="text-xs text-white/85">
+        {scope === 'map' ? 'The map layer is generated test data; the analysed series is real' : 'Generated test values, not observations'}
+      </span>
     </div>
   )
 }

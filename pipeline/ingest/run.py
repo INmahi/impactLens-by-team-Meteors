@@ -9,6 +9,7 @@ regenerated so the region notes and variable lists stay consistent.
 from __future__ import annotations
 
 import json
+import re
 import shutil
 from pathlib import Path
 from typing import Any, Callable, Iterable
@@ -123,7 +124,14 @@ def imbie_docs(raw: Path, marker: dict[str, Any] | None) -> dict[tuple[str, str]
 
 
 # --------------------------------------------------------------------------- overlay
-def overlay(root: Path, vid: str, docs: list[dict[str, Any]], synthetic: bool) -> None:
+def raw_date(raw: Path) -> str:
+    """Download date of a raw folder: the newest data file's modification date (YYYY-MM-DD)."""
+    from datetime import date
+    times = [p.stat().st_mtime for p in Path(raw).rglob("*") if p.is_file() and p.suffix.lower() in (".csv", ".nc", ".txt")]
+    return date.fromtimestamp(max(times)).isoformat() if times else date.today().isoformat()
+
+
+def overlay(root: Path, vid: str, docs: list[dict[str, Any]], synthetic: bool, accessed: str | None = None) -> None:
     """Replace one variable's series, stats and variables.json entry in an existing tree."""
     root = Path(root)
     vpath = root / "variables.json"
@@ -135,7 +143,13 @@ def overlay(root: Path, vid: str, docs: list[dict[str, Any]], synthetic: bool) -
         shutil.rmtree(root / vid / sub, ignore_errors=True)
     W.write_series_and_stats(root, {(vid, d["region"]): d for d in docs})
     v = _var(vid)
-    entry = W.variable_entry(v, docs, synthetic=synthetic, source=None if synthetic else REAL_SOURCES[vid]["source"])
+    source = None if synthetic else {**REAL_SOURCES[vid]["source"], **({"accessed": accessed} if accessed else {})}
+    entry = W.variable_entry(v, docs, synthetic=synthetic, source=source)
+    if not synthetic:
+        # Notes written for the synthetic generator ("generated independently", "in this synthetic
+        # data") are false for real data: drop them and add the source's own caveats (dataset card).
+        keep = [n for n in entry["notes"] if not re.search(r"synthetic|generated", n, re.I)]
+        entry["notes"] = keep + [n for n in REAL_SOURCES[vid].get("notes", []) if n not in keep]
     ids = [e["id"] for e in entries]
     if vid in ids:
         entries[ids.index(vid)] = entry
@@ -161,7 +175,7 @@ def ingest_sea_level(raw: Path, root: Path, log: Log = print) -> dict[str, Any]:
         f"cells per region {ing._avg.cell_counts() if ing._avg else {}}")
     for rid in docs:
         log(f"  {rid}: {ing.weeks_missing(rid)} weeks missing, {docs[rid]['values'].count(None)} null months")
-    overlay(root, "sea_level", list(docs.values()), synthetic=marker is not None)
+    overlay(root, "sea_level", list(docs.values()), synthetic=marker is not None, accessed=raw_date(raw))
     out: dict[str, Any] = {"docs": docs}
     gm = find_gmsl_file(raw)
     if gm is not None and GLOBAL_ID in docs:
@@ -182,7 +196,7 @@ def ingest_imbie(raw: Path, root: Path, log: Log = print) -> dict[tuple[str, str
     for vid in ("ice_mass", "ice_mass_rate"):
         vdocs = [d for (v, _r), d in docs.items() if v == vid]
         if vdocs:
-            overlay(Path(root), vid, vdocs, synthetic=marker is not None)
+            overlay(Path(root), vid, vdocs, synthetic=marker is not None, accessed=raw_date(Path(raw)))
             log(f"{vid}: {len(vdocs)} regions, " + ", ".join(
                 f"{d['region']} {d['dates'][0]}..{d['dates'][-1]}" for d in vdocs))
     return docs

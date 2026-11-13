@@ -25,6 +25,16 @@ REAL_SOURCES: dict[str, dict[str, Any]] = {
             "citation": "Willis, J. (2026). NASA-SSH Simple Gridded Sea Surface Height from Standardized "
                         "Reference Missions Only Version 1.1. PO.DAAC. https://doi.org/10.5067/NSREF-SG0V11. "
                         "Area means over our polygons by Trend Detective.",
+            "doi": "10.5067/NSREF-SG0V11",
+            "version": "1.1",
+            "licence": "NASA open data (no restrictions)",
+            "processing": [
+                "Downloaded the weekly 0.5-degree grids unchanged.",
+                "Area-weighted mean of the valid cells inside each sea's polygon (polygons kept about 100 km "
+                "offshore); the global mean uses all valid cells.",
+                "Monthly value = mean of the weeks labelled in that month (at least 3 weeks, else missing).",
+                "No glacial isostatic adjustment, no land subsidence, no gap filling or extrapolation.",
+            ],
         },
         "segment": "NASA_SSH_REF_SIMPLE_GRID_V11 (NASA-SSH simple grid v1.1), {what}; weekly grids "
                    "averaged by label month (>= 3 weeks)",
@@ -33,19 +43,50 @@ REAL_SOURCES: dict[str, dict[str, Any]] = {
         "source": {
             "name": "IMBIE 2026 (UK Polar Data Centre)",
             "url": "https://doi.org/10.5285/128c5e33-5224-4197-82f0-19dcc95b80a0",
-            "citation": "IMBIE Team (2026). Mass balance of the Greenland and Antarctic ice sheets. UK Polar "
+            "citation": "Otosaka, I., Shepherd, A., Amory, C., et al. (2026). Mass balance of the Greenland and "
+                        "Antarctic Ice Sheets from the 1970s to 2023 (Version 1.0) [Data set]. NERC EDS UK Polar "
                         "Data Centre. https://doi.org/10.5285/128c5e33-5224-4197-82f0-19dcc95b80a0",
+            "doi": "10.5285/128c5e33-5224-4197-82f0-19dcc95b80a0",
+            "version": "1.0",
+            "licence": "Open Government Licence v3.0",
+            "processing": [
+                "Downloaded the per-region CSV files (imbie3_<region>_Gt_partitioned.csv) unchanged.",
+                "Used the total cumulative mass balance column and its 1-sigma uncertainty, monthly, as published.",
+                "No smoothing, gap filling or extrapolation.",
+            ],
         },
         "segment": "IMBIE 2026 ({file}), cumulative mass balance anomaly",
+        "notes": [
+            "Cumulative mass is relative to the start of the record, not the total mass of the ice sheet.",
+            "Reconciled from many satellite surveys (gravity, altimetry and the input-output method), not one instrument.",
+            "Before 1992 the record rests on fewer, older methods, so the uncertainty is larger early.",
+            "Not independent of GRACE-based ice maps or sea-level budgets: gravimetry is one of IMBIE's methods.",
+        ],
     },
     "ice_mass_rate": {
         "source": {
             "name": "IMBIE 2026 (UK Polar Data Centre)",
             "url": "https://doi.org/10.5285/128c5e33-5224-4197-82f0-19dcc95b80a0",
-            "citation": "IMBIE Team (2026). Mass balance of the Greenland and Antarctic ice sheets. UK Polar "
+            "citation": "Otosaka, I., Shepherd, A., Amory, C., et al. (2026). Mass balance of the Greenland and "
+                        "Antarctic Ice Sheets from the 1970s to 2023 (Version 1.0) [Data set]. NERC EDS UK Polar "
                         "Data Centre. https://doi.org/10.5285/128c5e33-5224-4197-82f0-19dcc95b80a0",
+            "doi": "10.5285/128c5e33-5224-4197-82f0-19dcc95b80a0",
+            "version": "1.0",
+            "licence": "Open Government Licence v3.0",
+            "processing": [
+                "Downloaded the per-region CSV files (imbie3_<region>_Gt_partitioned.csv) unchanged.",
+                "Annual rate = mean of the 12 published monthly rate rows of each calendar year; years with "
+                "fewer than 12 months are left out (no padding).",
+                "Never recomputed by differencing the cumulative series.",
+            ],
         },
         "segment": "IMBIE 2026 ({file}), mass balance rate; calendar-year mean of 12 monthly rows",
+        "notes": [
+            "Published rates change about once a year, so each calendar year is one point.",
+            "Reconciled from many satellite surveys (gravity, altimetry and the input-output method), not one instrument.",
+            "Before 1992 the record rests on fewer, older methods, so the uncertainty is larger early.",
+            "Not independent of GRACE-based ice maps or sea-level budgets: gravimetry is one of IMBIE's methods.",
+        ],
     },
 }
 

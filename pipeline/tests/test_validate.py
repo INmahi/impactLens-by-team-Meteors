@@ -464,7 +464,6 @@ def test_rule8_manifest_synthetic_mismatch(tree: Path) -> None:
     edit(tree, MANIFEST, lambda d: d.update(synthetic=False))
     assert_rule(check(tree), 8, "for ice_mass")
 
-
 def test_rule8_injected_on_real_data(tree: Path) -> None:
     def make_real(d):
         d.update(synthetic=False)

@@ -12,6 +12,7 @@
     "test": "pnpm -r test",
     "golden": "uv run python pipeline/stats/make_golden.py 1000",
     "data": "uv run python -m pipeline build --synthetic",
+    "data:real": "uv run python -m pipeline build --synthetic && uv run python scripts/ingest_real.py",
     "validate": "uv run python -m pipeline validate",
     "media": "uv run --group media python -m pipeline media"
   }

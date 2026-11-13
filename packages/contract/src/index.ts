@@ -15,6 +15,11 @@ export interface Source {
   citation: string;
   doi?: string;
   version?: string;
+  /** Date the raw files were downloaded (YYYY-MM-DD). */
+  accessed?: string;
+  licence?: string;
+  /** What Trend Detective did to the source values, in order (shown in the Data source panel). */
+  processing?: string[];
 }
 
 export interface Variable {

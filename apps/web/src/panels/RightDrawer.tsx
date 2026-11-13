@@ -9,6 +9,7 @@ import { formatStep, formatUnitsText, spanYears, useRegionsData, useVariablesDat
 import { compareVerdict, correlationText, detectText, fmt, interpretation, rateUnits, trendVerdict, uncertaintyText } from '@/lib/verdict'
 import { useAppStore, type AnalysisResult } from '@/state/store'
 import { cn } from 'cn'
+import DataSourceCard from './DataSourceCard'
 
 export default function RightDrawer({
   className,
@@ -87,7 +88,6 @@ function Body({ a, v, r, regions, variables, wide }: { a: AnalysisResult; v: Var
             {formatStep(a.start)} – {formatStep(a.end)}
           </Chip>
         </p>
-        <p className="text-[11px] text-white/80">Source: {v.source.name}</p>
       </section>
 
       {cmp && rB && <CompareCard v={v} A={r} B={rB} rep={a.compare!.report} cv={cmp} wide={wide} />}
@@ -115,6 +115,9 @@ function Body({ a, v, r, regions, variables, wide }: { a: AnalysisResult; v: Var
       )}
 
       {a.extras.length > 0 && <ExtrasBlock a={a} r={r} variables={variables} />}
+
+      {/* Data source and honesty: always visible, highlighted (competition: honest results). */}
+      <DataSourceCard a={a} v={v} variables={variables} />
 
       {/* 3-5. Details in tabs */}
       <div>
