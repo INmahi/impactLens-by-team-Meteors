@@ -8,6 +8,7 @@ import * as echarts from 'echarts/core'
 import { CanvasRenderer, SVGRenderer } from 'echarts/renderers'
 import type { Region, Series, Variable } from '@trend/contract'
 import { getSeriesCached, useRegionsData, useVariablesData } from '@/lib/useData'
+import { usePhone } from '@/lib/useMedia'
 import { useAppStore, type AnalysisResult } from '@/state/store'
 import { cn } from 'cn'
 import { buildChart, buildCompareChart, buildTogetherChart, CHART_LABELS } from './buildChart'
@@ -100,6 +101,7 @@ function ChartBody({ a, v, r, regions, variables }: { a: AnalysisResult; v: Vari
   const [seriesB, setSeriesB] = useState<Series | null>(null)
   const [extraSeries, setExtraSeries] = useState<{ variable: Variable; series: Series }[]>([])
   const el = useRef<HTMLDivElement | null>(null)
+  const phone = usePhone()
   const [zoomed, setZoomed] = useState(false)
   const chart = useRef<echarts.ECharts | null>(null)
 
@@ -151,7 +153,7 @@ function ChartBody({ a, v, r, regions, variables }: { a: AnalysisResult; v: Vari
         setZoomed(!!dz)
       })
     }
-    chart.current.setOption(withZoom(out.option), true)
+    chart.current.setOption(fitNarrow(withZoom(out.option), el.current.clientWidth), true)
     setZoomed(false)
     const ro = new ResizeObserver(() => chart.current?.resize())
     ro.observe(el.current)
@@ -248,10 +250,35 @@ ${svg}`, 'image/svg+xml')
       {out?.message ? (
         <p className="rounded-lg border border-white/10 p-3 text-sm text-white/90">{out.message}</p>
       ) : (
-        <div ref={el} role="img" aria-label={`${out?.title ?? 'Chart'}: ${CHART_LABELS[type] ?? type}`} className="h-80 w-full" />
+        <div ref={el} role="img" aria-label={`${out?.title ?? 'Chart'}: ${CHART_LABELS[type] ?? type}`} className={cn('w-full', phone ? 'h-[26rem]' : 'h-80')} />
       )}
     </div>
   )
+}
+
+/** Narrow screens (phone): wrap the subtitle and the source line inside the chart and make room for a
+ *  legend that wraps, so nothing is cut off or overlaps the axis labels. */
+function fitNarrow(option: echarts.EChartsCoreOption, width: number): echarts.EChartsCoreOption {
+  if (width >= 640) return option
+  const o = option as Record<string, unknown>
+  const w = Math.max(200, width - 24)
+  const title = o.title as Record<string, unknown> | undefined
+  const grid = (o.grid ?? {}) as Record<string, number>
+  const legend = (o.legend ?? {}) as Record<string, unknown>
+  const graphic = (o.graphic as Record<string, unknown>[] | undefined) ?? []
+  const zoom = (o.dataZoom as Record<string, unknown>[] | undefined) ?? []
+  return {
+    ...o,
+    title: title && {
+      ...title,
+      textStyle: { ...(title.textStyle as object), fontSize: 13, width: w, overflow: 'break' },
+      subtextStyle: { ...(title.subtextStyle as object), width: w, overflow: 'break', lineHeight: 14 },
+    },
+    grid: { ...grid, left: 52, right: 16, top: (grid.top ?? 88) + 42, bottom: (grid.bottom ?? 78) + 56 },
+    legend: { ...legend, bottom: ((legend.bottom as number) ?? 40) + 28, itemGap: 8, textStyle: { color: '#e2e8f0', fontSize: 11 } },
+    graphic: graphic.map((g) => ({ ...g, style: { ...(g.style as object), width: w, overflow: 'break', fontSize: 10 } })),
+    dataZoom: zoom.map((z) => (z.type === 'slider' ? { ...z, bottom: ((z.bottom as number) ?? 44) + 28, left: 52, right: 16 } : z)),
+  }
 }
 
 /** Extra height the live chart gives the zoom slider (exports leave it out). */

@@ -172,6 +172,7 @@ function Body({ a, v, r, regions, variables, wide }: { a: AnalysisResult; v: Var
               )}
               <p className="leading-snug">{verdict.detail}</p>
               {a.detect && !rep.test.significant && <p className="leading-snug">{detectText(v, a.detect)}</p>}
+              {a.pending?.includes('detect') && <p className="text-white/75 italic">Estimating how many more years of data would be needed…</p>}
               <ul className="flex list-disc flex-col gap-1 pl-4">
                 {interpretation(v, r, rep, variables).map((t) => (
                   <li key={t}>{t}</li>
@@ -220,6 +221,7 @@ function Body({ a, v, r, regions, variables, wide }: { a: AnalysisResult; v: Var
                 <dd>{rep.test.correction.toFixed(2)}</dd>
               </dl>
               {a.uncertainty && <p className="text-[13px] text-white/90">{uncertaintyText(v, a.uncertainty)}</p>}
+              {a.pending?.includes('uncertainty') && <p className="text-[13px] text-white/75 italic">Adding the source&apos;s stated uncertainty (a few seconds)…</p>}
               <details className="rounded-lg border border-white/10 px-2 py-1">
                 <summary className="cursor-pointer text-[13px] text-white/90">Cross-check tests ({rep.crossChecks.length})</summary>
                 <table className="mt-1 w-full text-[12px] tabular-nums">

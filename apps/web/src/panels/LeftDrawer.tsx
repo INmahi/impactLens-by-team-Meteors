@@ -539,12 +539,6 @@ function RunAnalysis({ variable, regionId, blocked }: { variable: Variable; regi
       const asInput = (x: typeof series) => ({ dates: x.dates, values: x.values, frequency: x.frequency, kind: x.kind })
       const input = { ...asInput(series), start, end }
       const report = await runTrend(input)
-      // Extras: "years needed" when not significant; source uncertainty when the series has sigma.
-      const sigma = series.sigma
-      const [detect, uncertainty] = await Promise.all([
-        report.test.significant ? null : runStats('detectability', input).catch(() => null),
-        sigma && sigma.some((x) => x != null) ? runStats('uncertainty', { ...input, sigma }).catch(() => null) : null,
-      ])
 
       // Compare two regions: difference of trends on the common period (paired bootstrap).
       let compare: { region: string; report: Awaited<ReturnType<typeof runStats<'compare'>>> } | null = null
@@ -566,7 +560,23 @@ function RunAnalysis({ variable, regionId, blocked }: { variable: Variable; regi
         }
       }
 
-      useAppStore.getState().setAnalysisDone({ variable: variable.id, region: regionId, start, end, report, detect, uncertainty, compare, extras })
+      // Show the result now; the slow extras ("years needed" when not significant, and the Monte Carlo of the
+      // source's stated uncertainty, ~4 s for 600 points) fill in when ready. They are queued after the
+      // compare / correlation jobs, because the worker runs one job at a time.
+      const sigma = series.sigma
+      const wantDetect = !report.test.significant
+      const wantUnc = !!sigma && sigma.some((x) => x != null)
+      const pending = [...(wantDetect ? (['detect'] as const) : []), ...(wantUnc ? (['uncertainty'] as const) : [])]
+      useAppStore.getState().setAnalysisDone({ variable: variable.id, region: regionId, start, end, report, detect: null, uncertainty: null, compare, extras, pending })
+      const st = useAppStore.getState()
+      if (wantDetect)
+        runStats('detectability', input)
+          .catch(() => null)
+          .then((detect) => st.patchAnalysis(report, { detect }, 'detect'))
+      if (wantUnc)
+        runStats('uncertainty', { ...input, sigma: sigma! })
+          .catch(() => null)
+          .then((uncertainty) => st.patchAnalysis(report, { uncertainty }, 'uncertainty'))
     } catch (e) {
       useAppStore.getState().setAnalysisError(e instanceof Error ? e.message : String(e))
     }

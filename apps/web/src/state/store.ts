@@ -20,6 +20,8 @@ export interface AnalysisResult {
   compare: { region: string; report: CompareReport } | null
   /** Compare mode "variables": each extra variable's trend in the same region and its correlation with the main one. */
   extras: { variable: string; report: TrendReport; correlation: CorrelationReport | null }[]
+  /** Slow extras still being computed after the result is shown ("years needed", source uncertainty). */
+  pending?: ('detect' | 'uncertainty')[]
 }
 
 export type CompareMode = 'none' | 'regions' | 'variables'
@@ -75,6 +77,8 @@ export interface AppState {
   pickFromGlobe: (id: string) => void
   setAnalysisRunning: () => void
   setAnalysisDone: (result: AnalysisResult) => void
+  /** Fill in a slow extra for the result whose trend report is `report` (ignored if a newer run replaced it). */
+  patchAnalysis: (report: TrendReport, patch: Partial<AnalysisResult>, done: 'detect' | 'uncertainty') => void
   setAnalysisError: (message: string) => void
 }
 
@@ -118,5 +122,10 @@ export const useAppStore = create<AppState>()((set, get) => ({
   },
   setAnalysisRunning: () => set({ analysisStatus: 'running', analysisError: null }),
   setAnalysisDone: (analysis) => set({ analysisStatus: 'done', analysis, analysisError: null }),
+  patchAnalysis: (report, patch, done) => {
+    const a = get().analysis
+    if (!a || a.report !== report) return
+    set({ analysis: { ...a, ...patch, pending: (a.pending ?? []).filter((x) => x !== done) } })
+  },
   setAnalysisError: (analysisError) => set({ analysisStatus: 'error', analysisError }),
 }))
