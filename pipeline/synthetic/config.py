@@ -199,6 +199,8 @@ def _sea(rid: str, name: str, outline: Ring | list[Ring], *notes: str) -> "Regio
     return RegionSpec(rid, name, None, "coastal_sea", bbox, _cam_fit(bbox), outline, tuple(notes))
 
 
+_BD_DIV_NAMES = {name for name, *_ in BD_DIVISIONS.values()}
+
 REGIONS: list[RegionSpec] = [
     RegionSpec("greenland", "Greenland", None, "ice_sheet", (-74, 59, -10, 84),
                _cam(-42, 72, 4_500_000), GREENLAND),
@@ -217,12 +219,13 @@ REGIONS: list[RegionSpec] = [
                BANGLADESH,
                ("A mean over the whole country inside its border (Bangladesh Bureau of Statistics via geoBoundaries); not the value at any district.",)),
     # The 8 divisions of Bangladesh (M12), see bangladesh.py. Monsoon rainfall.
-    *[RegionSpec(rid, name, "bangladesh", "division", bbox,
+    # Names: "X Division" and, where a district shares its division's name, "X District" (unambiguous everywhere).
+    *[RegionSpec(rid, f"{name} Division", "bangladesh", "division", bbox,
                  _cam((bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2, 700_000), rings,
                  (f"A mean over the whole {name} division; not the value at any district or town.",))
       for rid, (name, _iso, bbox, rings) in BD_DIVISIONS.items()],
     # The 64 districts (parent = their division), same source; monsoon rainfall only.
-    *[RegionSpec(rid, name, div, "district", bbox,
+    *[RegionSpec(rid, f"{name} District" if name in _BD_DIV_NAMES else name, div, "district", bbox,
                  _cam((bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2, 350_000), rings,
                  (f"A mean over the whole {name} district; not the value at any town. IMERG cells are about 11 km, so a "
                   "small district averages only a handful of them.",))

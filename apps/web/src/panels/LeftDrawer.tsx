@@ -440,7 +440,7 @@ function RegionPicker({
           {kinds.length > 1 && <p className="text-xs text-white/80">{KIND_LABEL[kind] ?? kind}</p>}
           {groups.map(([groupName, list]) => (
           <div key={groupName ?? kind} className="flex flex-col gap-1">
-          {groupName && <p className="pl-1 text-[11px] text-white/65">{groupName} division</p>}
+          {groupName && <p className="pl-1 text-[11px] text-white/65">{groupName}</p>}
           <div className="flex flex-wrap gap-1">
             {list
               .map((r) => (
