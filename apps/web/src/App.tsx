@@ -82,6 +82,54 @@ function AskAiButton({ open, onClick, compact = false }: { open: boolean; onClic
   )
 }
 
+/** After a manual Run analysis: a small offer to have the AI assistant summarise the result (hides after 12 s). */
+function AiSummaryOffer({ aiOpen, onAccept, className }: { aiOpen: boolean; onAccept: () => void; className?: string }) {
+  const analysis = useAppStore((s) => s.analysis)
+  const lastRunBy = useAppStore((s) => s.lastRunBy)
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    if (!analysis || lastRunBy !== 'button' || aiOpen) return
+    setShow(true)
+    const t = setTimeout(() => setShow(false), 12000)
+    return () => clearTimeout(t)
+  }, [analysis]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (aiOpen) setShow(false)
+  }, [aiOpen])
+  if (!show) return null
+  return (
+    <div
+      role="status"
+      className={cn(
+        'pointer-events-auto flex items-center gap-3 rounded-2xl border border-white/15 bg-slate-950/90 py-2 pr-2 pl-3 text-sm text-white shadow-2xl shadow-black/50 backdrop-blur-xl',
+        'animate-in fade-in slide-in-from-top-2 duration-200 motion-reduce:animate-none',
+        className,
+      )}
+    >
+      <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-full bg-gradient-to-br from-sky-300 to-indigo-400 text-slate-950">
+        ✦
+      </span>
+      <span>Want a plain-language summary of this result?</span>
+      <button
+        type="button"
+        onClick={() => {
+          setShow(false)
+          onAccept()
+        }}
+        className="rounded-lg bg-sky-300 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-sky-200"
+      >
+        AI summary
+      </button>
+      <button type="button" aria-label="Dismiss" onClick={() => setShow(false)} className="rounded-lg px-2 py-1 text-white/70 hover:bg-white/10">
+        ×
+      </button>
+    </div>
+  )
+}
+
+const SUMMARY_REQUEST =
+  'Summarise the result now shown in the app for a non-expert: what was tested, the verdict, the trend with its 95% interval, the p-value, the dataset, and one caveat.'
+
 function DesktopOverlay() {
   // Side drawers run full height and slide out sideways; the scroller and chart drawer sit between
   // them and widen (animated) when a drawer is closed.
@@ -116,6 +164,14 @@ function DesktopOverlay() {
         <LeftDrawer className="max-h-full" onCollapse={() => setLeftOpen(false)} />
       </div>
       <ReopenTab side="left" label="Show analysis inputs" show={!leftOpen} onClick={() => setLeftOpen(true)} />
+      <AiSummaryOffer
+        aiOpen={aiOpen}
+        onAccept={() => {
+          useAppStore.getState().setAiRequest(SUMMARY_REQUEST)
+          setAiOpen(true)
+        }}
+        className="absolute left-1/2 top-24 z-30 -translate-x-1/2"
+      />
       {/* AI assistant: a floating pop-up under the Ask AI button; the results stay visible on the right. */}
       <AssistantPanel open={aiOpen} onClose={() => setAiOpen(false)} className="absolute left-3 top-16 z-30 h-[min(42rem,calc(100dvh-5.5rem))] w-[27rem] max-w-[calc(100vw-1.5rem)] origin-top-left" />
 
@@ -199,6 +255,14 @@ function PhoneOverlay() {
         )}
       </div>
 
+      <AiSummaryOffer
+        aiOpen={aiOpen}
+        onAccept={() => {
+          useAppStore.getState().setAiRequest(SUMMARY_REQUEST)
+          setAiOpen(true)
+        }}
+        className="absolute inset-x-2 top-[calc(max(0.5rem,env(safe-area-inset-top))+5.5rem)] z-30 text-xs"
+      />
       <AssistantPanel
         open={aiOpen}
         onClose={() => setAiOpen(false)}

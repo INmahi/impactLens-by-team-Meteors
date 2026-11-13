@@ -544,7 +544,7 @@ function RunAnalysis({ variable, regionId, blocked }: { variable: Variable; regi
   }, [variable.id, regionId, rangeStart, rangeEnd])
 
   // Same action as the AI assistant's run_analysis tool (lib/runAnalysis.ts).
-  const run = () => void runAnalysisFromStore()
+  const run = () => void runAnalysisFromStore('button')
 
   return (
     <div className="flex flex-col gap-2">

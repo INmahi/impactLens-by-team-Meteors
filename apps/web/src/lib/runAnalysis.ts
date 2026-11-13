@@ -5,8 +5,9 @@ import { getSeriesCached, getVariablesCached } from '@/lib/useData'
 import { runStats, runTrend } from '@/lib/stats'
 import { useAppStore, type AnalysisResult } from '@/state/store'
 
-export async function runAnalysisFromStore(): Promise<AnalysisResult | null> {
+export async function runAnalysisFromStore(by: 'button' | 'assistant' = 'button'): Promise<AnalysisResult | null> {
   const s0 = useAppStore.getState()
+  s0.setLastRunBy(by)
   const variables = await getVariablesCached()
   const variable = variables.find((v) => v.id === s0.variable)
   const regionId = s0.region

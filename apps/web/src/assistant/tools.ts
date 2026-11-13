@@ -212,7 +212,7 @@ export async function runTool(name: string, rawArgs: string, onStatus: (s: strin
       return setInputs(args)
     case 'run_analysis': {
       onStatus('Running the analysis…')
-      const res = await runAnalysisFromStore()
+      const res = await runAnalysisFromStore('assistant')
       if (!res) return { ok: false, errors: [useAppStore.getState().analysisError ?? 'the analysis failed'] }
       return resultSummary(res)
     }

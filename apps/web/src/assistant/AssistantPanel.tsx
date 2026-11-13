@@ -2,7 +2,7 @@
 // It uses only four tools (assistant/tools.ts): it cannot compute statistics or change anything else.
 // The only online feature of the app (CLAUDE.md offline rule); the key stays in this browser.
 import { useEffect, useRef, useState } from 'react'
-import { Activity, ExternalLink, SendHorizontal, Settings2, Sparkles, WifiOff, X } from 'lucide-react'
+import { Activity, Copy, ExternalLink, RotateCcw, SendHorizontal, Settings2, Sparkles, WifiOff, X } from 'lucide-react'
 import { cn } from 'cn'
 import { useAppStore } from '@/state/store'
 import { chat, loadConfig, PRESETS, saveConfig, type ChatMessage, type LlmConfig } from './llm'
@@ -24,20 +24,78 @@ const SUGGESTIONS = [
   'Is Greenland losing ice faster over time?',
 ]
 
-/** Light formatting: **bold** and line breaks only. */
-function Text({ text }: { text: string }) {
+/** Inline formatting: **bold** and `code`. */
+function Inline({ text }: { text: string }) {
   return (
     <>
-      {text.split('\n').map((line, i) => (
-        <p key={i} className={cn(i > 0 && 'mt-1.5')}>
-          {line.split(/(\*\*[^*]+\*\*)/g).map((part, k) =>
-            /^\*\*[^*]+\*\*$/.test(part) ? <strong key={k}>{part.slice(2, -2)}</strong> : <span key={k}>{part}</span>,
-          )}
-        </p>
-      ))}
+      {text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((part, k) =>
+        /^\*\*[^*]+\*\*$/.test(part) ? (
+          <strong key={k} className="font-semibold">
+            {part.slice(2, -2)}
+          </strong>
+        ) : /^`[^`]+`$/.test(part) ? (
+          <code key={k} className="rounded bg-black/30 px-1 py-0.5 text-[12px]">
+            {part.slice(1, -1)}
+          </code>
+        ) : (
+          <span key={k}>{part}</span>
+        ),
+      )}
     </>
   )
 }
+
+/** Light Markdown: paragraphs, "- " and "1. " lists, "### " headings, bold and code. No HTML is rendered. */
+function Text({ text }: { text: string }) {
+  const blocks: { kind: 'p' | 'ul' | 'ol' | 'h'; lines: string[] }[] = []
+  for (const raw of text.split('\n')) {
+    const line = raw.trimEnd()
+    if (!line.trim()) {
+      blocks.push({ kind: 'p', lines: [] })
+      continue
+    }
+    const ul = /^\s*[-*•]\s+(.*)$/.exec(line)
+    const ol = /^\s*\d+[.)]\s+(.*)$/.exec(line)
+    const h = /^\s*#{1,4}\s+(.*)$/.exec(line)
+    const kind = ul ? 'ul' : ol ? 'ol' : h ? 'h' : 'p'
+    const content = (ul ?? ol ?? h)?.[1] ?? line
+    const last = blocks[blocks.length - 1]
+    if (last && last.kind === kind && kind !== 'h' && kind !== 'p') last.lines.push(content)
+    else blocks.push({ kind, lines: [content] })
+  }
+  return (
+    <div className="flex flex-col gap-1.5">
+      {blocks
+        .filter((b) => b.lines.length)
+        .map((b, i) =>
+          b.kind === 'ul' || b.kind === 'ol' ? (
+            (() => {
+              const L = b.kind === 'ul' ? 'ul' : 'ol'
+              return (
+                <L key={i} className={cn('flex flex-col gap-0.5 pl-4', b.kind === 'ul' ? 'list-disc' : 'list-decimal')}>
+                  {b.lines.map((l, k) => (
+                    <li key={k}>
+                      <Inline text={l} />
+                    </li>
+                  ))}
+                </L>
+              )
+            })()
+          ) : b.kind === 'h' ? (
+            <p key={i} className="font-semibold">
+              <Inline text={b.lines[0]} />
+            </p>
+          ) : (
+            <p key={i}>
+              <Inline text={b.lines.join(' ')} />
+            </p>
+          ),
+        )}
+    </div>
+  )
+}
+
+const FOLLOW_UPS = ['Explain this result simply', 'What does the p-value mean here?', 'What does the 95% interval mean?', 'Compare with another region']
 
 export default function AssistantPanel({ open, onClose, className }: { open: boolean; onClose: () => void; className?: string }) {
   const [cfg, setCfg] = useState<LlmConfig>(() => loadConfig())
@@ -114,6 +172,16 @@ export default function AssistantPanel({ open, onClose, className }: { open: boo
     }
   }
 
+  // A request from elsewhere in the app (the "AI summary" offer after a manual run) is sent once the panel is open.
+  const aiRequest = useAppStore((s) => s.aiRequest)
+  const sendRef = useRef(send)
+  sendRef.current = send
+  useEffect(() => {
+    if (!open || !aiRequest || busy) return
+    useAppStore.getState().setAiRequest(null)
+    void sendRef.current(aiRequest)
+  }, [open, aiRequest, busy])
+
   function update(c: Partial<LlmConfig>) {
     const next = { ...cfg, ...c }
     setCfg(next)
@@ -147,6 +215,19 @@ export default function AssistantPanel({ open, onClose, className }: { open: boo
             {!online ? 'Offline' : !cfg.apiKey ? 'Add an API key in settings' : 'Online'} · {cfg.model}
           </p>
         </div>
+        <button
+          type="button"
+          aria-label="Start a new chat"
+          title="New chat"
+          onClick={() => {
+            history.current = []
+            setShown([{ role: 'assistant', text: WELCOME }])
+          }}
+          disabled={busy}
+          className="grid size-8 place-items-center rounded-lg text-white/85 hover:bg-white/10 disabled:opacity-40"
+        >
+          <RotateCcw className="size-4" />
+        </button>
         <button
           type="button"
           aria-label="Assistant settings"
@@ -220,7 +301,7 @@ export default function AssistantPanel({ open, onClose, className }: { open: boo
               <Text text={m.text} />
             </div>
           ) : (
-            <div key={i} className="flex max-w-[92%] items-start gap-2 self-start">
+            <div key={i} className="group/msg flex max-w-[92%] items-start gap-2 self-start">
               <span aria-hidden className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-gradient-to-br from-sky-300 to-indigo-400 text-slate-950">
                 <Sparkles className="size-3" />
               </span>
@@ -232,8 +313,34 @@ export default function AssistantPanel({ open, onClose, className }: { open: boo
               >
                 <Text text={m.text} />
               </div>
+              {m.role === 'assistant' && i > 0 && (
+                <button
+                  type="button"
+                  aria-label="Copy this answer"
+                  title="Copy"
+                  onClick={() => void navigator.clipboard?.writeText(m.text).catch(() => {})}
+                  className="mt-1 grid size-6 shrink-0 place-items-center rounded-md text-white/50 opacity-0 transition-opacity group-hover/msg:opacity-100 hover:bg-white/10 hover:text-white focus-visible:opacity-100"
+                >
+                  <Copy className="size-3.5" />
+                </button>
+              )}
             </div>
           ),
+        )}
+
+        {started && !busy && analysis && shown[shown.length - 1]?.role === 'assistant' && (
+          <div className="flex flex-wrap gap-1.5 pl-8">
+            {FOLLOW_UPS.map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => void send(q)}
+                className="rounded-full border border-white/15 bg-white/[0.04] px-2.5 py-1 text-[11.5px] text-white/85 transition-colors hover:border-sky-300/60 hover:bg-sky-300/10"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
         )}
 
         {!started && (

@@ -61,6 +61,10 @@ export interface AppState {
   analysisStatus: AnalysisStatus
   analysis: AnalysisResult | null
   analysisError: string | null
+  /** Who started the last analysis: the Run button or the AI assistant (the summary offer is for the button). */
+  lastRunBy: 'button' | 'assistant' | null
+  /** A message the AI assistant should send as soon as it is open (e.g. "summarise this result"). */
+  aiRequest: string | null
 
   setVariable: (id: string | null) => void
   setRegion: (id: string | null) => void
@@ -77,6 +81,8 @@ export interface AppState {
   pickFromGlobe: (id: string) => void
   setAnalysisRunning: () => void
   setAnalysisDone: (result: AnalysisResult) => void
+  setLastRunBy: (by: 'button' | 'assistant') => void
+  setAiRequest: (text: string | null) => void
   /** Fill in a slow extra for the result whose trend report is `report` (ignored if a newer run replaced it). */
   patchAnalysis: (report: TrendReport, patch: Partial<AnalysisResult>, done: 'detect' | 'uncertainty') => void
   setAnalysisError: (message: string) => void
@@ -100,6 +106,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
   analysisStatus: 'idle',
   analysis: null,
   analysisError: null,
+  lastRunBy: null,
+  aiRequest: null,
 
   // Changing the variable resets the range (each variable has its own record) and the comparison picks.
   setVariable: (variable) => set({ variable, rangeStart: null, rangeEnd: null, compareRegion: null, compareVariables: [] }),
@@ -122,6 +130,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
   },
   setAnalysisRunning: () => set({ analysisStatus: 'running', analysisError: null }),
   setAnalysisDone: (analysis) => set({ analysisStatus: 'done', analysis, analysisError: null }),
+  setLastRunBy: (lastRunBy) => set({ lastRunBy }),
+  setAiRequest: (aiRequest) => set({ aiRequest }),
   patchAnalysis: (report, patch, done) => {
     const a = get().analysis
     if (!a || a.report !== report) return
