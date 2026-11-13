@@ -201,6 +201,18 @@ def _sea(rid: str, name: str, outline: Ring | list[Ring], *notes: str) -> "Regio
 
 _BD_DIV_NAMES = {name for name, *_ in BD_DIVISIONS.values()}
 
+# Himalaya (M12, 2026-11-13): hand-drawn outline of the high, glaciated Himalayan arc, Karakoram to eastern
+# Arunachal, following the main range and leaving out the Tibetan Plateau to the north and the Indo-Gangetic plain
+# to the south. Lon/lat, counter-clockwise. About 300 km wide at most (GRACE resolution: see the region notes).
+HIMALAYA: Ring = [
+    (73.0, 34.2), (74.2, 33.6), (75.6, 32.9), (77.0, 31.7), (78.3, 30.5), (79.6, 29.6), (81.0, 28.9),
+    (82.6, 28.2), (84.2, 27.6), (85.8, 27.3), (87.4, 27.0), (88.8, 26.9), (90.2, 26.9), (91.6, 26.9),
+    (93.0, 27.2), (94.4, 27.6), (95.6, 28.0), (96.6, 28.6), (96.2, 29.5), (94.9, 29.4), (93.4, 28.9),
+    (91.8, 28.5), (90.2, 28.4), (88.6, 28.4), (87.0, 28.6), (85.4, 28.9), (83.8, 29.4), (82.2, 30.0),
+    (80.8, 30.7), (79.4, 31.6), (78.2, 32.6), (77.0, 33.7), (76.0, 34.9), (75.0, 35.8), (73.6, 36.2),
+    (72.8, 35.3), (73.0, 34.2),
+]
+
 REGIONS: list[RegionSpec] = [
     RegionSpec("greenland", "Greenland", None, "ice_sheet", (-74, 59, -10, 84),
                _cam(-42, 72, 4_500_000), GREENLAND),
@@ -213,6 +225,11 @@ REGIONS: list[RegionSpec] = [
                _cam(80, -78, 6_500_000), ANTARCTICA_EAST),
     RegionSpec("antarctica_peninsula", "Antarctic Peninsula", "antarctica", "ice_sheet_basin", (-76, -75, -55, -63),
                _cam(-63, -68, 2_500_000), ANTARCTICA_PENINSULA),
+    RegionSpec("himalaya", "Himalayas", None, "glacier_region", (72.5, 26.5, 97.0, 36.5), _cam(84.5, 30.5, 3_200_000),
+               HIMALAYA,
+               ("The high, glaciated Himalayan arc (outline drawn by this project), not a single glacier.",
+                "GRACE sees about 300 km detail, and this arc is about that wide: groundwater loss in the plains of "
+                "northern India and Pakistan leaks into the Himalayan GRACE signal, so it is not glacier ice alone.")),
     RegionSpec("global", "Global", None, "global", (-180, -90, 180, 90), _cam(0, 20, 20_000_000), None),
     # Bangladesh (M12): country outline from Natural Earth (public domain), see bangladesh.py.
     RegionSpec("bangladesh", "Bangladesh", None, "country", (88.0, 20.7, 92.7, 26.7), _cam(90.3, 23.6, 1_600_000),
@@ -360,7 +377,7 @@ _ICE_REGIONS_NOTE = ("Sub-regions are generated independently, so West + East + 
 # the ice_mass series; each has its own injected trend for the M2 gate.
 VARIABLES: list[VariableSpec] = [
     VariableSpec(
-        id="ice_mass", group="ice_sheet", name="Ice mass", units="Gt", kind="cumulative", frequency="monthly",
+        id="ice_mass", group="ice", name="Ice mass", units="Gt", kind="cumulative", frequency="monthly",
         map_mode="ice_mass_map", chart_types=["series", "anomaly", "annual_change", "sea_level_equivalent"],
         source=_IMBIE, segment_source="Synthetic (IMBIE 2026 shape)",
         describe={"what": "How much ice an ice sheet holds, compared with the start of its record.",
@@ -381,7 +398,7 @@ VARIABLES: list[VariableSpec] = [
         },
     ),
     VariableSpec(
-        id="ice_mass_rate", group="ice_sheet", name="Ice mass change rate", units="Gt/yr", kind="rate", frequency="annual",
+        id="ice_mass_rate", group="ice", name="Ice mass change rate", units="Gt/yr", kind="rate", frequency="annual",
         map_mode="ice_mass_map", chart_types=["bar", "series"],
         source=_IMBIE, segment_source="Synthetic (IMBIE 2026 shape)",
         describe={"what": "How fast an ice sheet gains or loses ice each year.",
@@ -403,7 +420,24 @@ VARIABLES: list[VariableSpec] = [
         },
     ),
     VariableSpec(
-        id="ice_extent", group="ice_sheet", name="Ice extent", units="km2", kind="level", frequency="monthly",
+        id="ice_mass_grace", group="ice", name="Ice mass from gravity (GRACE)", units="Gt", kind="cumulative",
+        frequency="monthly", map_mode="ice_mass_map", chart_types=["series", "anomaly", "sea_level_equivalent"],
+        source=_GRACE, segment_source="Synthetic (GRACE-like)",
+        describe={"what": "Mass change of the ice in a region, weighed month by month by the GRACE and GRACE-FO "
+                          "satellites, which measure tiny changes in Earth's gravity.",
+                  "whyItMatters": "The same method for Greenland, Antarctica and the Himalayas, so their losses can "
+                                  "be compared directly; about 362 Gt of ice is 1 mm of global sea level."},
+        notes=[SYNTH_NOTE, "Relative to the 2004-2009 average.", "GRACE sees about 300 km detail."],
+        series={
+            "greenland": SeriesSpec("2002-04", "2026-09", slope=-260.0, ar1=0.6, noise_sd=60.0, seasonal_amp=150.0,
+                                    gaps=8, decimals=0),
+            "antarctica": SeriesSpec("2002-04", "2026-09", slope=-130.0, ar1=0.6, noise_sd=90.0, gaps=8, decimals=0),
+            "himalaya": SeriesSpec("2002-04", "2026-09", slope=-15.0, ar1=0.6, noise_sd=10.0, seasonal_amp=20.0,
+                                   gaps=8, decimals=0),
+        },
+    ),
+    VariableSpec(
+        id="ice_extent", group="ice", name="Ice extent", units="km2", kind="level", frequency="monthly",
         map_mode=None, outlines=True, chart_types=["series", "anomaly"],
         source=_ITSLIVE, segment_source="Synthetic (ITS_LIVE NSIDC-0793 shape)",
         describe={"what": "The area of Greenland covered by ice, month by month.",
@@ -431,6 +465,8 @@ VARIABLES: list[VariableSpec] = [
             # Deliberately noisy: a small real trend that is hard to detect.
             "antarctica": SeriesSpec("1981", "2026", slope=0.01, ar1=0.2, noise_sd=0.6, decimals=3,
                                      baseline=(1991, 2020)),
+            "himalaya": SeriesSpec("1980", "2026", slope=0.03, ar1=0.2, noise_sd=0.5, decimals=3,
+                                   baseline=(1991, 2020)),
         },
     ),
     VariableSpec(
