@@ -11,6 +11,7 @@ import { useRegionsData } from '@/lib/useData'
 import LeftDrawer from '@/panels/LeftDrawer'
 import AssistantPanel from '@/assistant/AssistantPanel'
 import DataSourcesDialog from '@/panels/DataSourcesDialog'
+import ImportDataDialog from '@/panels/ImportDataDialog'
 import MapPanel from '@/panels/MapPanel'
 import RightDrawer from '@/panels/RightDrawer'
 import { useAppStore } from '@/state/store'
@@ -153,6 +154,7 @@ function DesktopOverlay() {
         <h1 className="glass pointer-events-auto px-3 py-1.5 text-base font-semibold">Trend Detective</h1>
         <DataSourcesDialog />
         <AskAiButton open={aiOpen} onClick={() => setAiOpen((x) => !x)} />
+        <ImportDataDialog />
         <RegionChip />
       </header>
       <SyntheticWatermark className="absolute left-1/2 top-3 -translate-x-1/2" />
@@ -233,6 +235,7 @@ function PhoneOverlay() {
         <h1 className="glass pointer-events-auto shrink-0 px-3 py-1.5 text-sm font-semibold">Trend Detective</h1>
         <DataSourcesDialog compact />
         <AskAiButton compact open={aiOpen} onClick={() => setAiOpen((x) => !x)} />
+        <ImportDataDialog compact />
       </header>
       <div className="pointer-events-auto absolute right-2 top-[calc(max(0.5rem,env(safe-area-inset-top))+2.75rem)]">
         <GlobeControls />
