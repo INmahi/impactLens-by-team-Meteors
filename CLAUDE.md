@@ -5,6 +5,63 @@ NASA Space Apps 2026 entry for the "Earth System Trend Detective" challenge. A w
 - Challenge, judging and decisions: `docs/COMPETITION_CONTEXT.md`
 - Spec, data contract, milestones and agent workflow: `docs/TECH_BUILD_PLAN.md`
 
+## ⚠️ NEXT MAJOR PRIORITY: replace the test values in "Submerged coastal land" with real data
+
+**Status (2026-11-13):** 9 of 10 variables and both map layers are real NASA/partner data. The one exception is
+`land_submerged` ("Submerged coastal land", km², annual 1985–2024, 16 regions: Bangladesh, Khulna/Barishal/
+Chattogram divisions, 12 sea-facing districts). It holds **synthetic test values** from `pipeline/synthetic`
+(`config.py`, source `_JRC_GSW`). At boss's request the UI no longer shows synthetic labels in the results
+panel or over the globe, so **the live site (https://impactlense-v1.netlify.app/) shows these test values as if
+they were real.** Replacing them with real data comes before any other new work. The only remaining
+disclosures are the dataset name ("…test values in its format"), the Data sources page and the Notes tab.
+The README's data table says "(integration in progress)".
+
+**Data to use: JRC Global Surface Water (GSW), Yearly Water Classification History**
+- Made by the EC Joint Research Centre from Landsat 5/7/8 (NASA/USGS); 30 m (0.00025°) pixels; yearly 1984–2021
+  in v1.4, plus 2022–2024 in v1.5. Free, no login, Copernicus licence (free use with attribution).
+- Explorer: https://global-surface-water.appspot.com/. Download page: https://global-surface-water.appspot.com/download.
+- Files: public Google Cloud bucket `global-surface-water`, e.g.
+  `https://storage.googleapis.com/global-surface-water/downloads2021/yearly/yearlyClassification2021/0000000000-0000040000.tif`
+  (one folder per year; tiles are named by pixel offsets, about 10–20 MB each). List the files with
+  `https://storage.googleapis.com/global-surface-water/?prefix=downloads2021/yearly/yearlyClassification1985/`.
+  **Do not guess which tiles cover Bangladesh:** open one tile per offset and read its GeoTIFF georeferencing
+  (rioxarray) to find those covering 88.0–92.7°E, 20.5–23.5°N (probably 1–2 tiles per year, about 1.5 GB for
+  all years). Check how the v1.5 2022–2024 files are named before mixing versions; v1.5 notes a possible
+  co-registration offset (Landsat Collection 2 vs Collection 1).
+- Pixel classes: 0 = no data (cloud or gap), 1 = not water, 2 = seasonal water, 3 = permanent water.
+- Boss is downloading it on another device (2026-11-13). Ask for the folder path before downloading again.
+- Cite: Pekel, J.-F. et al. (2016), Nature 540, 418–422, doi:10.1038/nature20584. Map credit: "Source: EC JRC/Google".
+
+**How (method to implement; agree any change with stats-lead):**
+1. New `pipeline/ingest/jrc_gsw.py` plus `ingest jrc_gsw` in `pipeline/__main__.py` choices and `run.py`, in the
+   same style as `ingest_imerg`. Region polygons come from `data/public/regions.topo.json` via
+   `grid.polygons_from_topo` and `polygon_mask` (one mask per region, at the 0.00025° grid). Read only the
+   window around each region (rioxarray windowed read), not whole tiles.
+2. **Baseline land:** pixels classed "not water" (1) in most observed years of 1985–1989 (the first years with
+   enough images). Only these pixels can count as lost land.
+3. **Each year t:** the area of baseline-land pixels classed permanent water (3) in year t, in km². Use each
+   pixel's true area (0.00025° × 0.00025° scaled by cos(latitude)). The series is cumulative change since
+   1985, matching the existing `kind: cumulative`, `units: km2`.
+4. **Gaps:** if more than about 10% of a region's baseline-land pixels are no data (0) in year t, write that
+   year as null. Never fill or interpolate it (hard rule). Early Landsat years are sparse, so expect gaps.
+5. Write series with `series_doc(...)`, `synthetic: false`, source = JRC GSW (name, version, url, citation as
+   above), and a `segments` entry for any change of version (v1.4 to v1.5 in 2022). Then `pnpm validate`.
+6. Keep the variable's honest notes: it counts every cause of land turning to water (sea level rise, coastal
+   and river-bank erosion, subsidence, new ponds and aquaculture) and cannot separate sea level rise from them.
+   Do not rename it to claim sea level rise as the cause. Also note that seasonal water (class 2) is excluded.
+7. Sanity checks before shipping:
+   - **Visual check:** a 1985 vs latest mask for one district (Bhola or Satkhira), comparing land-to-water
+     pixels with the GSW explorer's "Transitions" layer.
+   - **Magnitude check:** compare with published Bangladesh coastal erosion and accretion estimates.
+   - **Accretion:** new land also forms (the Meghna estuary gains land), so a district's net change can be
+     small. This variable is loss only; say so.
+8. Then remove `_JRC_GSW` "test values" wording from `pipeline/synthetic/config.py` and the variable's source
+   name, remove "(integration in progress)" from README.md, rebuild (`pnpm build`), and commit `data/public`.
+   Pushing to `main` redeploys Netlify. The results panel then shows "Real observations" by itself
+   (`synthetic: false`).
+9. **If real data cannot be ready before judging:** hide `land_submerged`, for example by dropping it from
+   `variables.json` and from each region's `variables`. Do not keep showing test values as real.
+
 ## Repository map
 ```
 .claude/agents/      six subagents        .claude/skills/   project skills
