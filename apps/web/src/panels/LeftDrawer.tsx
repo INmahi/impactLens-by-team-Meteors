@@ -610,13 +610,6 @@ function ComparePicker({
     { id: 'regions', label: 'Another region', disabled: otherRegions.length === 0 },
     { id: 'variables', label: 'More variables', disabled: otherVariables.length === 0 },
   ]
-  const chip = (active: boolean) =>
-    cn(
-      'cursor-pointer rounded-full border px-2.5 py-1 text-[13px]',
-      'has-focus-visible:outline-2 has-focus-visible:outline-offset-1 has-focus-visible:outline-ring',
-      'has-disabled:cursor-not-allowed has-disabled:opacity-40',
-      active ? 'border-amber-300/80 bg-amber-300/20 text-white' : 'border-white/20 text-white/90 hover:bg-white/10',
-    )
 
   return (
     <div className="flex flex-col gap-2">
@@ -655,20 +648,38 @@ function ComparePicker({
       {mode === 'variables' && (
         <div className="flex flex-col gap-1">
           <p className="text-xs text-white/80">Add up to three more variables for this region ({extra.length}/3):</p>
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-col gap-0.5">
             {otherVariables.map((v) => {
               const on = extra.includes(v.id)
               return (
-                <label key={v.id} className={chip(on)}>
-                  <input
-                    type="checkbox"
-                    className="sr-only"
-                    checked={on}
-                    disabled={!on && extra.length >= 3}
-                    onChange={() => setExtra(on ? extra.filter((x) => x !== v.id) : [...extra, v.id])}
-                  />
-                  {v.name}
-                </label>
+                <div key={v.id} className="flex items-center gap-1">
+                  <label
+                    className={cn(
+                      'flex flex-1 cursor-pointer items-baseline justify-between gap-2 rounded-lg border px-2 py-1.5 text-sm',
+                      'has-focus-visible:outline-2 has-focus-visible:outline-offset-1 has-focus-visible:outline-ring',
+                      'has-disabled:cursor-not-allowed has-disabled:opacity-40',
+                      on ? 'border-amber-300/70 bg-amber-300/15 text-white' : 'border-transparent text-white/90 hover:bg-white/10',
+                    )}
+                  >
+                    <span className="flex items-baseline gap-2">
+                      <input
+                        type="checkbox"
+                        className="sr-only"
+                        checked={on}
+                        disabled={!on && extra.length >= 3}
+                        onChange={() => setExtra(on ? extra.filter((x) => x !== v.id) : [...extra, v.id])}
+                      />
+                      <span aria-hidden className={cn('grid size-3 shrink-0 place-items-center rounded-[3px] border border-white/70 text-[9px] leading-none', on && 'border-amber-300 bg-amber-300 text-slate-950')}>
+                        {on ? '✓' : ''}
+                      </span>
+                      {v.name}
+                    </span>
+                    <span className="shrink-0 text-xs tabular-nums text-white/80">
+                      {v.period[0].slice(0, 4)}–{v.period[1].slice(0, 4)}
+                    </span>
+                  </label>
+                  <DescribeDialog variable={v} />
+                </div>
               )
             })}
           </div>
