@@ -5,8 +5,119 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trend Detective</title>
+    <link rel="preload" as="image" href="/team_meteors.webp" />
+    <style>
+      /* Loading screen (boss, 2026-11-13). Plain HTML + CSS so it shows before the app's code loads;
+         src/main.tsx fades it out once the page has loaded. */
+      #splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(14px, 3vh, 26px);
+        padding: 24px 16px;
+        background: radial-gradient(ellipse at 50% 60%, #0f1b3d 0%, #05070d 62%);
+        color: #fff;
+        font-family: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+        text-align: center;
+        transition: opacity 0.9s ease, visibility 0.9s ease;
+      }
+      #splash.splash-out {
+        opacity: 0;
+        visibility: hidden;
+      }
+      #splash .splash-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: clamp(14px, 3vh, 26px);
+        animation: splash-in 1s ease-out both;
+      }
+      #splash .splash-title {
+        margin: 0;
+        font-size: clamp(30px, 5.2vw, 52px);
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        line-height: 1.05;
+      }
+      #splash .splash-title span {
+        display: block;
+        margin-top: 6px;
+        font-size: clamp(14px, 2vw, 19px);
+        font-weight: 500;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: #7dd3fc;
+      }
+      #splash .splash-event {
+        margin: 0;
+        font-size: clamp(12.5px, 1.6vw, 15px);
+        letter-spacing: 0.08em;
+        color: rgba(255, 255, 255, 0.82);
+      }
+      #splash .splash-event em {
+        display: block;
+        margin-top: 4px;
+        font-style: normal;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        color: #fcd34d;
+      }
+      #splash img {
+        width: min(640px, 88vw);
+        height: auto;
+        aspect-ratio: 961 / 541;
+        border-radius: 16px;
+        border: 1px solid rgba(96, 140, 255, 0.45);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 18px 60px rgba(30, 70, 255, 0.28);
+      }
+      #splash .splash-bar {
+        position: relative;
+        width: min(220px, 50vw);
+        height: 3px;
+        overflow: hidden;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.12);
+      }
+      #splash .splash-bar::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        width: 40%;
+        border-radius: 3px;
+        background: linear-gradient(90deg, transparent, #7dd3fc, transparent);
+        animation: splash-bar 1.3s ease-in-out infinite;
+      }
+      @keyframes splash-in {
+        from { opacity: 0; transform: translateY(8px) scale(0.985); }
+        to { opacity: 1; transform: none; }
+      }
+      @keyframes splash-bar {
+        from { transform: translateX(-100%); }
+        to { transform: translateX(250%); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #splash, #splash .splash-inner, #splash .splash-bar::after { animation: none; transition: none; }
+      }
+    </style>
   </head>
   <body>
+    <div id="splash" role="status" aria-label="Loading ImpactLens">
+      <div class="splash-inner">
+        <h1 class="splash-title">ImpactLens<span>by Team Meteors</span></h1>
+        <p class="splash-event">NASA Space Apps Challenge 2026<em>Be an Earth System Trend Detective!</em></p>
+        <img
+          src="/team_meteors.webp"
+          width="961"
+          height="541"
+          alt="Team Meteors: Protyasha Talukder, Ishat Noor Mahi, Mollah Hamza, Mushfiq Zubayer and Humayra Jui"
+        />
+        <div class="splash-bar" aria-hidden="true"></div>
+      </div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
