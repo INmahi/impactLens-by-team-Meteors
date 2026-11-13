@@ -137,3 +137,24 @@
     outline-offset: 2px;
     }
 }
+/* Scrollable panels keep wheel/touch/keyboard scrolling but show no scroll bar (boss, 2026-11-14). */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* "Ask AI" invitation after Run analysis (boss, 2026-11-14): a soft breathing sky glow, no neon. */
+@keyframes ai-glow {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.55), 0 0 10px 0 rgba(125, 211, 252, 0.25); }
+  50% { box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.9), 0 0 18px 2px rgba(125, 211, 252, 0.45); }
+}
+@utility ai-glow {
+  animation: ai-glow 2.2s ease-in-out infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.9), 0 0 14px 1px rgba(125, 211, 252, 0.4);
+  }
+}

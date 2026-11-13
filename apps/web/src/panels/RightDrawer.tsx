@@ -62,7 +62,7 @@ export default function RightDrawer({
           )}
         </span>
       </header>
-      <div className="flex min-h-0 flex-col gap-3 overflow-y-auto overscroll-contain px-4 pb-4 text-sm">
+      <div className="no-scrollbar flex min-h-0 flex-col gap-3 overflow-y-auto overscroll-contain px-4 pb-4 text-sm">
         {status === 'running' && <p role="status">Running the analysis…</p>}
         {analysis && v && r && regions && variables && <Body a={analysis} v={v} r={r} regions={regions} variables={variables} wide={!!wide} />}
       </div>

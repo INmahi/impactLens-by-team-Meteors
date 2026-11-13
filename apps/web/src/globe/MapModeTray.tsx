@@ -11,7 +11,7 @@ import { getManifest } from './layerData'
 import { modeLabel, yearOf, type MapMode } from './mapModes'
 import { useMapModes, useVariables, useVariableWithoutMap } from './useLayerInfo'
 
-function useGridManifests(modes: MapMode[] | null): Map<string, Manifest> {
+export function useGridManifests(modes: MapMode[] | null): Map<string, Manifest> {
   const [manifests, setManifests] = useState<Map<string, Manifest>>(new Map())
   const key = modes?.filter((m) => m.kind === 'grid').map((m) => m.id).join('|') ?? ''
   useEffect(() => {
@@ -28,7 +28,7 @@ function useGridManifests(modes: MapMode[] | null): Map<string, Manifest> {
   return manifests
 }
 
-function iconFor(mode: MapMode | null, manifest: Manifest | undefined): ComponentType<{ className?: string }> {
+export function iconFor(mode: MapMode | null, manifest: Manifest | undefined): ComponentType<{ className?: string }> {
   if (!mode) return EyeOff
   if (mode.kind === 'outline') return Shapes
   const u = (manifest?.units ?? '').toLowerCase()
@@ -37,7 +37,7 @@ function iconFor(mode: MapMode | null, manifest: Manifest | undefined): Componen
   return Layers
 }
 
-function yearSpan(mode: MapMode, manifest: Manifest | undefined): string | null {
+export function yearSpan(mode: MapMode, manifest: Manifest | undefined): string | null {
   if (mode.kind === 'outline') return `${yearOf(mode.period[0])}–${yearOf(mode.period[1])}`
   const dates = manifest ? [...manifest.frames.map((f) => f.date), ...manifest.missing].sort() : []
   return dates.length ? `${yearOf(dates[0])}–${yearOf(dates[dates.length - 1])}` : null

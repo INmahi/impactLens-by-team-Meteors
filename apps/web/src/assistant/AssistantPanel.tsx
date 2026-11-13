@@ -8,7 +8,7 @@ import { useAppStore } from '@/state/store'
 import { chat, loadConfig, PRESETS, saveConfig, type ChatMessage, type LlmConfig } from './llm'
 import { runTool, TOOLS } from './tools'
 
-const SYSTEM = `You are the Trend Detective assistant inside a NASA Space Apps web app that tests whether Earth-system records are changing (Mann-Kendall test, Sen's slope with a 95% interval).
+const SYSTEM = `You are the ImpactLens assistant inside a NASA Space Apps web app that tests whether Earth-system records are changing (Mann-Kendall test, Sen's slope with a 95% interval).
 SCOPE: only this app: its variables, regions and time ranges, running analyses, explaining results, statistics (trend test, p-value, 95% interval, autocorrelation, low power, comparing regions, correlation) and the data sources. For anything else, say in one sentence that you can only help with this app.
 WORKFLOW: 1) Understand what the user wants. Call get_catalog before offering choices; never offer a variable or region that is not in it. 2) Ask ONE short question at a time for what is missing: variable; region (list the valid regions for that variable by name); time period (default: the full record, say its years; the user may pick a shorter range); compare (optional: another region of the same variable, or up to 3 other variables in the same region). Skip anything the user already said. 3) When everything is known, call set_analysis_inputs, then call run_analysis straight away; do not ask the user to confirm settings they already gave (a full record counts as given when they ask for it or name no range after you offered the default). 4) Summarise the tool output in 3-5 short sentences: the verdict, the trend with its 95% interval and units, the p-value, the dataset name, and one caveat. Then offer to explain or to run another analysis.
 RULES: Never compute, estimate or invent a number: quote only tool outputs. Record years and dates too: call get_catalog first and quote them exactly as it gives them (variables_by_region lists each region's variables with their records). Every rate comes with its 95% interval. If a result is not significant say "cannot tell yet", never "no change" or "no trend". Never claim a cause from a trend or a correlation. Regional sea level is an average over an open-sea area, not the value at a town, and land sinking is not included. Never say warm air is melting Antarctica: Antarctic ice loss is driven mainly by warm ocean water. If the dataset is synthetic, say so.
@@ -211,7 +211,7 @@ export default function AssistantPanel({ open, onClose, className }: { open: boo
           <Sparkles className="size-[18px]" />
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="text-[15px] leading-tight font-semibold">Trend Detective AI</h2>
+          <h2 className="text-[15px] leading-tight font-semibold">ImpactLens AI</h2>
           <p className="flex items-center gap-1.5 truncate text-[11.5px] text-white/75" title={`${cfg.model} via ${cfg.baseUrl}`}>
             <span aria-hidden className={cn('size-1.5 shrink-0 rounded-full', ready ? 'bg-emerald-400' : 'bg-amber-300')} />
             {!online ? 'Offline' : !cfg.apiKey ? 'Add an API key in settings' : 'Online'} · {cfg.model}
@@ -291,7 +291,7 @@ export default function AssistantPanel({ open, onClose, className }: { open: boo
       )}
 
       {/* Conversation */}
-      <div ref={listRef} className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 py-4 text-[13.5px] leading-relaxed" aria-live="polite">
+      <div ref={listRef} className="no-scrollbar flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 py-4 text-[13.5px] leading-relaxed" aria-live="polite">
         {shown.map((m, i) =>
           m.role === 'status' ? (
             <p key={i} className="flex items-center gap-1.5 self-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11.5px] text-white/80">

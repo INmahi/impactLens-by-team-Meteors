@@ -229,7 +229,7 @@ function Inputs({ variables, regions }: { variables: Variable[]; regions: Region
         </button>
       </div>
 
-      <div className="flex min-h-0 flex-col gap-2 overflow-y-auto overscroll-contain px-4 pb-3">
+      <div className="no-scrollbar flex min-h-0 flex-col gap-2 overflow-y-auto overscroll-contain px-4 pb-3">
         <Step n={++n} title="Variable" summary={variable?.name} done={!!variable} open={open.has('variable')} onToggle={() => toggle('variable')}>
           <VariablePicker variables={variables} selected={variableId} onSelect={chooseVariable} />
         </Step>

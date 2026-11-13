@@ -218,7 +218,7 @@ export default function ImportDataDialog({ compact = false }: { compact?: boolea
         <Upload className="size-4" aria-hidden />
         {compact ? 'Import' : 'Import own data'}
       </DialogTrigger>
-      <DialogContent className="glass-strong max-h-[90dvh] overflow-y-auto border-0 text-white sm:max-w-2xl">
+      <DialogContent className="glass-strong no-scrollbar max-h-[90dvh] overflow-y-auto border-0 text-white sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-base text-white">Import your own data</DialogTitle>
           <DialogDescription className="text-[13px] text-white/85">

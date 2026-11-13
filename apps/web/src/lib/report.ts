@@ -90,7 +90,7 @@ ${row('Method', esc(`${a.compare.report.bootstrap.method}; ${a.compare.report.bo
 
   const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Trend Detective report: ${esc(title)}</title>
+<title>ImpactLens report: ${esc(title)}</title>
 <style>
 :root{--ink:#0f172a;--muted:#475569;--line:#e2e8f0;--sig:#0369a1;--ns:#b45309}
 *{box-sizing:border-box}body{margin:0;font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:#f8fafc}
@@ -112,7 +112,7 @@ table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;p
 <button class="print" onclick="window.print()">Print / save as PDF</button>
 <main>
 <header><h1>${esc(title)}</h1>
-<p class="muted">Trend Detective report, generated ${esc(generated)} UTC. Mann-Kendall trend test with Sen's slope, computed in the browser by the app's statistics engine.</p>
+<p class="muted">ImpactLens report, generated ${esc(generated)} UTC. Mann-Kendall trend test with Sen's slope, computed in the browser by the app's statistics engine.</p>
 <p><span class="badge ${v.synthetic ? 'syn' : 'real'}">${v.synthetic ? 'SYNTHETIC test data' : 'Real observations'}</span>
 ${
     cmp

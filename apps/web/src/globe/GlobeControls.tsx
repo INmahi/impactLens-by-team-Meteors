@@ -59,9 +59,10 @@ export function PoleToggle({ className }: { className?: string }) {
 }
 
 /** Zoom in / out buttons. */
-export function ZoomControls({ className }: { className?: string }) {
+export function ZoomControls({ className, horizontal = false }: { className?: string; horizontal?: boolean }) {
   return (
-    <div role="group" aria-label="Zoom" className={cn('glass flex flex-col gap-1 p-1', className)}>
+    // Horizontal: "−" left of "+" (reversed DOM order keeps zoom-in first for Tab).
+    <div role="group" aria-label="Zoom" className={cn('glass flex gap-1 p-1', horizontal ? 'flex-row-reverse' : 'flex-col', className)}>
       <Button size="icon-sm" variant="ghost" aria-label="Zoom in" title="Zoom in" onClick={zoomIn}>
         <Plus aria-hidden />
       </Button>

@@ -38,7 +38,7 @@ function LegendHeader({ title, titleId, date }: { title: string; titleId: string
         {title}
       </h2>
       <time dateTime={date} className="shrink-0 text-xs tabular-nums text-white/85" aria-live="polite">
-        {formatDate(date, true)}
+        {formatDate(date)}
       </time>
     </header>
   )

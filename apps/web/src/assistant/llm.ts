@@ -75,7 +75,7 @@ export async function chat(
     try {
       r = await fetch(`${cfg.baseUrl.replace(/\/$/, '')}/chat/completions`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${cfg.apiKey}`, 'Content-Type': 'application/json', 'X-Title': 'Trend Detective' },
+        headers: { Authorization: `Bearer ${cfg.apiKey}`, 'Content-Type': 'application/json', 'X-Title': 'ImpactLens' },
         body: JSON.stringify(body),
       })
     } catch {

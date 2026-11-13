@@ -134,7 +134,7 @@ export default function DataSourcesDialog({ compact = false }: { compact?: boole
         <span aria-hidden className={cn('size-2 rounded-full', anySynthetic ? 'bg-amber-300' : 'bg-emerald-300')} />
         Data sources
       </DialogTrigger>
-      <DialogContent className="glass-strong max-h-[90dvh] overflow-y-auto border-0 text-white sm:max-w-2xl">
+      <DialogContent className="glass-strong no-scrollbar max-h-[90dvh] overflow-y-auto border-0 text-white sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-base text-white">Data sources and honesty</DialogTitle>
           <DialogDescription className="text-[13px] text-white/85">

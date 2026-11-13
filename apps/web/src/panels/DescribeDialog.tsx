@@ -32,7 +32,7 @@ export default function DescribeDialog({ variable: v }: { variable: Variable }) 
       >
         Describe
       </DialogTrigger>
-      <DialogContent className="glass-strong max-h-[90dvh] overflow-y-auto border-0 text-white sm:max-w-lg">
+      <DialogContent className="glass-strong no-scrollbar max-h-[90dvh] overflow-y-auto border-0 text-white sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-base text-white">{text?.title ?? v.name}</DialogTitle>
           {v.synthetic && <p className="text-xs font-semibold tracking-wide text-amber-300">SYNTHETIC DATA in this version</p>}
