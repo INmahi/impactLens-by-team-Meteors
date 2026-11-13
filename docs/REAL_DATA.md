@@ -17,13 +17,13 @@ What to download, where it goes, and the one command that processes it. Details 
 | # | Variable | Dataset | Format, size | Login | Raw folder | Status |
 |---|---|---|---|---|---|---|
 | 1 | Ice mass, ice mass change rate | IMBIE 2026 v1.0 (UK Polar Data Centre), doi:10.5285/128c5e33-5224-4197-82f0-19dcc95b80a0 | 5 CSV, 0.4 MB | No | `data/raw/imbie/` | **Done 2026-11-13** (SHA-256 in `SHA256SUMS.txt`) |
-| 2 | Sea level (global + coastal seas) | NASA-SSH simple gridded SSH V1.1 (PO.DAAC), `NASA_SSH_REF_SIMPLE_GRID_V11` | ~1,766 weekly netCDF, ~1.9 GB | Earthdata | `data/raw/sea_level/` | Ingest ready and tested on stand-ins; download in part (b) |
-| 3 | Sea level cross-check | NASA-SSH GMSL indicator (PO.DAAC), `NASA_SSH_GMSL_INDICATOR` | 1 text file, tiny | Earthdata | `data/raw/sea_level/` | Read by the sea-level ingest as a cross-check |
-| 4 | Ice mass map | GRACE/GRACE-FO JPL mascons RL06.3 v4 CRI (PO.DAAC), `TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4` | 1 netCDF, ~44 MB | Earthdata | `data/raw/grace/` | Ingest to write in part (b) |
-| 5 | Ice extent (Greenland) | ITS_LIVE masks, NSIDC-0793 v1 | 1 netCDF, ~780 MB | Earthdata | `data/raw/itslive/` | Ingest to write in part (b) |
+| 2 | Sea level (global + coastal seas) | NASA-SSH simple gridded SSH V1.1 (PO.DAAC), `NASA_SSH_REF_SIMPLE_GRID_V11` | ~1,766 weekly netCDF, ~1.9 GB | Earthdata | `data/raw/sea_level/` | **Done 2026-11-13**: 1,776 grids, 1992-10..2026-11; 10 weeks missing (2 null months) |
+| 3 | Sea level cross-check | NASA-SSH GMSL indicator (PO.DAAC), `NASA_SSH_GMSL_INDICATOR` | 1 text file, tiny | Earthdata | `data/raw/sea_level/` | **Done**: cross-check grid global 3.170 vs indicator 3.200 mm/yr (1993-01..2026-10) |
+| 4 | Ice mass map | GRACE/GRACE-FO JPL mascons RL06.3 v4 CRI (PO.DAAC), `TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4` | 1 netCDF, ~44 MB | Earthdata | `data/raw/grace/` | Downloaded 2026-11-13 (45 MB); ingest in part b2 |
+| 5 | Ice extent (Greenland) | ITS_LIVE masks, NSIDC-0793 v1 | 1 netCDF, ~780 MB | Earthdata | `data/raw/itslive/` | Downloaded 2026-11-13 (778 MB); ingest in part b2 |
 | 6 | Summer air temperature | MERRA-2 monthly M2TMNXSLV v5.12.4 (GES DISC), T2M only | ~0.5 GB if subset to T2M | Earthdata + GES DISC approval | `data/raw/merra2/` | Ingest to write in part (b); subset at the server to avoid ~30-40 GB |
-| 7 | Sea level, long record 1900-2018 | JPL_RECON_GMSL v1.0 (PO.DAAC, Frederikse et al. 2020) | 1 netCDF, tiny | Earthdata | `data/raw/recon_gmsl/` | Ingest to write in part (b) |
-| 8 | Ice mass, long record 1900-2018 | Same file as 7 (ice-sheet contributions) | same | same | same | Ingest to write in part (b) |
+| 7 | Sea level, long record 1900-2018 | JPL_RECON_GMSL v1.0 (PO.DAAC, Frederikse et al. 2020) | 1 netCDF, tiny | Earthdata | `data/raw/recon_gmsl/` | **Done 2026-11-13** (`ingest recon_gmsl`) |
+| 8 | Ice mass, long record 1900-2018 | Same file as 7 (ice-sheet contributions) | same | same | same | **Done 2026-11-13** (mm of sea level -> Gt, 362 Gt = 1 mm, sign flipped) |
 
 ## Commands
 
@@ -31,6 +31,8 @@ What to download, where it goes, and the one command that processes it. Details 
 pnpm data:real          # synthetic tree, then every real source present in data/raw/ on top
 uv run python -m pipeline ingest imbie --raw data/raw/imbie
 uv run python -m pipeline ingest sea_level --raw data/raw/sea_level
+uv run python -m pipeline ingest recon_gmsl --raw data/raw/recon_gmsl
+uv run python scripts/download_real.py sea_level gmsl_indicator recon_gmsl grace itslive   # downloads (Earthdata .netrc)
 uv run python -m pipeline validate
 pnpm media              # rerun the Describe videos after the data changes
 ```
@@ -49,3 +51,5 @@ pnpm media              # rerun the Describe videos after the data changes
 |---|---|---|---|
 | Greenland mean rate 1992-2018 | IMBIE 2020: 3,902 ± 342 Gt total, about -150 Gt/yr | -4,593 Gt total, -170.1 Gt/yr | Same direction and size; the 2026 reconciliation is a different, later estimate, so an exact match is not expected (dataset card: never splice releases) |
 | Antarctica mean rate 1992-2017 | IMBIE 2018: 2,720 ± 1,390 Gt total, about -109 Gt/yr | -3,539 Gt total, -136.1 Gt/yr | Inside the published uncertainty |
+| Global mean sea level 1993-2026 (grids, no GIA) | NASA-SSH GMSL indicator: 3.200 mm/yr | 3.170 mm/yr | Agrees (difference 0.03 mm/yr) |
+| Global mean sea level 1900-2018 | Frederikse et al. 2020: 1.56 +- 0.33 mm/yr | 1.56 mm/yr (least squares); Sen 1.54 (1.35 to 1.74) | Agrees |

@@ -18,6 +18,51 @@ MARKER = "standin.json"
 
 # Real-data source metadata (docs/datasets/*.md). Used when no stand-in marker is present.
 REAL_SOURCES: dict[str, dict[str, Any]] = {
+    "sea_level_long": {
+        "source": {
+            "name": "JPL_RECON_GMSL v1.0 (PO.DAAC; Frederikse et al. 2020)",
+            "url": "https://doi.org/10.5067/GMSLT-FJPL1",
+            "citation": "Frederikse, T., Landerer, F., Caron, L., et al. (2020). The causes of sea-level rise since "
+                        "1900. Nature 584, 393-397, https://doi.org/10.1038/s41586-020-2591-3. Data: JPL_RECON_GMSL "
+                        "v1.0, PO.DAAC, https://doi.org/10.5067/GMSLT-FJPL1",
+            "doi": "10.5067/GMSLT-FJPL1",
+            "version": "1.0",
+            "licence": "NASA open data (no restrictions)",
+            "processing": [
+                "Downloaded global_timeseries_measures.nc unchanged.",
+                "Used global_average_sea_level_change and its 5-95% lower and upper bounds, annual, as published.",
+                "No smoothing, gap filling or extrapolation; never joined to the satellite record.",
+            ],
+        },
+        "notes": [
+            "Reconstructed from tide gauges, corrected for land motion, plus models; not satellite data.",
+            "Global mean only; it is not the sea level at any place.",
+            "Ends in 2018; the satellite record (1993 onward) is a separate variable and is never joined to it.",
+        ],
+    },
+    "ice_mass_long": {
+        "source": {
+            "name": "JPL_RECON_GMSL v1.0 (PO.DAAC; Frederikse et al. 2020)",
+            "url": "https://doi.org/10.5067/GMSLT-FJPL1",
+            "citation": "Frederikse, T., Landerer, F., Caron, L., et al. (2020). The causes of sea-level rise since "
+                        "1900. Nature 584, 393-397, https://doi.org/10.1038/s41586-020-2591-3. Data: JPL_RECON_GMSL "
+                        "v1.0, PO.DAAC, https://doi.org/10.5067/GMSLT-FJPL1",
+            "doi": "10.5067/GMSLT-FJPL1",
+            "version": "1.0",
+            "licence": "NASA open data (no restrictions)",
+            "processing": [
+                "Downloaded global_timeseries_measures.nc unchanged.",
+                "Used the Greenland (GrIS) and Antarctic (AIS) sea-level contributions and their 5-95% bounds.",
+                "Converted mm of sea level to ice mass change in Gt with 362 Gt = 1 mm, sign flipped so ice "
+                "loss is negative mass (as in IMBIE).",
+                "No smoothing, gap filling or extrapolation; never joined to the IMBIE record.",
+            ],
+        },
+        "notes": [
+            "Before the satellite era the values come from reconstructions with large uncertainty (see the bounds).",
+            "Not independent of IMBIE and GRACE in the recent decades: the reconstruction uses them.",
+        ],
+    },
     "sea_level": {
         "source": {
             "name": "NASA-SSH simple gridded sea surface height V1.1 (PO.DAAC)",

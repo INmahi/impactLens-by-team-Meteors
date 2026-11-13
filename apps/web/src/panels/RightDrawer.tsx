@@ -144,7 +144,7 @@ function Body({ a, v, r, regions, variables, wide }: { a: AnalysisResult; v: Var
                 <>
                   <p className="leading-snug">{cmp.detail}</p>
                   <ul className="flex list-disc flex-col gap-1 pl-4">
-                    {[...new Set([...cmp.notes, ...a.compare!.report.notes])].map((t) => (
+                    {[...new Set([...cmp.notes, ...a.compare!.report.notes.filter((n) => !/^Trends are compared, not levels/.test(n))])].map((t) => (
                       <li key={t}>{t}</li>
                     ))}
                   </ul>

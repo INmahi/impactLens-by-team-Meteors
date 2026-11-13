@@ -190,6 +190,18 @@ def ingest_sea_level(raw: Path, root: Path, log: Log = print) -> dict[str, Any]:
     return out
 
 
+def ingest_recon(raw: Path, root: Path, log: Log = print) -> dict[tuple[str, str], dict[str, Any]]:
+    """JPL_RECON_GMSL -> sea_level_long (global) and ice_mass_long (greenland, antarctica)."""
+    from .recon import read_recon
+
+    docs = read_recon(Path(raw))
+    for vid in ("sea_level_long", "ice_mass_long"):
+        vdocs = [d for (v, _r), d in docs.items() if v == vid]
+        overlay(Path(root), vid, vdocs, synthetic=False, accessed=raw_date(Path(raw)))
+        log(f"{vid}: " + ", ".join(f"{d['region']} {d['dates'][0]}..{d['dates'][-1]}" for d in vdocs))
+    return docs
+
+
 def ingest_imbie(raw: Path, root: Path, log: Log = print) -> dict[tuple[str, str], dict[str, Any]]:
     marker = read_marker(Path(raw))
     docs = imbie_docs(Path(raw), marker)

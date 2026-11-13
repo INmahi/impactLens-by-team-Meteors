@@ -17,6 +17,7 @@ RAW = ROOT / "data" / "raw"
 SOURCES = {
     "imbie": RAW / "imbie",
     "sea_level": RAW / "sea_level",
+    "recon_gmsl": RAW / "recon_gmsl",
 }
 
 
