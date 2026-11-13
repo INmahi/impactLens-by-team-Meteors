@@ -11,7 +11,7 @@ Placeholders: `{A}`, `{B}` are region names from `regions.json` (never hard-code
 4. **Antarctica:** never attribute Antarctic mass loss to air temperature, and never write "warm air is melting Antarctica". Antarctic loss is mainly ocean-driven (warm water thinning West Antarctic glaciers). A temperature correlation or sensitivity for Antarctica must carry that sentence.
 5. **Sea level:** regional values are "satellite sea level averaged over the {A} area", never the value at a town or harbour, and never the rise people feel on land (land sinking is not included). The global mean is never presented as a local value.
 6. **Always give the interval** with a rate: "3.9 mm/yr (95% interval 3.4 to 4.4)".
-7. **Short records** (`lowPower`): add "With only {N} years of data, a real {trend|difference} could still be missed."
+7. **Short records** (`lowPower`): if the result is not significant, add "With only {N} years of data, a real {trend|difference} could still be missed." If it is significant, add instead "With only {N} years of data, the size of this trend is uncertain; a few unusual years can move it." (A significant result must never be followed by "could still be missed"; M9 review S3.)
 8. **Synthetic data:** "SYNTHETIC DATA" stays visible whenever `synthetic` is true; never quote synthetic numbers as findings.
 9. **Rate series:** a trend in a rate is a speed-up or slow-down ("acceleration"); never call it "the rate".
 10. **Cumulative series:** the slope is the "average rate over {start}-{end}"; point to the rate series for speed-up.

@@ -123,3 +123,16 @@ The TypeScript engine (`packages/stats`) has no dependencies.
 - **Rejected:** a simulation search inside the app (seconds per call for monthly data).
 - **Known limits:** it is a "post-hoc power" estimate (Hoenig and Heisey 2001): it uses the current slope, which is uncertain exactly when the test is not significant. Show it as "about N more years if the current rate and noise continue", never as a forecast. The formula is for linear OLS; the headline Mann-Kendall test with its correction is slightly less powerful (calibration in the simulation table).
 - **References:** Weatherhead et al. (1998), J. Geophys. Res. 103(D14), 17149-17161; Tiao et al. (1990).
+
+## D8 (M10). Sea level is a level, not a running total
+- **Decision:** `sea_level` and `sea_level_long` keep `kind: level`. The verdict reads "rose by about X mm/yr" with its interval; the "running total" caveat for cumulative series is not shown.
+- **Why:** sea surface height is measured directly at each step; it is not the sum of a rate series, so its Mann-Kendall significance is not inflated the way a cumulative sum's is. There is no sea-level rate series to point to. (Departs from the CLAUDE.md wording that listed sea level as cumulative; M9 review S9.)
+- **Known limits:** monthly sea level is strongly autocorrelated (ENSO, monsoon); the lag-1 effective sample size correction and the Hamed-Rao cross-check cover this. The Western tropical Pacific (p = 0.057) shows the correction doing its job.
+
+## D9 (M10). Real-data aggregation choices
+- **Temperature:** summer = June-August (Greenland) and December-February labelled by the year of its January (Antarctica), only complete summers; anomaly from the 1991-2020 mean of those summers. Region mean = area-weighted mean of MERRA-2 cells whose centre is inside the region outline.
+- **Sea level:** area-weighted mean of NASA-SSH cells inside each sea polygon; monthly = mean of the weeks labelled in the month (at least 3), otherwise missing. No GIA, no subsidence.
+- **Ice mass change rate:** annual mean of the 12 published monthly rate rows; years with fewer than 12 months left out; never recomputed by differencing.
+- **Long records:** Frederikse et al. contributions converted from mm of sea level to Gt with 362 Gt = 1 mm (sign flipped so loss is negative).
+- **Why:** each is the simplest rule that uses only the published values, never fills a gap and is written in the Data sources page so a judge can check it.
+- **Checks against published values:** `docs/REAL_DATA.md` (global sea level 3.17 vs NASA indicator 3.20 mm/yr; 1900-2018 rate 1.56 mm/yr = Frederikse 2020; ITS_LIVE 1985-2021 loss 5,016 km2 vs about 5,000 published; record Greenland melt summers 2012 and 2019 among the warmest).

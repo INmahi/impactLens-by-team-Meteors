@@ -154,7 +154,15 @@ export function compareVerdict(v: Variable, A: Region, B: Region, rep: CompareRe
     'A difference in trends does not by itself say why the two differ.',
   ]
   if (!rep.crossCheck.agrees) notes.push('The cross-check disagrees; treat this as borderline.')
-  if (rep.lowPower) notes.push(`With only ${Math.round(spanYears(rep.start, rep.end))} common years of data, a real difference could still be missed.`)
+  if (rep.lowPower) {
+    const yrs = Math.round(spanYears(rep.start, rep.end))
+    // wording.md rule 7: a significant result never gets "could still be missed".
+    notes.push(
+      rep.verdict === 'cannot_tell_apart'
+        ? `With only ${yrs} common years of data, a real difference could still be missed.`
+        : `With only ${yrs} common years of data, the size of this difference is uncertain; a few unusual years can move it.`,
+    )
+  }
 
   const isRate = rep.a.kind === 'rate'
   const verb = (x: number) => (x >= 0 ? 'rising' : 'falling')
