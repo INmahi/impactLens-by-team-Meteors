@@ -64,4 +64,9 @@ export default defineConfig({
   define: {
     CESIUM_BASE_URL: JSON.stringify('/cesium/'),
   },
+  // Sharing through VS Code port forwarding (dev tunnels) or GitHub Codespaces: allow those host names.
+  // Share the production preview (pnpm start, port 4173), not the dev server: in dev mode the assistant's key
+  // from apps/web/.env.local is part of the served code.
+  server: { allowedHosts: ['.devtunnels.ms', '.app.github.dev'] },
+  preview: { allowedHosts: ['.devtunnels.ms', '.app.github.dev'] },
 })

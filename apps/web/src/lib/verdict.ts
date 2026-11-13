@@ -178,13 +178,33 @@ export function compareVerdict(v: Variable, A: Region, B: Region, rep: CompareRe
     }
   }
   // ice_mass_rate is the only 'rate' variable (negative = loss); a new rate variable needs its own text.
-  if (isRate && rep.verdict === 'different_directions') {
-    const [spd, slw] = a < 0 ? [A, B] : [B, A]
-    return { tone: 'significant', headline: `${spd.name}'s ice loss is speeding up while ${slw.name}'s is slowing down.`, detail, notes }
-  }
   if (rep.verdict === 'different_directions') {
-    const [up, down] = a >= 0 ? [A, B] : [B, A]
-    return { tone: 'significant', headline: `${subject(v, up)} is rising, while ${subject(v, down).replace(/^./, (ch) => ch.toLowerCase())} is falling.`, detail, notes }
+    // The difference is significant, but each region's own trend may not be: only call a region "rising" or
+    // "falling" when its own test says so (wording.md rule 2: otherwise "cannot tell yet").
+    const sigA = rep.a.test.significant
+    const sigB = rep.b.test.significant
+    const lower = (x: string) => x.replace(/^./, (ch) => ch.toLowerCase())
+    const dir = (R: Region, slope: number) =>
+      isRate ? `${R.name}'s ice loss is ${slope < 0 ? 'speeding up' : 'slowing down'}` : `${subject(v, R)} is ${slope >= 0 ? 'rising' : 'falling'}`
+    if (sigA && sigB) {
+      const [first, second, s1, s2] = a >= 0 ? [A, B, a, b] : [B, A, b, a]
+      return { tone: 'significant', headline: `${dir(first, s1)}, while ${lower(dir(second, s2))}.`, detail, notes }
+    }
+    if (sigA || sigB) {
+      const [clear, unclear, sc] = sigA ? [A, B, a] : [B, A, b]
+      return {
+        tone: 'significant',
+        headline: `${dir(clear, sc)}; for ${unclear.name} the app cannot tell yet. The two trends are different.`,
+        detail,
+        notes,
+      }
+    }
+    return {
+      tone: 'significant',
+      headline: `The two trends are different, but on its own neither ${A.name} nor ${B.name} shows a clear trend yet.`,
+      detail,
+      notes,
+    }
   }
   const [fast, slow, sFast] = rep.verdict === 'a_faster' ? [A, B, a] : [B, A, b]
   let headline = `${subject(v, fast)} is ${verb(sFast)} faster than in ${slow.kind === 'global' ? 'the global mean' : slow.name}.`
