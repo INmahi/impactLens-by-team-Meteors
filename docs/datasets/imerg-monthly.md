@@ -26,3 +26,9 @@ Card written 2026-11-13 by main (M12, Bangladesh variables). Facts below were ch
 - A satellite estimate averaged over the whole country, not station rain; gauge adjustment is monthly and gauge density varies.
 - 1998-2014 relies on TRMM-era sensors and 2014 onward on GPM; version 07 processes both together, but the observing system changed.
 - Large year-to-year swings (monsoon variability) make a trend hard to detect with 28 years.
+
+## Cross-check against NASA POWER (validity, 2026-11-13)
+- NASA POWER monthly regional PRECTOTCORR (MERRA-2 reanalysis rain, bias-corrected; API v2.10, no login; `scripts/download_real.py power`, 37 grid points inside the border) gives a June-September mean of 1,552 mm for 1998-2025 against IMERG's 1,657 mm, with a year-to-year correlation of only 0.21.
+- Trends, same engine: POWER 1998-2025 +34.1 mm/yr (95% interval 12.9 to 56.0, p = 0.004); IMERG 1998-2025 -5.7 mm/yr (-18.4 to 5.0, p = 0.26). The intervals do not overlap. POWER 1981-1997 is -24.1 mm/yr (p = 0.07) and 1981-2025 +30.8 mm/yr (p < 0.001).
+- Decision: POWER rain is not used as a variable. Reanalysis precipitation trends are sensitive to changes in the assimilated observing system; the satellite-plus-gauge IMERG record is the one the app analyses. The disagreement is stated in the IMERG notes. `pipeline/ingest/power.py` (`read_power`) reproduces the numbers.
+

@@ -41,14 +41,38 @@ vec4 sampleAtlas(float index, vec2 uv) {
 ${branches.join('\n')}
 }
 
-// Returns (value, valid). Texture values are 0..1, so multiply by 255 and round.
-vec2 decodeFrame(float index, vec4 rect, vec4 bounds, vec2 st) {
-  vec2 uv = clamp(mix(rect.xy, rect.zw, st), bounds.xy, bounds.zw);
+// One texel: (value, valid). Texture values are 0..1, so multiply by 255 and round. Always sampled at a texel
+// centre with NEAREST filtering: packed bytes must never be interpolated by the GPU.
+vec2 decodeTexel(float index, vec2 uv) {
   vec4 t = sampleAtlas(index, uv);
   float hi = floor(t.r * 255.0 + 0.5);
   float lo = floor(t.g * 255.0 + 0.5);
-  float valid = step(0.5, t.b);
-  return vec2((hi * 256.0 + lo) * scale + offset, valid);
+  return vec2((hi * 256.0 + lo) * scale + offset, step(0.5, t.b));
+}
+
+// Smooth display: decode the 4 surrounding texels and blend them bilinearly, using only valid ones (gaps and
+// coasts are not smeared). Display only: the data, legend and statistics are unchanged.
+// Returns (value, valid).
+vec2 decodeFrame(float index, vec4 rect, vec4 bounds, vec2 st) {
+  vec2 uv = mix(rect.xy, rect.zw, st);
+  vec2 texel = 2.0 * abs(bounds.xy - rect.xy);          // bounds are inset by half a texel
+  vec2 f = (uv - bounds.xy) / max(texel, vec2(1e-9));
+  vec2 i0 = floor(f);
+  vec2 w = clamp(f - i0, 0.0, 1.0);
+  vec2 p0 = clamp(bounds.xy + i0 * texel, bounds.xy, bounds.zw);
+  vec2 p1 = clamp(bounds.xy + (i0 + 1.0) * texel, bounds.xy, bounds.zw);
+  vec2 s00 = decodeTexel(index, p0);
+  vec2 s10 = decodeTexel(index, vec2(p1.x, p0.y));
+  vec2 s01 = decodeTexel(index, vec2(p0.x, p1.y));
+  vec2 s11 = decodeTexel(index, p1);
+  float w00 = (1.0 - w.x) * (1.0 - w.y) * s00.y;
+  float w10 = w.x * (1.0 - w.y) * s10.y;
+  float w01 = (1.0 - w.x) * w.y * s01.y;
+  float w11 = w.x * w.y * s11.y;
+  float ws = w00 + w10 + w01 + w11;
+  float value = (w00 * s00.x + w10 * s10.x + w01 * s01.x + w11 * s11.x) / max(ws, 1e-6);
+  // Valid where at least about half of the surrounding weight is valid: crisp, slightly rounded edges.
+  return vec2(value, step(0.45, ws));
 }
 
 czm_material czm_getMaterial(czm_materialInput materialInput) {

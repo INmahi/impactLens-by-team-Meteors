@@ -30,7 +30,11 @@ DATASETS: dict[str, tuple[str, Path, str | None]] = {
     "merra2": ("M2TMNXSLV", RAW / "merra2", None),
     # GPM IMERG monthly V07 (M12): only precipitation over a box around Bangladesh, via OPeNDAP (~30 KB a month).
     "imerg": ("GPM_3IMERGM", RAW / "imerg", None),
+    # NASA POWER (M12): monthly precipitation over a box around Bangladesh, regional API, no login.
+    "power": ("POWER", RAW / "power", None),
 }
+POWER_URL = ("https://power.larc.nasa.gov/api/temporal/monthly/regional?parameters=PRECTOTCORR&community=AG"
+             "&latitude-min=20.5&latitude-max=26.7&longitude-min=88.0&longitude-max=92.7&start=1981&end={end}&format=JSON")
 # IMERG 0.1-degree grid: lon index (lon + 179.95) / 0.1, lat index (lat + 89.95) / 0.1; dims (time, lon, lat).
 # Box 87.95-92.95 E, 20.45-26.85 N covers Bangladesh (Natural Earth bounds 88.02-92.63 E, 20.79-26.57 N).
 IMERG_VARS = "dap4.ce=/Grid/precipitation[0:1:0][2679:1:2729][1104:1:1168];/Grid/lat[1104:1:1168];/Grid/lon[2679:1:2729];/Grid/time"
@@ -94,6 +98,26 @@ def sha256sums(folder: Path) -> None:
     (folder / "SHA256SUMS.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def download_power() -> int:
+    """NASA POWER regional monthly precipitation for Bangladesh (no login). The last full year is requested."""
+    import datetime as dt
+
+    import requests
+
+    folder = RAW / "power"
+    folder.mkdir(parents=True, exist_ok=True)
+    end = dt.date.today().year - 1
+    r = requests.get(POWER_URL.format(end=end), timeout=300, headers={"User-Agent": "TrendDetective-pipeline"})
+    if r.status_code != 200 or not r.text.lstrip().startswith("{"):
+        print(f"power: HTTP {r.status_code}: {r.text[:200]}")
+        return 1
+    out = folder / f"power_PRECTOTCORR_monthly_regional_1981_{end}.json"
+    out.write_text(r.text, encoding="utf-8")
+    sha256sums(folder)
+    print(f"power: {out.relative_to(ROOT)} ({len(r.content) / 1e6:.1f} MB)")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("datasets", nargs="+", choices=sorted(DATASETS))
@@ -102,6 +126,8 @@ def main() -> int:
     ap.add_argument("--threads", type=int, default=6)
     args = ap.parse_args()
 
+    if args.datasets == ["power"]:
+        return download_power()
     ensure_netrc()
     import earthaccess
 
