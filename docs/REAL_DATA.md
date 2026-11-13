@@ -24,6 +24,7 @@ What to download, where it goes, and the one command that processes it. Details 
 | 6 | Summer air temperature | MERRA-2 monthly M2TMNXSLV v5.12.4 (GES DISC), T2M only | ~0.5 GB if subset to T2M | Earthdata + GES DISC approval | `data/raw/merra2/` | **Done 2026-11-13** (`ingest merra2`): T2M only via NASA OPeNDAP, 561 months, 286 MB instead of 30-40 GB |
 | 7 | Sea level, long record 1900-2018 | JPL_RECON_GMSL v1.0 (PO.DAAC, Frederikse et al. 2020) | 1 netCDF, tiny | Earthdata | `data/raw/recon_gmsl/` | **Done 2026-11-13** (`ingest recon_gmsl`) |
 | 8 | Ice mass, long record 1900-2018 | Same file as 7 (ice-sheet contributions) | same | same | same | **Done 2026-11-13** (mm of sea level -> Gt, 362 Gt = 1 mm, sign flipped) |
+| 9 | Ice mass from gravity (Greenland, Antarctica, Himalayas) | Same GRACE file as 4 | - | Earthdata | `data/raw/grace/` | **Done 2026-11-13** (`ingest grace` writes `ice_mass_grace`); Himalayan summer temperature from the MERRA-2 files (`ingest merra2`) |
 | 10 | Bangladesh monsoon rainfall | GPM IMERG Final monthly V07 (`GPM_3IMERGM`), Bangladesh box via OPeNDAP | 333 files, 13 MB | Earthdata | `data/raw/imerg/` | **Done 2026-11-13** (`ingest imerg`) |
 | 11 | Bangladesh border | Natural Earth 1:50m admin 0 (public domain) | 1 GeoJSON, 3 MB | No | `data/raw/naturalearth/` | Simplified outline committed in `pipeline/synthetic/bangladesh.py` |
 

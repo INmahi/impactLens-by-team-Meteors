@@ -165,6 +165,15 @@ def _imerg() -> dict[str, Any]:
 REAL_SOURCES["monsoon_rainfall"] = _imerg()
 
 
+def _grace_mass() -> dict[str, Any]:
+    from .grace import MASS_NOTES, MASS_SOURCE
+
+    return {"source": MASS_SOURCE, "notes": MASS_NOTES}
+
+
+REAL_SOURCES["ice_mass_grace"] = _grace_mass()
+
+
 def read_marker(raw: Path) -> dict[str, Any] | None:
     p = Path(raw) / MARKER
     if not p.is_file():

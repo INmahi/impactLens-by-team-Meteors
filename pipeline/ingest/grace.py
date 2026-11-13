@@ -131,6 +131,65 @@ def read_grace(raw: Path) -> tuple[list[str], np.ndarray, list[str], list[str]]:
     return frame_months, frames.astype(np.float32), _months(frame_months[0], frame_months[-1]), nat["warnings"]
 
 
+R_EARTH_M = 6_371_008.8
+
+
+def region_mass(raw: Path, parts: Any) -> tuple[list[str], list[float | None], list[float | None], int]:
+    """Mass change in Gt over the 0.5-degree cells whose centre is inside the outline: sum of water-equivalent
+    thickness x cell area (1 cm of water over 1 m2 = 10 kg). 1-sigma = the same sum of the per-cell uncertainty
+    (errors treated as fully correlated over the region, the cautious choice). Every month from the first to the
+    last solution; months without a solution stay None. Returns (months, Gt, sigma Gt, cells)."""
+    import math
+
+    from .grid import Grid, polygon_mask
+
+    nat = read_native(raw)
+    grid = Grid(nat["lat"], nat["lon"])
+    mask = polygon_mask(grid, parts)
+    if not mask.any():
+        raise IngestError("no GRACE cell centre falls inside the region outline")
+    area_m2 = grid.weights[mask] * (R_EARTH_M**2) * math.radians(0.5)
+    by_month: dict[str, tuple[float, float | None]] = {}
+    for i, m in enumerate(nat["months"]):
+        v = grid.apply(nat["lwe"][i])[mask]
+        ok = np.isfinite(v)
+        if ok.sum() < 0.9 * mask.sum():
+            continue
+        gt = float((v[ok] * area_m2[ok]).sum() * 10.0 / 1e12)
+        sig = None
+        if nat["unc"] is not None:
+            u = grid.apply(nat["unc"][i])[mask]
+            okc = np.isfinite(u)
+            sig = float((u[okc] * area_m2[okc]).sum() * 10.0 / 1e12) if okc.any() else None
+        by_month[m] = (gt, sig)
+    months = _months(min(by_month), max(by_month))
+    return (months, [by_month[m][0] if m in by_month else None for m in months],
+            [by_month[m][1] if m in by_month else None for m in months], int(mask.sum()))
+
+
+MASS_SOURCE = {
+    **SOURCE,
+    "processing": [
+        "Downloaded the global monthly mascon grid unchanged.",
+        "Mass change = sum over the 0.5-degree cells whose centre lies inside the region outline of water-equivalent "
+        "thickness x cell area (1 cm of water on 1 m2 = 10 kg), in Gt, relative to the source's 2004.0-2009.999 mean.",
+        "1-sigma = the same sum of the source's per-cell uncertainty (errors treated as fully correlated, cautious).",
+        "Months with no solution (including the 2017-2018 mission gap) stay as gaps, never interpolated.",
+    ],
+}
+MASS_NOTES = [
+    "Measured by gravity: GRACE weighs all mass, so near the coast and in the Himalayas some of the signal is water "
+    "or ocean mass, not ice.",
+    "Himalayas: the arc is about as wide as GRACE's resolution (~300 km); groundwater loss in the plains of northern "
+    "India and Pakistan leaks into this signal, so treat the Himalayan trend as an upper bound on glacier loss.",
+    "Antarctica: GRACE totals depend strongly on the correction for land still rising after the last ice age (GIA); "
+    "for 2002-2023 GRACE gives about -131 Gt/yr against IMBIE's reconciled -184 Gt/yr. Greenland agrees closely "
+    "(about -249 against -253 Gt/yr).",
+    "A different method from the IMBIE ice mass record (which combines gravity, altimetry and input-output); the "
+    "two are not independent but should agree closely for Greenland and Antarctica.",
+]
+
+
 def write_grace_layer(raw: Path, root: Path, accessed: str, log: Any = print) -> dict[str, Any]:
     from ..synthetic.config import LayerSpec
     from ..synthetic.maps import LayerFields, write_layer

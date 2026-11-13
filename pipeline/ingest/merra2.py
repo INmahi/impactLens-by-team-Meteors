@@ -24,7 +24,20 @@ from .grid import Grid, IngestError, polygon_mask, polygons_from_topo
 
 FILE = re.compile(r"^MERRA2_\d{3}\.tavgM_2d_slv_Nx\.(\d{4})(\d{2})\.T2M\.nc4$")
 BASE = (1991, 2020)
-SUMMER = {"greenland": (6, 7, 8), "antarctica": (12, 1, 2)}
+NORTH_SUMMER = (6, 7, 8)
+SOUTH_SUMMER = (12, 1, 2)
+
+
+def summer_months(region_ids: list[str], polys: dict) -> dict[str, tuple[int, int, int]]:
+    """June-August for regions north of the equator, December-February for southern ones (by outline centre)."""
+    out = {}
+    for rid in region_ids:
+        lats = [lat for outer, _ in polys[rid] for _, lat in outer]
+        out[rid] = SOUTH_SUMMER if sum(lats) / len(lats) < 0 else NORTH_SUMMER
+    return out
+
+
+SUMMER: dict[str, tuple[int, int, int]] = {}  # filled by read_months from the temperature variable's regions
 
 SOURCE = {
     "name": "NASA MERRA-2 monthly 2 m air temperature (M2TMNXSLV v5.12.4, GES DISC)",
@@ -38,8 +51,8 @@ SOURCE = {
     "processing": [
         "Downloaded only the T2M field of each monthly file through NASA's OPeNDAP service (values unchanged).",
         "Region mean = area-weighted mean of the 0.5 x 0.625 degree cells whose centre lies inside the region outline.",
-        "Summer = June-August for Greenland; December-February for Antarctica, labelled by the year of its January; "
-        "only summers with all three months.",
+        "Summer = June-August for northern regions (Greenland, Himalayas); December-February for Antarctica, labelled "
+        "by the year of its January; only summers with all three months.",
         "Shown as the difference from the 1991-2020 average summer (kelvin differences = degrees C).",
         "Map: each month minus the 1991-2020 mean of that calendar month, interpolated to a 1-degree grid.",
     ],
@@ -83,6 +96,10 @@ def read_months(raw: Path, topo: dict[str, Any], log: Any = print) -> dict[str, 
         t2m[~np.isfinite(t2m) | (np.abs(t2m) >= 1e14)] = np.nan
         if grid is None:
             grid = Grid(lat, lon)
+            from ..synthetic import config as C
+
+            SUMMER.clear()
+            SUMMER.update(summer_months(list(next(v for v in C.VARIABLES if v.id == "temperature").series), polys))
             for rid in SUMMER:
                 if rid not in polys:
                     raise IngestError(f"regions.topo.json has no outline for {rid}")
@@ -94,7 +111,7 @@ def read_months(raw: Path, topo: dict[str, Any], log: Any = print) -> dict[str, 
             v = a[m]
             ok = np.isfinite(v)
             if ok.sum():
-                means[rid][label] = float((v[ok] * w[ok]).sum() / w[ok].sum())
+                means.setdefault(rid, {})[label] = float((v[ok] * w[ok]).sum() / w[ok].sum())
         fields[label] = a.astype(np.float32)
     assert grid is not None
     # Monthly climatology 1991-2020 per calendar month, then 1-degree anomaly frames.

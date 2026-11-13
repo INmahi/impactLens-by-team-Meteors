@@ -192,9 +192,22 @@ def ingest_sea_level(raw: Path, root: Path, log: Log = print) -> dict[str, Any]:
 
 def ingest_grace(raw: Path, root: Path, log: Log = print) -> dict[str, Any]:
     """GRACE/GRACE-FO mascons -> the ice_mass_map layer (frames + manifest, synthetic: false)."""
-    from .grace import write_grace_layer
+    from .grace import region_mass, write_grace_layer
+    from .grid import polygons_from_topo
 
-    return write_grace_layer(Path(raw), Path(root), raw_date(Path(raw)), log)
+    manifest = write_grace_layer(Path(raw), Path(root), raw_date(Path(raw)), log)
+    # Ice mass from gravity (M12): Gt per ice region, same method for Greenland, Antarctica and the Himalayas.
+    polys = polygons_from_topo(json.loads((Path(root) / "regions.topo.json").read_text(encoding="utf-8")))
+    docs = []
+    for rid in _var("ice_mass_grace").series:
+        months, values, sigma, cells = region_mass(Path(raw), polys[rid])
+        docs.append(series_doc(variable="ice_mass_grace", region=rid, units="Gt", frequency="monthly", kind="cumulative",
+                               dates=months, values=values, sigma=sigma,
+                               segment_source="GRACE/GRACE-FO JPL mascons RL06.3Mv04 CRI, mass over the region outline",
+                               synthetic=False, decimals=0))
+        log(f"ice_mass_grace: {rid} {months[0]}..{months[-1]}, {cells} cells")
+    overlay(Path(root), "ice_mass_grace", docs, synthetic=False, accessed=raw_date(Path(raw)))
+    return manifest
 
 
 def ingest_itslive(raw: Path, root: Path, log: Log = print) -> dict[str, Any]:

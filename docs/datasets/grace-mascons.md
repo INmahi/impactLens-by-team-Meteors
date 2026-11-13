@@ -75,3 +75,9 @@ Date checked: 2026-11-12. URLs opened:
 PO.DAAC pages (podaac.jpl.nasa.gov) refused connections during the check, so the dataset landing page and the RL06.3 release announcement (https://podaac.jpl.nasa.gov/announcements/2024-09-12-Release-of-GRACE-FO-JPL-RL06.3-for-L2-3-and-MASCON-Data-Sets) were not read.
 
 UNVERIFIED: exact missing months; file size unit; netCDF variable names; baseline period; GIA treatment; whether `uncertainty` exists in the CRI file.
+
+## Ice mass from gravity per region (M12, added 2026-11-13 by main)
+- Variable `ice_mass_grace` (Gt, monthly 2002-04 to 2026-09) for `greenland`, `antarctica` and `himalaya` (new region, kind glacier_region, hand-drawn outline of the glaciated arc). Mass = sum of `lwe_thickness` x cell area over the 0.5-degree cells whose centre is inside the outline (1 cm of water on 1 m2 = 10 kg); 1-sigma = the same sum of `uncertainty`.
+- Cross-check against IMBIE over 2002-04 to 2023-12 (same engine): Greenland GRACE -248.5 Gt/yr (95% -269.1 to -229.2) vs IMBIE -253.3 (-273.0 to -220.9): agree. Antarctica GRACE -130.5 (-155.9 to -106.2) vs IMBIE -183.6 (-203.1 to -158.3): disagree, as expected from the GIA correction sensitivity of GRACE over Antarctica; stated in the notes.
+- Himalayas: -9.1 Gt/yr (95% -10.1 to -8.1), p < 0.001, 2002-2026, 159 cells. Published Himalayan glacier loss is of the order of -7 to -8 Gt/yr (e.g. Maurer et al. 2019, Science Advances; not re-checked here): the GRACE value includes groundwater leakage from the Indo-Gangetic plain and is an upper bound on glacier loss (stated in the notes).
+
