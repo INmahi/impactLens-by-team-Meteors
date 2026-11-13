@@ -26,7 +26,46 @@ DATASETS: dict[str, tuple[str, Path, str | None]] = {
     "recon_gmsl": ("JPL_RECON_GMSL", RAW / "recon_gmsl", None),
     "grace": ("TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4", RAW / "grace", None),
     "itslive": ("NSIDC-0793", RAW / "itslive", r"\.nc$"),  # skip the MP4 animations
+    # MERRA-2 monthly: only T2M is fetched through NASA's OPeNDAP service (~0.5 MB a month, not 50-75 MB).
+    "merra2": ("M2TMNXSLV", RAW / "merra2", None),
 }
+MERRA2_VERSION = "5.12.4"
+MERRA2_VARS = "dap4.ce=/T2M;/lat;/lon;/time"
+
+
+def download_merra2(earthaccess, folder: Path, limit: int | None, threads: int) -> int:
+    """One T2M-only netCDF-4 per month via OPeNDAP (the granule's own OPENDAP link). Skips files on disk."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    results = earthaccess.search_data(short_name="M2TMNXSLV", version=MERRA2_VERSION)
+    print(f"merra2: M2TMNXSLV {MERRA2_VERSION}: {len(results)} granules", flush=True)
+    jobs = []
+    for g in results[:limit] if limit else results:
+        url = next((u["URL"] for u in g["umm"].get("RelatedUrls", []) if u.get("Subtype") == "OPENDAP DATA"), None)
+        name = g.data_links()[0].rsplit("/", 1)[-1].replace(".nc4", ".T2M.nc4")
+        if url is None:
+            raise SystemExit(f"merra2: no OPeNDAP link for {name}")
+        jobs.append((url + ".dap.nc4?" + MERRA2_VARS, folder / name))
+    folder.mkdir(parents=True, exist_ok=True)
+    session = earthaccess.get_requests_https_session()
+
+    def fetch(job: tuple[str, Path]) -> str:
+        url, out = job
+        if out.exists() and out.stat().st_size > 100_000:
+            return "skip"
+        for attempt in range(4):
+            r = session.get(url, timeout=300)
+            if r.status_code == 200 and r.content[1:4] == b"HDF":  # netCDF-4 = HDF5 signature
+                tmp = out.with_suffix(".part")
+                tmp.write_bytes(r.content)
+                tmp.replace(out)
+                return "ok"
+        raise RuntimeError(f"{out.name}: HTTP {r.status_code} after 4 tries")
+
+    with ThreadPoolExecutor(max_workers=threads) as pool:
+        done = list(pool.map(fetch, jobs))
+    print(f"merra2: {done.count('ok')} downloaded, {done.count('skip')} already on disk", flush=True)
+    return len(jobs)
 
 
 def ensure_netrc() -> None:
@@ -64,6 +103,10 @@ def main() -> int:
 
     for name in args.datasets:
         short, folder, filt = DATASETS[name]
+        if name == "merra2" and not args.list:
+            download_merra2(earthaccess, folder, args.limit, args.threads)
+            sha256sums(folder)
+            continue
         results = earthaccess.search_data(short_name=short)
         print(f"{name}: {short}: {len(results)} granules", flush=True)
         if args.list:

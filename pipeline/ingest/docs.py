@@ -146,6 +146,15 @@ def _itslive() -> dict[str, Any]:
 REAL_SOURCES["ice_extent"] = _itslive()
 
 
+def _merra2() -> dict[str, Any]:
+    from .merra2 import NOTES, SOURCE
+
+    return {"source": SOURCE, "notes": NOTES}
+
+
+REAL_SOURCES["temperature"] = _merra2()
+
+
 def read_marker(raw: Path) -> dict[str, Any] | None:
     p = Path(raw) / MARKER
     if not p.is_file():

@@ -214,6 +214,28 @@ def ingest_itslive(raw: Path, root: Path, log: Log = print) -> dict[str, Any]:
     return out
 
 
+def ingest_merra2(raw: Path, root: Path, log: Log = print) -> dict[str, Any]:
+    """MERRA-2 T2M -> temperature (greenland JJA, antarctica DJF summer anomaly) + the temperature map layer."""
+    from .merra2 import read_months, summers, write_map
+
+    topo_path = Path(root) / "regions.topo.json"
+    if not topo_path.is_file():
+        raise IngestError(f"{topo_path} not found; region outlines come from it (build the tree first)")
+    read = read_months(Path(raw), json.loads(topo_path.read_text(encoding="utf-8")), log)
+    docs = []
+    for rid, (dates, values) in summers(read["means"]).items():
+        docs.append(series_doc(variable="temperature", region=rid, units="degC", frequency="annual", kind="level",
+                               dates=dates, values=values,
+                               segment_source="NASA MERRA-2 M2TMNXSLV v5.12.4 T2M (OPeNDAP subset), summer anomaly "
+                                              "vs 1991-2020", synthetic=False, decimals=3))
+    accessed = raw_date(Path(raw))
+    overlay(Path(root), "temperature", docs, synthetic=False, accessed=accessed)
+    write_map(read, Path(root), accessed, log)
+    for d in docs:
+        log(f"temperature: {d['region']} {d['dates'][0]}..{d['dates'][-1]}")
+    return read
+
+
 def ingest_recon(raw: Path, root: Path, log: Log = print) -> dict[tuple[str, str], dict[str, Any]]:
     """JPL_RECON_GMSL -> sea_level_long (global) and ice_mass_long (greenland, antarctica)."""
     from .recon import read_recon

@@ -20,6 +20,7 @@ SOURCES = {
     "recon_gmsl": RAW / "recon_gmsl",
     "grace": RAW / "grace",
     "itslive": RAW / "itslive",
+    "merra2": RAW / "merra2",
 }
 
 
