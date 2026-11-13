@@ -75,9 +75,3 @@ Date checked: 2026-11-12. URLs opened:
 PO.DAAC pages (podaac.jpl.nasa.gov) refused connections during the check, so the dataset landing page and the RL06.3 release announcement (https://podaac.jpl.nasa.gov/announcements/2024-09-12-Release-of-GRACE-FO-JPL-RL06.3-for-L2-3-and-MASCON-Data-Sets) were not read.
 
 UNVERIFIED: exact missing months; file size unit; netCDF variable names; baseline period; GIA treatment; whether `uncertainty` exists in the CRI file.
-
-## Bangladesh water storage (M12, added 2026-11-13 by main)
-- Variable `water_storage`, region `bangladesh` (Natural Earth border). Same downloaded file as the map layer (`GRCTellus.JPL.200204_202609.GLO.RL06.3M.MSCNv04CRI.nc`).
-- Value = area-weighted mean of `lwe_thickness` over the 46 half-degree cells whose centre is inside the border, cm of water relative to the file's `time_mean_removed` = 2004.000 to 2009.999. 1-sigma = area-weighted mean of the file's `uncertainty` (errors treated as fully correlated over the country, the cautious choice). Monthly 2002-04 to 2026-09, 33 months without a solution left as gaps.
-- First result: Sen's slope -0.04 cm/yr (95% interval -0.27 to 0.18), p = 0.71; Hamed-Rao p = 0.77, seasonal Mann-Kendall p = 0.61; annual means swing between about -6 and +6 cm with no drift. Total water storage over the whole of Bangladesh shows no detectable trend in 2002-2026.
-- Caveats: GRACE resolution about 300 km, so Bangladesh spans only a few independent mascons and signal leaks from neighbouring India, where GRACE shows strong groundwater loss. The large annual monsoon cycle (about +-40 cm) dominates the monthly series. The value is total water (groundwater, soil moisture, surface water), not groundwater alone. Published Bangladesh groundwater studies (for example Shamsudduha and co-authors on the Bengal Aquifer System) should be checked before quoting a comparison: UNVERIFIED here.

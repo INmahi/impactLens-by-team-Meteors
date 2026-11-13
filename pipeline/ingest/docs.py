@@ -155,14 +155,6 @@ def _merra2() -> dict[str, Any]:
 REAL_SOURCES["temperature"] = _merra2()
 
 
-def _water() -> dict[str, Any]:
-    from .grace import WATER_NOTES, WATER_SOURCE
-
-    return {"source": WATER_SOURCE, "notes": WATER_NOTES}
-
-
-REAL_SOURCES["water_storage"] = _water()
-
 
 def _imerg() -> dict[str, Any]:
     from .imerg import NOTES, SOURCE

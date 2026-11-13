@@ -192,24 +192,9 @@ def ingest_sea_level(raw: Path, root: Path, log: Log = print) -> dict[str, Any]:
 
 def ingest_grace(raw: Path, root: Path, log: Log = print) -> dict[str, Any]:
     """GRACE/GRACE-FO mascons -> the ice_mass_map layer (frames + manifest, synthetic: false)."""
-    from .grace import region_series, write_grace_layer
-    from .grid import polygons_from_topo
+    from .grace import write_grace_layer
 
-    manifest = write_grace_layer(Path(raw), Path(root), raw_date(Path(raw)), log)
-    # Bangladesh water storage (M12): same file, area mean over the country outline.
-    topo_path = Path(root) / "regions.topo.json"
-    polys = polygons_from_topo(json.loads(topo_path.read_text(encoding="utf-8")))
-    vspec = _var("water_storage")
-    docs = []
-    for rid in vspec.series:
-        months, values, sigma, cells = region_series(Path(raw), polys[rid])
-        docs.append(series_doc(variable="water_storage", region=rid, units="cm w.e.", frequency="monthly",
-                               kind="level", dates=months, values=values, sigma=sigma,
-                               segment_source="GRACE/GRACE-FO JPL mascons RL06.3Mv04 CRI, area mean over the country",
-                               synthetic=False, decimals=2))
-        log(f"water_storage: {rid} {months[0]}..{months[-1]}, {cells} cells, {values.count(None)} months without data")
-    overlay(Path(root), "water_storage", docs, synthetic=False, accessed=raw_date(Path(raw)))
-    return manifest
+    return write_grace_layer(Path(raw), Path(root), raw_date(Path(raw)), log)
 
 
 def ingest_itslive(raw: Path, root: Path, log: Log = print) -> dict[str, Any]:

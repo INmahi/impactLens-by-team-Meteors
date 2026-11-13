@@ -42,26 +42,6 @@ SOURCE = {
 }
 
 
-WATER_SOURCE = {
-    **SOURCE,
-    "processing": [
-        "Downloaded the global monthly mascon grid unchanged.",
-        "Water storage = area-weighted mean of the 0.5-degree cells whose centre lies inside the Bangladesh border "
-        "(Natural Earth), in cm of water relative to the source's 2004.0-2009.999 mean.",
-        "1-sigma = area-weighted mean of the source's per-cell uncertainty (errors assumed fully correlated over "
-        "the country, the cautious choice).",
-        "Months with no solution (including the 2017-2018 mission gap) stay as gaps, never interpolated.",
-    ],
-}
-WATER_NOTES = [
-    "GRACE weighs all water: groundwater, soil moisture, rivers, wetlands and snow; in Bangladesh most of the long-term "
-    "change is groundwater.",
-    "GRACE resolution is about 300 km (mascons), so Bangladesh spans only a few independent cells and some signal "
-    "leaks in from neighbouring India.",
-    "The monsoon fills the country with water every year; the trend is the change in the yearly average level.",
-]
-
-
 def _month(days: float) -> str:
     d = date(2002, 1, 1) + timedelta(days=float(days))
     return f"{d.year:04d}-{d.month:02d}"
@@ -149,37 +129,6 @@ def read_grace(raw: Path) -> tuple[list[str], np.ndarray, list[str], list[str]]:
     frames[:, land_frac < 0.5] = np.nan
     frame_months = nat["months"]
     return frame_months, frames.astype(np.float32), _months(frame_months[0], frame_months[-1]), nat["warnings"]
-
-
-def region_series(raw: Path, parts: Any) -> tuple[list[str], list[float | None], list[float | None], int]:
-    """Area-weighted mean of lwe and of its stated 1-sigma over the 0.5-degree cells whose centre is inside the
-    outline, every month from the first to the last solution (missing months stay None). Returns
-    (months, values cm, sigma cm, number of cells)."""
-    from .grid import Grid, polygon_mask
-
-    nat = read_native(raw)
-    grid = Grid(nat["lat"], nat["lon"])
-    mask = polygon_mask(grid, parts)
-    if not mask.any():
-        raise IngestError("no GRACE cell centre falls inside the region outline")
-    w = grid.weights[mask]
-    by_month = {}
-    for i, m in enumerate(nat["months"]):
-        v = grid.apply(nat["lwe"][i])[mask]
-        ok = np.isfinite(v)
-        if not ok.any():
-            continue
-        val = float((v[ok] * w[ok]).sum() / w[ok].sum())
-        sig = None
-        if nat["unc"] is not None:
-            u = grid.apply(nat["unc"][i])[mask]
-            okc = np.isfinite(u)
-            # Mean of the cell sigmas: assumes errors fully correlated across the area (conservative).
-            sig = float((u[okc] * w[okc]).sum() / w[okc].sum()) if okc.any() else None
-        by_month[m] = (val, sig)
-    months = _months(min(by_month), max(by_month))
-    return (months, [by_month[m][0] if m in by_month else None for m in months],
-            [by_month[m][1] if m in by_month else None for m in months], int(mask.sum()))
 
 
 def write_grace_layer(raw: Path, root: Path, accessed: str, log: Any = print) -> dict[str, Any]:

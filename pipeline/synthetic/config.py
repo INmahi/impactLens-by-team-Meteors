@@ -216,8 +216,7 @@ REGIONS: list[RegionSpec] = [
     RegionSpec("bangladesh", "Bangladesh", None, "country", (88.0, 20.7, 92.7, 26.7), _cam(90.3, 23.6, 1_600_000),
                BANGLADESH,
                ("A mean over the whole country inside its border (Bangladesh Bureau of Statistics via geoBoundaries); not the value at any district.",)),
-    # The 8 divisions of Bangladesh (M12): geoBoundaries ADM1 (CC0), see bangladesh.py. Monsoon rainfall only
-    # (GRACE's ~300 km resolution cannot separate divisions, so water storage stays national).
+    # The 8 divisions of Bangladesh (M12), see bangladesh.py. Monsoon rainfall.
     *[RegionSpec(rid, name, "bangladesh", "division", bbox,
                  _cam((bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2, 700_000), rings,
                  (f"A mean over the whole {name} division; not the value at any district or town.",))
@@ -508,20 +507,7 @@ VARIABLES: list[VariableSpec] = [
                                      decimals=0),
         },
     ),
-    # ---- Bangladesh (M12). Synthetic placeholders; `ingest grace` / `ingest imerg` replace them with real data.
-    VariableSpec(
-        id="water_storage", group="bangladesh", name="Water storage", units="cm w.e.", kind="level",
-        frequency="monthly", map_mode="ice_mass_map", chart_types=["series", "anomaly", "annual_change"],
-        source=_GRACE, segment_source="Synthetic (GRACE-like)",
-        describe={"what": "All the water stored over Bangladesh, in soil, rivers, wetlands and underground, weighed "
-                          "from space by the GRACE satellites; mostly groundwater.",
-                  "whyItMatters": "Groundwater supplies most drinking water and dry-season irrigation; a falling "
-                                  "trend means more is pumped out than refills."},
-        notes=[SYNTH_NOTE, "Water-equivalent thickness in cm relative to the 2004-2009 average.",
-               "GRACE resolution is about 300 km, so Bangladesh is covered by only a few independent cells."],
-        series={"bangladesh": SeriesSpec("2002-04", "2026-09", slope=-0.6, ar1=0.6, noise_sd=2.0,
-                                         seasonal_amp=30.0, sigma=(3.0, 2.5), gaps=6, decimals=2)},
-    ),
+    # ---- Bangladesh (M12). Synthetic placeholder; `ingest imerg` replaces it with real data.
     VariableSpec(
         id="monsoon_rainfall", group="bangladesh", name="Monsoon rainfall", units="mm", kind="level",
         frequency="annual", map_mode=None, chart_types=["series", "anomaly"], baseline=("2001", "2020"),
