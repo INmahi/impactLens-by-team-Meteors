@@ -1,0 +1,2173 @@
+[
+  {
+    "id": "greenland",
+    "name": "Greenland",
+    "parent": null,
+    "kind": "ice_sheet",
+    "variables": [
+      "ice_mass",
+      "ice_mass_rate",
+      "ice_extent",
+      "temperature",
+      "ice_mass_long",
+      "ice_mass_grace"
+    ],
+    "bbox": [
+      -74,
+      59,
+      -10,
+      84
+    ],
+    "camera": {
+      "lon": -42,
+      "lat": 72,
+      "height": 4500000,
+      "heading": 0,
+      "pitch": -90
+    }
+  },
+  {
+    "id": "antarctica",
+    "name": "Antarctica",
+    "parent": null,
+    "kind": "ice_sheet",
+    "variables": [
+      "ice_mass",
+      "ice_mass_rate",
+      "temperature",
+      "ice_mass_long",
+      "ice_mass_grace"
+    ],
+    "bbox": [
+      -180,
+      -90,
+      180,
+      -60
+    ],
+    "camera": {
+      "lon": 0,
+      "lat": -90,
+      "height": 9000000,
+      "heading": 0,
+      "pitch": -90
+    }
+  },
+  {
+    "id": "antarctica_west",
+    "name": "West Antarctica",
+    "parent": "antarctica",
+    "kind": "ice_sheet_basin",
+    "variables": [
+      "ice_mass",
+      "ice_mass_rate"
+    ],
+    "bbox": [
+      -150,
+      -90,
+      -45,
+      -72
+    ],
+    "camera": {
+      "lon": -100,
+      "lat": -80,
+      "height": 4000000,
+      "heading": 0,
+      "pitch": -90
+    }
+  },
+  {
+    "id": "antarctica_east",
+    "name": "East Antarctica",
+    "parent": "antarctica",
+    "kind": "ice_sheet_basin",
+    "variables": [
+      "ice_mass",
+      "ice_mass_rate"
+    ],
+    "bbox": [
+      -180,
+      -90,
+      180,
+      -65
+    ],
+    "camera": {
+      "lon": 80,
+      "lat": -78,
+      "height": 6500000,
+      "heading": 0,
+      "pitch": -90
+    }
+  },
+  {
+    "id": "antarctica_peninsula",
+    "name": "Antarctic Peninsula",
+    "parent": "antarctica",
+    "kind": "ice_sheet_basin",
+    "variables": [
+      "ice_mass",
+      "ice_mass_rate"
+    ],
+    "bbox": [
+      -76,
+      -75,
+      -55,
+      -63
+    ],
+    "camera": {
+      "lon": -63,
+      "lat": -68,
+      "height": 2500000,
+      "heading": 0,
+      "pitch": -90
+    }
+  },
+  {
+    "id": "himalaya",
+    "name": "Himalayas",
+    "parent": null,
+    "kind": "glacier_region",
+    "variables": [
+      "temperature",
+      "ice_mass_grace"
+    ],
+    "bbox": [
+      72.5,
+      26.5,
+      97.0,
+      36.5
+    ],
+    "camera": {
+      "lon": 84.5,
+      "lat": 30.5,
+      "height": 3200000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "The high, glaciated Himalayan arc (outline drawn by this project), not a single glacier.",
+      "GRACE sees about 300 km detail, and this arc is about that wide: groundwater loss in the plains of northern India and Pakistan leaks into the Himalayan GRACE signal, so it is not glacier ice alone."
+    ]
+  },
+  {
+    "id": "global",
+    "name": "Global",
+    "parent": null,
+    "kind": "global",
+    "variables": [
+      "sea_level",
+      "sea_level_long"
+    ],
+    "bbox": [
+      -180,
+      -90,
+      180,
+      90
+    ],
+    "camera": {
+      "lon": 0,
+      "lat": 20,
+      "height": 20000000,
+      "heading": 0,
+      "pitch": -90
+    }
+  },
+  {
+    "id": "bangladesh",
+    "name": "Bangladesh",
+    "parent": null,
+    "kind": "country",
+    "variables": [
+      "monsoon_rainfall",
+      "land_submerged"
+    ],
+    "bbox": [
+      88.0,
+      20.7,
+      92.7,
+      26.7
+    ],
+    "camera": {
+      "lon": 90.3,
+      "lat": 23.6,
+      "height": 1600000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole country inside its border (Bangladesh Bureau of Statistics via geoBoundaries); not the value at any district."
+    ]
+  },
+  {
+    "id": "bd_barishal",
+    "name": "Barishal Division",
+    "parent": "bangladesh",
+    "kind": "division",
+    "variables": [
+      "monsoon_rainfall",
+      "land_submerged"
+    ],
+    "bbox": [
+      89.81,
+      21.72,
+      91.07,
+      23.12
+    ],
+    "camera": {
+      "lon": 90.44,
+      "lat": 22.42,
+      "height": 700000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Barishal division; not the value at any district or town."
+    ]
+  },
+  {
+    "id": "bd_chattogram",
+    "name": "Chattogram Division",
+    "parent": "bangladesh",
+    "kind": "division",
+    "variables": [
+      "monsoon_rainfall",
+      "land_submerged"
+    ],
+    "bbox": [
+      90.49,
+      20.55,
+      92.73,
+      24.32
+    ],
+    "camera": {
+      "lon": 91.61,
+      "lat": 22.435000000000002,
+      "height": 700000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Chattogram division; not the value at any district or town."
+    ]
+  },
+  {
+    "id": "bd_dhaka",
+    "name": "Dhaka Division",
+    "parent": "bangladesh",
+    "kind": "division",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      89.25,
+      22.8,
+      91.3,
+      24.84
+    ],
+    "camera": {
+      "lon": 90.275,
+      "lat": 23.82,
+      "height": 700000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Dhaka division; not the value at any district or town."
+    ]
+  },
+  {
+    "id": "bd_khulna",
+    "name": "Khulna Division",
+    "parent": "bangladesh",
+    "kind": "division",
+    "variables": [
+      "monsoon_rainfall",
+      "land_submerged"
+    ],
+    "bbox": [
+      88.51,
+      21.6,
+      90.01,
+      24.24
+    ],
+    "camera": {
+      "lon": 89.26,
+      "lat": 22.92,
+      "height": 700000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Khulna division; not the value at any district or town."
+    ]
+  },
+  {
+    "id": "bd_mymensingh",
+    "name": "Mymensingh Division",
+    "parent": "bangladesh",
+    "kind": "division",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      89.59,
+      24.2,
+      91.29,
+      25.48
+    ],
+    "camera": {
+      "lon": 90.44,
+      "lat": 24.84,
+      "height": 700000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Mymensingh division; not the value at any district or town."
+    ]
+  },
+  {
+    "id": "bd_rajshahi",
+    "name": "Rajshahi Division",
+    "parent": "bangladesh",
+    "kind": "division",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      87.96,
+      23.76,
+      89.87,
+      25.33
+    ],
+    "camera": {
+      "lon": 88.91499999999999,
+      "lat": 24.545,
+      "height": 700000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Rajshahi division; not the value at any district or town."
+    ]
+  },
+  {
+    "id": "bd_rangpur",
+    "name": "Rangpur Division",
+    "parent": "bangladesh",
+    "kind": "division",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      88.04,
+      24.99,
+      89.94,
+      26.68
+    ],
+    "camera": {
+      "lon": 88.99000000000001,
+      "lat": 25.835,
+      "height": 700000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Rangpur division; not the value at any district or town."
+    ]
+  },
+  {
+    "id": "bd_sylhet",
+    "name": "Sylhet Division",
+    "parent": "bangladesh",
+    "kind": "division",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      90.88,
+      23.93,
+      92.55,
+      25.26
+    ],
+    "camera": {
+      "lon": 91.715,
+      "lat": 24.595,
+      "height": 700000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Sylhet division; not the value at any district or town."
+    ]
+  },
+  {
+    "id": "bd_bagerhat_district",
+    "name": "Bagerhat",
+    "parent": "bd_khulna",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall",
+      "land_submerged"
+    ],
+    "bbox": [
+      89.48,
+      21.67,
+      90.01,
+      23.03
+    ],
+    "camera": {
+      "lon": 89.745,
+      "lat": 22.35,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Bagerhat district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_bandarban_district",
+    "name": "Bandarban",
+    "parent": "bd_chattogram",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      92.01,
+      21.13,
+      92.73,
+      22.41
+    ],
+    "camera": {
+      "lon": 92.37,
+      "lat": 21.77,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Bandarban district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_barguna_district",
+    "name": "Barguna",
+    "parent": "bd_barishal",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall",
+      "land_submerged"
+    ],
+    "bbox": [
+      89.83,
+      21.81,
+      90.42,
+      22.54
+    ],
+    "camera": {
+      "lon": 90.125,
+      "lat": 22.174999999999997,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Barguna district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_barishal_district",
+    "name": "Barishal District",
+    "parent": "bd_barishal",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      89.97,
+      22.4,
+      90.74,
+      23.12
+    ],
+    "camera": {
+      "lon": 90.35499999999999,
+      "lat": 22.759999999999998,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Barishal district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_bhola_district",
+    "name": "Bhola",
+    "parent": "bd_barishal",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall",
+      "land_submerged"
+    ],
+    "bbox": [
+      90.48,
+      21.81,
+      91.07,
+      22.89
+    ],
+    "camera": {
+      "lon": 90.775,
+      "lat": 22.35,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Bhola district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_bogura_district",
+    "name": "Bogura",
+    "parent": "bd_rajshahi",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      88.91,
+      24.49,
+      89.78,
+      25.17
+    ],
+    "camera": {
+      "lon": 89.345,
+      "lat": 24.83,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Bogura district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_brahmanbaria_district",
+    "name": "Brahmanbaria",
+    "parent": "bd_chattogram",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      90.67,
+      23.61,
+      91.38,
+      24.32
+    ],
+    "camera": {
+      "lon": 91.025,
+      "lat": 23.965,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Brahmanbaria district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_chandpur_district",
+    "name": "Chandpur",
+    "parent": "bd_chattogram",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      90.49,
+      22.93,
+      91.08,
+      23.55
+    ],
+    "camera": {
+      "lon": 90.785,
+      "lat": 23.240000000000002,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Chandpur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_chapai_nawabganj_district",
+    "name": "Chapai Nawabganj",
+    "parent": "bd_rajshahi",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      87.96,
+      24.37,
+      88.56,
+      25.01
+    ],
+    "camera": {
+      "lon": 88.25999999999999,
+      "lat": 24.69,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Chapai Nawabganj district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_chattogram_district",
+    "name": "Chattogram District",
+    "parent": "bd_chattogram",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall",
+      "land_submerged"
+    ],
+    "bbox": [
+      91.26,
+      21.81,
+      92.26,
+      23.04
+    ],
+    "camera": {
+      "lon": 91.76,
+      "lat": 22.424999999999997,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Chattogram district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_chuadanga_district",
+    "name": "Chuadanga",
+    "parent": "bd_khulna",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      88.59,
+      23.32,
+      89.07,
+      23.89
+    ],
+    "camera": {
+      "lon": 88.83,
+      "lat": 23.605,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Chuadanga district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_cox_s_bazar_district",
+    "name": "Cox's Bazar",
+    "parent": "bd_chattogram",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall",
+      "land_submerged"
+    ],
+    "bbox": [
+      91.78,
+      20.55,
+      92.39,
+      21.97
+    ],
+    "camera": {
+      "lon": 92.08500000000001,
+      "lat": 21.259999999999998,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Cox's Bazar district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_cumilla_district",
+    "name": "Cumilla",
+    "parent": "bd_chattogram",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      90.58,
+      23.0,
+      91.42,
+      23.85
+    ],
+    "camera": {
+      "lon": 91.0,
+      "lat": 23.425,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Cumilla district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_dhaka_district",
+    "name": "Dhaka District",
+    "parent": "bd_dhaka",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      89.96,
+      23.47,
+      90.56,
+      24.09
+    ],
+    "camera": {
+      "lon": 90.25999999999999,
+      "lat": 23.78,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Dhaka district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_dinajpur_district",
+    "name": "Dinajpur",
+    "parent": "bd_rangpur",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      88.33,
+      25.17,
+      89.35,
+      26.11
+    ],
+    "camera": {
+      "lon": 88.84,
+      "lat": 25.64,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Dinajpur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_faridpur_district",
+    "name": "Faridpur",
+    "parent": "bd_dhaka",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      89.44,
+      23.16,
+      90.23,
+      23.77
+    ],
+    "camera": {
+      "lon": 89.83500000000001,
+      "lat": 23.465,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Faridpur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_feni_district",
+    "name": "Feni",
+    "parent": "bd_chattogram",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall",
+      "land_submerged"
+    ],
+    "bbox": [
+      91.2,
+      22.71,
+      91.63,
+      23.34
+    ],
+    "camera": {
+      "lon": 91.41499999999999,
+      "lat": 23.025,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Feni district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_gaibandha_district",
+    "name": "Gaibandha",
+    "parent": "bd_rangpur",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      89.13,
+      24.99,
+      89.81,
+      25.7
+    ],
+    "camera": {
+      "lon": 89.47,
+      "lat": 25.345,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Gaibandha district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_gazipur_district",
+    "name": "Gazipur",
+    "parent": "bd_dhaka",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      90.1,
+      23.8,
+      90.75,
+      24.39
+    ],
+    "camera": {
+      "lon": 90.425,
+      "lat": 24.095,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Gazipur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_gopalganj_district",
+    "name": "Gopalganj",
+    "parent": "bd_dhaka",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      89.62,
+      22.8,
+      90.19,
+      23.41
+    ],
+    "camera": {
+      "lon": 89.905,
+      "lat": 23.105,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Gopalganj district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_habiganj_district",
+    "name": "Habiganj",
+    "parent": "bd_sylhet",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      91.11,
+      23.93,
+      91.71,
+      24.75
+    ],
+    "camera": {
+      "lon": 91.41,
+      "lat": 24.34,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Habiganj district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_jamalpur_district",
+    "name": "Jamalpur",
+    "parent": "bd_mymensingh",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      89.59,
+      24.52,
+      90.24,
+      25.48
+    ],
+    "camera": {
+      "lon": 89.91499999999999,
+      "lat": 25.0,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Jamalpur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_jashore_district",
+    "name": "Jashore",
+    "parent": "bd_khulna",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      88.81,
+      22.76,
+      89.61,
+      23.42
+    ],
+    "camera": {
+      "lon": 89.21000000000001,
+      "lat": 23.090000000000003,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Jashore district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_jhalokati_district",
+    "name": "Jhalokati",
+    "parent": "bd_barishal",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      89.97,
+      22.29,
+      90.43,
+      22.84
+    ],
+    "camera": {
+      "lon": 90.2,
+      "lat": 22.564999999999998,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Jhalokati district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_jhenaidah_district",
+    "name": "Jhenaidah",
+    "parent": "bd_khulna",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      88.65,
+      23.17,
+      89.42,
+      23.82
+    ],
+    "camera": {
+      "lon": 89.035,
+      "lat": 23.495,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Jhenaidah district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_joypurhat_district",
+    "name": "Joypurhat",
+    "parent": "bd_rajshahi",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      88.87,
+      24.8,
+      89.33,
+      25.33
+    ],
+    "camera": {
+      "lon": 89.1,
+      "lat": 25.064999999999998,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Joypurhat district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_khagrachhari_district",
+    "name": "Khagrachhari",
+    "parent": "bd_chattogram",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      91.66,
+      22.64,
+      92.23,
+      23.78
+    ],
+    "camera": {
+      "lon": 91.945,
+      "lat": 23.21,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Khagrachhari district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_khulna_district",
+    "name": "Khulna District",
+    "parent": "bd_khulna",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall",
+      "land_submerged"
+    ],
+    "bbox": [
+      89.18,
+      21.65,
+      89.8,
+      23.06
+    ],
+    "camera": {
+      "lon": 89.49000000000001,
+      "lat": 22.354999999999997,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Khulna district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_kishoreganj_district",
+    "name": "Kishoreganj",
+    "parent": "bd_dhaka",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      90.52,
+      23.98,
+      91.3,
+      24.69
+    ],
+    "camera": {
+      "lon": 90.91,
+      "lat": 24.335,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Kishoreganj district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_kurigram_district",
+    "name": "Kurigram",
+    "parent": "bd_rangpur",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      89.41,
+      25.32,
+      89.94,
+      26.28
+    ],
+    "camera": {
+      "lon": 89.675,
+      "lat": 25.8,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Kurigram district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_kushtia_district",
+    "name": "Kushtia",
+    "parent": "bd_khulna",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      88.65,
+      23.64,
+      89.41,
+      24.24
+    ],
+    "camera": {
+      "lon": 89.03,
+      "lat": 23.939999999999998,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Kushtia district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_lakshmipur_district",
+    "name": "Lakshmipur",
+    "parent": "bd_chattogram",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall",
+      "land_submerged"
+    ],
+    "bbox": [
+      90.59,
+      22.45,
+      91.07,
+      23.22
+    ],
+    "camera": {
+      "lon": 90.83,
+      "lat": 22.835,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Lakshmipur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_lalmonirhat_district",
+    "name": "Lalmonirhat",
+    "parent": "bd_rangpur",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      88.86,
+      25.74,
+      89.62,
+      26.5
+    ],
+    "camera": {
+      "lon": 89.24000000000001,
+      "lat": 26.119999999999997,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Lalmonirhat district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_madaripur_district",
+    "name": "Madaripur",
+    "parent": "bd_dhaka",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      89.89,
+      22.91,
+      90.4,
+      23.55
+    ],
+    "camera": {
+      "lon": 90.14500000000001,
+      "lat": 23.23,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Madaripur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_magura_district",
+    "name": "Magura",
+    "parent": "bd_khulna",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      89.19,
+      23.21,
+      89.68,
+      23.73
+    ],
+    "camera": {
+      "lon": 89.435,
+      "lat": 23.47,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Magura district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_manikganj_district",
+    "name": "Manikganj",
+    "parent": "bd_dhaka",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      89.64,
+      23.58,
+      90.3,
+      24.09
+    ],
+    "camera": {
+      "lon": 89.97,
+      "lat": 23.835,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Manikganj district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_meherpur_district",
+    "name": "Meherpur",
+    "parent": "bd_khulna",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      88.51,
+      23.55,
+      88.93,
+      24.03
+    ],
+    "camera": {
+      "lon": 88.72,
+      "lat": 23.79,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Meherpur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_moulvibazar_district",
+    "name": "Moulvibazar",
+    "parent": "bd_sylhet",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      91.55,
+      24.09,
+      92.35,
+      24.89
+    ],
+    "camera": {
+      "lon": 91.94999999999999,
+      "lat": 24.490000000000002,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Moulvibazar district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_munshiganj_district",
+    "name": "Munshiganj",
+    "parent": "bd_dhaka",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      90.11,
+      23.33,
+      90.76,
+      23.72
+    ],
+    "camera": {
+      "lon": 90.435,
+      "lat": 23.525,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Munshiganj district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_mymensingh_district",
+    "name": "Mymensingh District",
+    "parent": "bd_mymensingh",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      90.03,
+      24.2,
+      90.87,
+      25.25
+    ],
+    "camera": {
+      "lon": 90.45,
+      "lat": 24.725,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Mymensingh district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_naogaon_district",
+    "name": "Naogaon",
+    "parent": "bd_rajshahi",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      88.34,
+      24.48,
+      89.2,
+      25.26
+    ],
+    "camera": {
+      "lon": 88.77000000000001,
+      "lat": 24.87,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Naogaon district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_narail_district",
+    "name": "Narail",
+    "parent": "bd_khulna",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      89.33,
+      22.89,
+      89.86,
+      23.37
+    ],
+    "camera": {
+      "lon": 89.595,
+      "lat": 23.130000000000003,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Narail district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_narayanganj_district",
+    "name": "Narayanganj",
+    "parent": "bd_dhaka",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      90.38,
+      23.48,
+      90.79,
+      23.94
+    ],
+    "camera": {
+      "lon": 90.58500000000001,
+      "lat": 23.71,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Narayanganj district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_narsingdi_district",
+    "name": "Narsingdi",
+    "parent": "bd_dhaka",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      90.51,
+      23.71,
+      91.04,
+      24.3
+    ],
+    "camera": {
+      "lon": 90.775,
+      "lat": 24.005000000000003,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Narsingdi district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_natore_district",
+    "name": "Natore",
+    "parent": "bd_rajshahi",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      88.8,
+      24.05,
+      89.39,
+      24.74
+    ],
+    "camera": {
+      "lon": 89.095,
+      "lat": 24.395,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Natore district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_netrokona_district",
+    "name": "Netrokona",
+    "parent": "bd_mymensingh",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      90.44,
+      24.53,
+      91.29,
+      25.24
+    ],
+    "camera": {
+      "lon": 90.86500000000001,
+      "lat": 24.884999999999998,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Netrokona district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_nilphamari_district",
+    "name": "Nilphamari",
+    "parent": "bd_rangpur",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      88.68,
+      25.68,
+      89.19,
+      26.36
+    ],
+    "camera": {
+      "lon": 88.935,
+      "lat": 26.02,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Nilphamari district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_noakhali_district",
+    "name": "Noakhali",
+    "parent": "bd_chattogram",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall",
+      "land_submerged"
+    ],
+    "bbox": [
+      90.84,
+      21.97,
+      91.47,
+      23.18
+    ],
+    "camera": {
+      "lon": 91.155,
+      "lat": 22.575,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Noakhali district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_pabna_district",
+    "name": "Pabna",
+    "parent": "bd_rajshahi",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      88.95,
+      23.76,
+      89.78,
+      24.4
+    ],
+    "camera": {
+      "lon": 89.36500000000001,
+      "lat": 24.08,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Pabna district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_panchagarh_district",
+    "name": "Panchagarh",
+    "parent": "bd_rangpur",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      88.27,
+      25.96,
+      88.85,
+      26.68
+    ],
+    "camera": {
+      "lon": 88.56,
+      "lat": 26.32,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Panchagarh district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_patuakhali_district",
+    "name": "Patuakhali",
+    "parent": "bd_barishal",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall",
+      "land_submerged"
+    ],
+    "bbox": [
+      90.03,
+      21.72,
+      90.71,
+      22.64
+    ],
+    "camera": {
+      "lon": 90.37,
+      "lat": 22.18,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Patuakhali district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_pirojpur_district",
+    "name": "Pirojpur",
+    "parent": "bd_barishal",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall",
+      "land_submerged"
+    ],
+    "bbox": [
+      89.81,
+      22.11,
+      90.24,
+      22.92
+    ],
+    "camera": {
+      "lon": 90.025,
+      "lat": 22.515,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Pirojpur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_rajbari_district",
+    "name": "Rajbari",
+    "parent": "bd_dhaka",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      89.25,
+      23.51,
+      89.91,
+      23.96
+    ],
+    "camera": {
+      "lon": 89.58,
+      "lat": 23.735,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Rajbari district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_rajshahi_district",
+    "name": "Rajshahi District",
+    "parent": "bd_rajshahi",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      88.24,
+      24.06,
+      89.01,
+      24.77
+    ],
+    "camera": {
+      "lon": 88.625,
+      "lat": 24.415,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Rajshahi district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_rangamati_district",
+    "name": "Rangamati",
+    "parent": "bd_chattogram",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      91.88,
+      21.8,
+      92.68,
+      23.79
+    ],
+    "camera": {
+      "lon": 92.28,
+      "lat": 22.795,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Rangamati district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_rangpur_district",
+    "name": "Rangpur District",
+    "parent": "bd_rangpur",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      88.88,
+      25.25,
+      89.59,
+      26.01
+    ],
+    "camera": {
+      "lon": 89.235,
+      "lat": 25.630000000000003,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Rangpur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_satkhira_district",
+    "name": "Satkhira",
+    "parent": "bd_khulna",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall",
+      "land_submerged"
+    ],
+    "bbox": [
+      88.85,
+      21.6,
+      89.41,
+      23.0
+    ],
+    "camera": {
+      "lon": 89.13,
+      "lat": 22.3,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Satkhira district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_shariatpur_district",
+    "name": "Shariatpur",
+    "parent": "bd_dhaka",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      90.17,
+      22.95,
+      90.66,
+      23.5
+    ],
+    "camera": {
+      "lon": 90.41499999999999,
+      "lat": 23.225,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Shariatpur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_sherpur_district",
+    "name": "Sherpur",
+    "parent": "bd_mymensingh",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      89.83,
+      24.84,
+      90.34,
+      25.35
+    ],
+    "camera": {
+      "lon": 90.08500000000001,
+      "lat": 25.095,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Sherpur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_sirajganj_district",
+    "name": "Sirajganj",
+    "parent": "bd_rajshahi",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      89.2,
+      23.96,
+      89.87,
+      24.83
+    ],
+    "camera": {
+      "lon": 89.535,
+      "lat": 24.395,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Sirajganj district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_sunamganj_district",
+    "name": "Sunamganj",
+    "parent": "bd_sylhet",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      90.88,
+      24.52,
+      91.78,
+      25.26
+    ],
+    "camera": {
+      "lon": 91.33,
+      "lat": 24.89,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Sunamganj district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_sylhet_district",
+    "name": "Sylhet District",
+    "parent": "bd_sylhet",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      91.58,
+      24.54,
+      92.55,
+      25.24
+    ],
+    "camera": {
+      "lon": 92.065,
+      "lat": 24.89,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Sylhet district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_tangail_district",
+    "name": "Tangail",
+    "parent": "bd_dhaka",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      89.68,
+      23.91,
+      90.35,
+      24.84
+    ],
+    "camera": {
+      "lon": 90.015,
+      "lat": 24.375,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Tangail district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bd_thakurgaon_district",
+    "name": "Thakurgaon",
+    "parent": "bd_rangpur",
+    "kind": "district",
+    "variables": [
+      "monsoon_rainfall"
+    ],
+    "bbox": [
+      88.04,
+      25.62,
+      88.7,
+      26.25
+    ],
+    "camera": {
+      "lon": 88.37,
+      "lat": 25.935000000000002,
+      "height": 350000,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the whole Thakurgaon district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+    ]
+  },
+  {
+    "id": "bay_of_bengal",
+    "name": "Bay of Bengal (northern)",
+    "parent": null,
+    "kind": "coastal_sea",
+    "variables": [
+      "sea_level"
+    ],
+    "bbox": [
+      81,
+      13,
+      94,
+      21
+    ],
+    "camera": {
+      "lon": 87.5,
+      "lat": 17.0,
+      "height": 2300000.0,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the open northern Bay, about 100 km from the coast; not the value at any town.",
+      "The Ganges-Brahmaputra delta is sinking, so the rise people feel there is larger than this; land subsidence is not included.",
+      "Monsoon winds and river runoff make this sea swing strongly within the year and between years."
+    ]
+  },
+  {
+    "id": "gulf_of_mexico",
+    "name": "Gulf of Mexico",
+    "parent": null,
+    "kind": "coastal_sea",
+    "variables": [
+      "sea_level"
+    ],
+    "bbox": [
+      -97,
+      19,
+      -83,
+      30
+    ],
+    "camera": {
+      "lon": -90.0,
+      "lat": 24.5,
+      "height": 3100000.0,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the open Gulf, about 100 km from the coast; not the value at any town.",
+      "Land subsidence (for example around the Mississippi delta) is not included, so the local rise there is larger than this."
+    ]
+  },
+  {
+    "id": "us_east_coast",
+    "name": "US Atlantic coast",
+    "parent": null,
+    "kind": "coastal_sea",
+    "variables": [
+      "sea_level"
+    ],
+    "bbox": [
+      -80,
+      28,
+      -65,
+      44
+    ],
+    "camera": {
+      "lon": -72.5,
+      "lat": 36.0,
+      "height": 4500000.0,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over a band about 100-300 km offshore from Florida to the Gulf of Maine; not the value at any town or harbour.",
+      "Land subsidence along the coast is not included, so the local rise is larger in many places."
+    ]
+  },
+  {
+    "id": "western_tropical_pacific",
+    "name": "Western tropical Pacific",
+    "parent": null,
+    "kind": "coastal_sea",
+    "variables": [
+      "sea_level"
+    ],
+    "bbox": [
+      124,
+      -4,
+      160,
+      15
+    ],
+    "camera": {
+      "lon": 142.0,
+      "lat": 5.5,
+      "height": 5800000.0,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the open sea east of the Philippines and north of New Guinea; not the value at any island or town.",
+      "Swings strongly with El Nino, so a trend over a few decades can reflect a long swing.",
+      "Land movement of the islands is not included."
+    ]
+  },
+  {
+    "id": "north_sea",
+    "name": "North Sea",
+    "parent": null,
+    "kind": "coastal_sea",
+    "variables": [
+      "sea_level"
+    ],
+    "bbox": [
+      -1,
+      53,
+      7,
+      61
+    ],
+    "camera": {
+      "lon": 3.0,
+      "lat": 57.0,
+      "height": 2300000.0,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over the open central and northern North Sea; the southern bight and the coasts are left out. Not the value at any town.",
+      "Land movement (sinking or rising coasts) is not included."
+    ]
+  },
+  {
+    "id": "mediterranean",
+    "name": "Mediterranean Sea",
+    "parent": null,
+    "kind": "coastal_sea",
+    "variables": [
+      "sea_level"
+    ],
+    "bbox": [
+      3,
+      31,
+      35,
+      43
+    ],
+    "camera": {
+      "lon": 19.0,
+      "lat": 37.0,
+      "height": 4100000.0,
+      "heading": 0,
+      "pitch": -90
+    },
+    "notes": [
+      "A mean over three open-sea parts (western basin, Tyrrhenian, and Ionian with the Levantine basin); the Adriatic and Aegean are left out. Not the value at any town.",
+      "Land movement (sinking or rising coasts) is not included."
+    ]
+  }
+]

@@ -1,0 +1,1077 @@
+[
+  {
+    "id": "ice_mass",
+    "group": "ice",
+    "name": "Ice mass",
+    "units": "Gt",
+    "kind": "cumulative",
+    "frequency": "monthly",
+    "period": [
+      "1971-07",
+      "2023-12"
+    ],
+    "periods": {
+      "greenland": [
+        "1971-07",
+        "2023-12"
+      ],
+      "antarctica": [
+        "1979-01",
+        "2023-12"
+      ],
+      "antarctica_west": [
+        "1979-01",
+        "2023-12"
+      ],
+      "antarctica_east": [
+        "1979-01",
+        "2023-12"
+      ],
+      "antarctica_peninsula": [
+        "1979-01",
+        "2023-12"
+      ]
+    },
+    "regions": [
+      "greenland",
+      "antarctica",
+      "antarctica_west",
+      "antarctica_east",
+      "antarctica_peninsula"
+    ],
+    "mapMode": "ice_mass_map",
+    "chartTypes": [
+      "series",
+      "anomaly",
+      "annual_change",
+      "sea_level_equivalent"
+    ],
+    "source": {
+      "name": "IMBIE 2026 (UK Polar Data Centre)",
+      "url": "https://doi.org/10.5285/128c5e33-5224-4197-82f0-19dcc95b80a0",
+      "citation": "Otosaka, I., Shepherd, A., Amory, C., et al. (2026). Mass balance of the Greenland and Antarctic Ice Sheets from the 1970s to 2023 (Version 1.0) [Data set]. NERC EDS UK Polar Data Centre. https://doi.org/10.5285/128c5e33-5224-4197-82f0-19dcc95b80a0",
+      "doi": "10.5285/128c5e33-5224-4197-82f0-19dcc95b80a0",
+      "version": "1.0",
+      "licence": "Open Government Licence v3.0",
+      "processing": [
+        "Downloaded the per-region CSV files (imbie3_<region>_Gt_partitioned.csv) unchanged.",
+        "Used the total cumulative mass balance column and its 1-sigma uncertainty, monthly, as published.",
+        "No smoothing, gap filling or extrapolation."
+      ],
+      "accessed": "2026-11-13"
+    },
+    "describe": {
+      "video": "/media/ice_mass_loop.webm",
+      "what": "How much ice an ice sheet holds, compared with the start of its record.",
+      "whyItMatters": "Ice lost from the ice sheets raises sea level; about 362 Gt is 1 mm."
+    },
+    "notes": [
+      "Record starts in July 1971 for Greenland and 1979 for Antarctica.",
+      "Uncertainty (1-sigma) is larger early in the record.",
+      "Cumulative mass is relative to the start of the record, not the total mass of the ice sheet.",
+      "Reconciled from many satellite surveys (gravity, altimetry and the input-output method), not one instrument.",
+      "Before 1992 the record rests on fewer, older methods, so the uncertainty is larger early.",
+      "Not independent of GRACE-based ice maps or sea-level budgets: gravimetry is one of IMBIE's methods."
+    ],
+    "synthetic": false
+  },
+  {
+    "id": "ice_mass_rate",
+    "group": "ice",
+    "name": "Ice mass change rate",
+    "units": "Gt/yr",
+    "kind": "rate",
+    "frequency": "annual",
+    "period": [
+      "1972",
+      "2023"
+    ],
+    "periods": {
+      "greenland": [
+        "1972",
+        "2023"
+      ],
+      "antarctica": [
+        "1979",
+        "2023"
+      ],
+      "antarctica_west": [
+        "1979",
+        "2023"
+      ],
+      "antarctica_east": [
+        "1979",
+        "2023"
+      ],
+      "antarctica_peninsula": [
+        "1979",
+        "2023"
+      ]
+    },
+    "regions": [
+      "greenland",
+      "antarctica",
+      "antarctica_west",
+      "antarctica_east",
+      "antarctica_peninsula"
+    ],
+    "mapMode": "ice_mass_map",
+    "chartTypes": [
+      "bar",
+      "series"
+    ],
+    "source": {
+      "name": "IMBIE 2026 (UK Polar Data Centre)",
+      "url": "https://doi.org/10.5285/128c5e33-5224-4197-82f0-19dcc95b80a0",
+      "citation": "Otosaka, I., Shepherd, A., Amory, C., et al. (2026). Mass balance of the Greenland and Antarctic Ice Sheets from the 1970s to 2023 (Version 1.0) [Data set]. NERC EDS UK Polar Data Centre. https://doi.org/10.5285/128c5e33-5224-4197-82f0-19dcc95b80a0",
+      "doi": "10.5285/128c5e33-5224-4197-82f0-19dcc95b80a0",
+      "version": "1.0",
+      "licence": "Open Government Licence v3.0",
+      "processing": [
+        "Downloaded the per-region CSV files (imbie3_<region>_Gt_partitioned.csv) unchanged.",
+        "Annual rate = mean of the 12 published monthly rate rows of each calendar year; years with fewer than 12 months are left out (no padding).",
+        "Never recomputed by differencing the cumulative series."
+      ],
+      "accessed": "2026-11-13"
+    },
+    "describe": {
+      "video": "/media/ice_mass_rate_loop.webm",
+      "what": "How fast an ice sheet gains or loses ice each year.",
+      "whyItMatters": "A trend in the rate means the loss is speeding up or slowing down."
+    },
+    "notes": [
+      "A trend in this series is an acceleration (Gt/yr per year).",
+      "Published rates change about once a year, so each calendar year is one point.",
+      "Reconciled from many satellite surveys (gravity, altimetry and the input-output method), not one instrument.",
+      "Before 1992 the record rests on fewer, older methods, so the uncertainty is larger early.",
+      "Not independent of GRACE-based ice maps or sea-level budgets: gravimetry is one of IMBIE's methods."
+    ],
+    "synthetic": false
+  },
+  {
+    "id": "ice_extent",
+    "group": "ice",
+    "name": "Ice extent",
+    "units": "km2",
+    "kind": "level",
+    "frequency": "monthly",
+    "period": [
+      "1972-09",
+      "2022-02"
+    ],
+    "periods": {
+      "greenland": [
+        "1972-09",
+        "2022-02"
+      ]
+    },
+    "regions": [
+      "greenland"
+    ],
+    "mapMode": null,
+    "outlines": "ice_extent/outlines.topo.json",
+    "chartTypes": [
+      "series",
+      "anomaly"
+    ],
+    "source": {
+      "name": "ITS_LIVE Greenland ice sheet extent masks, NSIDC-0793 v1",
+      "url": "https://doi.org/10.5067/579TO87M7IZB",
+      "citation": "Greene, C. A., Gardner, A. S., Wood, M. & Cuzzone, J. K. (2024). MEaSUREs ITS_LIVE Greenland Monthly 120 m Ice Sheet Extent Masks, 1972-2022 (NSIDC-0793, Version 1). Boulder, Colorado USA: NASA NSIDC DAAC. https://doi.org/10.5067/579TO87M7IZB",
+      "doi": "10.5067/579TO87M7IZB",
+      "version": "1",
+      "licence": "NASA open data (NSIDC use and copyright guidelines)",
+      "processing": [
+        "Downloaded the 120 m monthly ice mask unchanged (the MP4 animations were not used).",
+        "Monthly ice area = number of ice pixels x 0.0144 km2, corrected for the polar-stereographic map scale (spherical formula).",
+        "Months without terminus observations are gap-filled by the source, not by us.",
+        "Globe outlines: yearly mean cover on a 4.8 km grid, contoured at 50%, simplified to 3 km (display only)."
+      ],
+      "accessed": "2026-11-13"
+    },
+    "describe": {
+      "video": "/media/ice_extent_loop.webm",
+      "what": "The area of Greenland covered by ice, month by month.",
+      "whyItMatters": "Retreating glacier fronts shrink the ice-covered area."
+    },
+    "notes": [
+      "Greenland only.",
+      "Early years have more missing months (sparse imagery).",
+      "Outlines are coarse; the record is computed from 120 m masks we do not ship.",
+      "Derived from glacier terminus positions; interior ice is fixed, so the change is at the glacier fronts.",
+      "Months without terminus observations are gap-filled by the source, so neighbouring months are not independent.",
+      "An area is not a mass: a retreating front does not equal mass loss (ice mass is a separate variable)."
+    ],
+    "synthetic": false
+  },
+  {
+    "id": "temperature",
+    "name": "Summer air temperature",
+    "units": "degC",
+    "kind": "level",
+    "frequency": "annual",
+    "period": [
+      "1980",
+      "2026"
+    ],
+    "periods": {
+      "greenland": [
+        "1980",
+        "2026"
+      ],
+      "antarctica": [
+        "1981",
+        "2026"
+      ],
+      "himalaya": [
+        "1980",
+        "2026"
+      ]
+    },
+    "regions": [
+      "greenland",
+      "antarctica",
+      "himalaya"
+    ],
+    "baseline": [
+      "1991",
+      "2020"
+    ],
+    "mapMode": "temperature",
+    "chartTypes": [
+      "series",
+      "anomaly"
+    ],
+    "source": {
+      "name": "NASA MERRA-2 monthly 2 m air temperature (M2TMNXSLV v5.12.4, GES DISC)",
+      "url": "https://doi.org/10.5067/AP1B0BA5PD2K",
+      "citation": "Global Modeling and Assimilation Office (GMAO) (2015), MERRA-2 tavgM_2d_slv_Nx: 2d, Monthly mean, Time-Averaged, Single-Level, Assimilation, Single-Level Diagnostics V5.12.4, Greenbelt, MD, USA, Goddard Earth Sciences Data and Information Services Center (GES DISC), doi:10.5067/AP1B0BA5PD2K",
+      "doi": "10.5067/AP1B0BA5PD2K",
+      "version": "5.12.4",
+      "licence": "NASA open data (GES DISC data use guidelines)",
+      "processing": [
+        "Downloaded only the T2M field of each monthly file through NASA's OPeNDAP service (values unchanged).",
+        "Region mean = area-weighted mean of the 0.5 x 0.625 degree cells whose centre lies inside the region outline.",
+        "Summer = June-August for northern regions (Greenland, Himalayas); December-February for Antarctica, labelled by the year of its January; only summers with all three months.",
+        "Shown as the difference from the 1991-2020 average summer (kelvin differences = degrees C).",
+        "Map: each month minus the 1991-2020 mean of that calendar month, interpolated to a 1-degree grid."
+      ],
+      "accessed": "2026-11-13"
+    },
+    "describe": {
+      "video": "/media/temperature_loop.webm",
+      "what": "Summer air temperature near the surface, as a difference from the 1991-2020 average.",
+      "whyItMatters": "Warm summers drive surface melt on Greenland."
+    },
+    "notes": [
+      "Greenland: June-August mean. Antarctica: December-February mean, labelled by the year of its January.",
+      "Anomaly from the 1991-2020 average.",
+      "Reanalysis, not direct measurement. Greenland summers from 1980, Antarctic summers from 1981 (the first full December-February in MERRA-2).",
+      "Reanalysis: a NASA weather model constrained by observations, not a direct measurement; over the ice sheet interiors, where observations are sparse, values lean on the model.",
+      "2 m air temperature of a model grid cell (about 50 km), not a station value."
+    ],
+    "synthetic": false
+  },
+  {
+    "id": "sea_level",
+    "name": "Sea level",
+    "units": "mm",
+    "kind": "level",
+    "frequency": "monthly",
+    "period": [
+      "1992-11",
+      "2026-10"
+    ],
+    "periods": {
+      "global": [
+        "1992-11",
+        "2026-10"
+      ],
+      "bay_of_bengal": [
+        "1992-11",
+        "2026-10"
+      ],
+      "gulf_of_mexico": [
+        "1992-11",
+        "2026-10"
+      ],
+      "us_east_coast": [
+        "1992-11",
+        "2026-10"
+      ],
+      "western_tropical_pacific": [
+        "1992-11",
+        "2026-10"
+      ],
+      "north_sea": [
+        "1992-11",
+        "2026-10"
+      ],
+      "mediterranean": [
+        "1992-11",
+        "2026-10"
+      ]
+    },
+    "regions": [
+      "global",
+      "bay_of_bengal",
+      "gulf_of_mexico",
+      "us_east_coast",
+      "western_tropical_pacific",
+      "north_sea",
+      "mediterranean"
+    ],
+    "mapMode": null,
+    "chartTypes": [
+      "series",
+      "anomaly"
+    ],
+    "source": {
+      "name": "NASA-SSH simple gridded sea surface height V1.1 (PO.DAAC)",
+      "url": "https://doi.org/10.5067/NSREF-SG0V11",
+      "citation": "Willis, J. (2026). NASA-SSH Simple Gridded Sea Surface Height from Standardized Reference Missions Only Version 1.1. PO.DAAC. https://doi.org/10.5067/NSREF-SG0V11. Area means over our polygons by Trend Detective.",
+      "doi": "10.5067/NSREF-SG0V11",
+      "version": "1.1",
+      "licence": "NASA open data (no restrictions)",
+      "processing": [
+        "Downloaded the weekly 0.5-degree grids unchanged.",
+        "Area-weighted mean of the valid cells inside each sea's polygon (polygons kept about 100 km offshore); the global mean uses all valid cells.",
+        "Monthly value = mean of the weeks labelled in that month (at least 3 weeks, else missing).",
+        "No glacial isostatic adjustment, no land subsidence, no gap filling or extrapolation."
+      ],
+      "accessed": "2026-11-13"
+    },
+    "describe": {
+      "video": "/media/sea_level_loop.webm",
+      "what": "Sea level measured by satellites since 1993: the global mean, or the mean over one coastal sea.",
+      "whyItMatters": "Rising seas threaten coasts worldwide, and some seas rise faster than the global mean."
+    },
+    "notes": [
+      "Global: the mean over the whole ocean, not the value at any place.",
+      "Coastal seas: the mean over the sea area drawn on the globe, not the value at a town or harbour, and not the rise people feel on land.",
+      "Land subsidence is not included. Where the land sinks, the local rise is larger than shown.",
+      "Satellite (absolute) sea level. Satellite data are less reliable near land, so each coastal-sea area keeps about 100 km away from the coast: it describes the open sea, not the shore.",
+      "Coastal seas swing more from year to year (El Nino, monsoon, winds) than the global mean, so a trend there needs a longer record to stand out.",
+      "Each coastal sea has its own notes, shown when it is selected.",
+      "Global series not corrected for glacial isostatic adjustment.",
+      "No per-point uncertainty in the source."
+    ],
+    "synthetic": false
+  },
+  {
+    "id": "sea_level_long",
+    "variantOf": "sea_level",
+    "name": "Sea level, long record",
+    "units": "mm",
+    "kind": "level",
+    "frequency": "annual",
+    "period": [
+      "1900",
+      "2018"
+    ],
+    "periods": {
+      "global": [
+        "1900",
+        "2018"
+      ]
+    },
+    "regions": [
+      "global"
+    ],
+    "mapMode": null,
+    "chartTypes": [
+      "series",
+      "budget"
+    ],
+    "source": {
+      "name": "JPL_RECON_GMSL v1.0 (PO.DAAC; Frederikse et al. 2020)",
+      "url": "https://doi.org/10.5067/GMSLT-FJPL1",
+      "citation": "Frederikse, T., Landerer, F., Caron, L., et al. (2020). The causes of sea-level rise since 1900. Nature 584, 393-397, https://doi.org/10.1038/s41586-020-2591-3. Data: JPL_RECON_GMSL v1.0, PO.DAAC, https://doi.org/10.5067/GMSLT-FJPL1",
+      "doi": "10.5067/GMSLT-FJPL1",
+      "version": "1.0",
+      "licence": "NASA open data (no restrictions)",
+      "processing": [
+        "Downloaded global_timeseries_measures.nc unchanged.",
+        "Used global_average_sea_level_change and its 5-95% lower and upper bounds, annual, as published.",
+        "No smoothing, gap filling or extrapolation; never joined to the satellite record."
+      ],
+      "accessed": "2026-11-13"
+    },
+    "describe": {
+      "video": "/media/sea_level_long_loop.webm",
+      "what": "Global mean sea level since 1900, reconstructed from tide gauges and models.",
+      "whyItMatters": "Shows how fast sea level rose before satellites."
+    },
+    "notes": [
+      "Separate from the satellite record; never joined to it.",
+      "Global only.",
+      "Bounds are 5-95%.",
+      "Reconstructed from tide gauges, corrected for land motion, plus models; not satellite data.",
+      "Global mean only; it is not the sea level at any place.",
+      "Ends in 2018; the satellite record (1993 onward) is a separate variable and is never joined to it."
+    ],
+    "synthetic": false
+  },
+  {
+    "id": "ice_mass_long",
+    "variantOf": "ice_mass",
+    "name": "Ice mass, long record",
+    "units": "Gt",
+    "kind": "cumulative",
+    "frequency": "annual",
+    "period": [
+      "1900",
+      "2018"
+    ],
+    "periods": {
+      "greenland": [
+        "1900",
+        "2018"
+      ],
+      "antarctica": [
+        "1900",
+        "2018"
+      ]
+    },
+    "regions": [
+      "greenland",
+      "antarctica"
+    ],
+    "mapMode": null,
+    "chartTypes": [
+      "series",
+      "sea_level_equivalent"
+    ],
+    "source": {
+      "name": "JPL_RECON_GMSL v1.0 (PO.DAAC; Frederikse et al. 2020)",
+      "url": "https://doi.org/10.5067/GMSLT-FJPL1",
+      "citation": "Frederikse, T., Landerer, F., Caron, L., et al. (2020). The causes of sea-level rise since 1900. Nature 584, 393-397, https://doi.org/10.1038/s41586-020-2591-3. Data: JPL_RECON_GMSL v1.0, PO.DAAC, https://doi.org/10.5067/GMSLT-FJPL1",
+      "doi": "10.5067/GMSLT-FJPL1",
+      "version": "1.0",
+      "licence": "NASA open data (no restrictions)",
+      "processing": [
+        "Downloaded global_timeseries_measures.nc unchanged.",
+        "Used the Greenland (GrIS) and Antarctic (AIS) sea-level contributions and their 5-95% bounds.",
+        "Converted mm of sea level to ice mass change in Gt with 362 Gt = 1 mm, sign flipped so ice loss is negative mass (as in IMBIE).",
+        "No smoothing, gap filling or extrapolation; never joined to the IMBIE record."
+      ],
+      "accessed": "2026-11-13"
+    },
+    "describe": {
+      "video": "/media/ice_mass_long_loop.webm",
+      "what": "Ice sheet mass change since 1900, reconstructed.",
+      "whyItMatters": "Puts the satellite era in a longer context."
+    },
+    "notes": [
+      "Separate from the IMBIE record; never joined to it.",
+      "Greenland includes peripheral glaciers. Before 2003 (before gravity satellites) it rests on reconstructions from models, older images and field data.",
+      "Bounds are 5-95%.",
+      "Before the satellite era the values come from reconstructions with large uncertainty (see the bounds).",
+      "Not independent of IMBIE and GRACE in the recent decades: the reconstruction uses them."
+    ],
+    "synthetic": false
+  },
+  {
+    "id": "monsoon_rainfall",
+    "group": "bangladesh",
+    "name": "Monsoon rainfall",
+    "units": "mm",
+    "kind": "level",
+    "frequency": "annual",
+    "period": [
+      "1998",
+      "2025"
+    ],
+    "periods": {
+      "bangladesh": [
+        "1998",
+        "2025"
+      ],
+      "bd_barishal": [
+        "1998",
+        "2025"
+      ],
+      "bd_chattogram": [
+        "1998",
+        "2025"
+      ],
+      "bd_dhaka": [
+        "1998",
+        "2025"
+      ],
+      "bd_khulna": [
+        "1998",
+        "2025"
+      ],
+      "bd_mymensingh": [
+        "1998",
+        "2025"
+      ],
+      "bd_rajshahi": [
+        "1998",
+        "2025"
+      ],
+      "bd_rangpur": [
+        "1998",
+        "2025"
+      ],
+      "bd_sylhet": [
+        "1998",
+        "2025"
+      ],
+      "bd_bagerhat_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_bandarban_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_barguna_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_barishal_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_bhola_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_bogura_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_brahmanbaria_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_chandpur_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_chapai_nawabganj_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_chattogram_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_chuadanga_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_cox_s_bazar_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_cumilla_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_dhaka_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_dinajpur_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_faridpur_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_feni_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_gaibandha_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_gazipur_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_gopalganj_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_habiganj_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_jamalpur_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_jashore_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_jhalokati_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_jhenaidah_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_joypurhat_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_khagrachhari_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_khulna_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_kishoreganj_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_kurigram_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_kushtia_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_lakshmipur_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_lalmonirhat_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_madaripur_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_magura_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_manikganj_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_meherpur_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_moulvibazar_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_munshiganj_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_mymensingh_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_naogaon_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_narail_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_narayanganj_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_narsingdi_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_natore_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_netrokona_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_nilphamari_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_noakhali_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_pabna_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_panchagarh_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_patuakhali_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_pirojpur_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_rajbari_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_rajshahi_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_rangamati_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_rangpur_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_satkhira_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_shariatpur_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_sherpur_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_sirajganj_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_sunamganj_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_sylhet_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_tangail_district": [
+        "1998",
+        "2025"
+      ],
+      "bd_thakurgaon_district": [
+        "1998",
+        "2025"
+      ]
+    },
+    "regions": [
+      "bangladesh",
+      "bd_barishal",
+      "bd_chattogram",
+      "bd_dhaka",
+      "bd_khulna",
+      "bd_mymensingh",
+      "bd_rajshahi",
+      "bd_rangpur",
+      "bd_sylhet",
+      "bd_bagerhat_district",
+      "bd_bandarban_district",
+      "bd_barguna_district",
+      "bd_barishal_district",
+      "bd_bhola_district",
+      "bd_bogura_district",
+      "bd_brahmanbaria_district",
+      "bd_chandpur_district",
+      "bd_chapai_nawabganj_district",
+      "bd_chattogram_district",
+      "bd_chuadanga_district",
+      "bd_cox_s_bazar_district",
+      "bd_cumilla_district",
+      "bd_dhaka_district",
+      "bd_dinajpur_district",
+      "bd_faridpur_district",
+      "bd_feni_district",
+      "bd_gaibandha_district",
+      "bd_gazipur_district",
+      "bd_gopalganj_district",
+      "bd_habiganj_district",
+      "bd_jamalpur_district",
+      "bd_jashore_district",
+      "bd_jhalokati_district",
+      "bd_jhenaidah_district",
+      "bd_joypurhat_district",
+      "bd_khagrachhari_district",
+      "bd_khulna_district",
+      "bd_kishoreganj_district",
+      "bd_kurigram_district",
+      "bd_kushtia_district",
+      "bd_lakshmipur_district",
+      "bd_lalmonirhat_district",
+      "bd_madaripur_district",
+      "bd_magura_district",
+      "bd_manikganj_district",
+      "bd_meherpur_district",
+      "bd_moulvibazar_district",
+      "bd_munshiganj_district",
+      "bd_mymensingh_district",
+      "bd_naogaon_district",
+      "bd_narail_district",
+      "bd_narayanganj_district",
+      "bd_narsingdi_district",
+      "bd_natore_district",
+      "bd_netrokona_district",
+      "bd_nilphamari_district",
+      "bd_noakhali_district",
+      "bd_pabna_district",
+      "bd_panchagarh_district",
+      "bd_patuakhali_district",
+      "bd_pirojpur_district",
+      "bd_rajbari_district",
+      "bd_rajshahi_district",
+      "bd_rangamati_district",
+      "bd_rangpur_district",
+      "bd_satkhira_district",
+      "bd_shariatpur_district",
+      "bd_sherpur_district",
+      "bd_sirajganj_district",
+      "bd_sunamganj_district",
+      "bd_sylhet_district",
+      "bd_tangail_district",
+      "bd_thakurgaon_district"
+    ],
+    "baseline": [
+      "2001",
+      "2020"
+    ],
+    "mapMode": null,
+    "chartTypes": [
+      "series",
+      "anomaly"
+    ],
+    "source": {
+      "name": "NASA GPM IMERG Final monthly precipitation V07 (GPM_3IMERGM, GES DISC)",
+      "url": "https://doi.org/10.5067/GPM/IMERG/3B-MONTH/07",
+      "citation": "Huffman, G.J., Stocker, E.F., Bolvin, D.T., Nelkin, E.J., Tan, J. (2023), GPM IMERG Final Precipitation L3 1 month 0.1 degree x 0.1 degree V07, Greenbelt, MD, Goddard Earth Sciences Data and Information Services Center (GES DISC), doi:10.5067/GPM/IMERG/3B-MONTH/07",
+      "doi": "10.5067/GPM/IMERG/3B-MONTH/07",
+      "version": "07",
+      "licence": "NASA open data (GES DISC data use guidelines)",
+      "processing": [
+        "Downloaded only the precipitation field over a box around Bangladesh through NASA's OPeNDAP service (values unchanged).",
+        "Monthly rain = area-weighted mean rate (mm/hr) over the 0.1-degree cells whose centre lies inside the Bangladesh border (Natural Earth), times the hours in the month.",
+        "Monsoon rainfall = June + July + August + September total; only years with all four months."
+      ],
+      "accessed": "2026-11-13"
+    },
+    "describe": {
+      "video": "/media/monsoon_rainfall_loop.webm",
+      "what": "Total rain over Bangladesh in the monsoon months, June to September, from NASA's GPM satellites (IMERG).",
+      "whyItMatters": "The monsoon brings most of the year's rain: too much floods rivers and fields, too little harms the rice harvest."
+    },
+    "notes": [
+      "June-September total, averaged over the country, division or district.",
+      "Rain varies a lot from year to year, so a trend needs many years to detect.",
+      "Satellite estimate (GPM and TRMM radiometers, gauge-adjusted each month), averaged over the whole country; not the rain at any one station.",
+      "1998-2014 comes from the TRMM-era satellites and 2014 onward from GPM, processed together in version 07.",
+      "Monsoon rain swings a lot from year to year, so a trend needs many years to detect.",
+      "Testing many divisions at once: about 1 test in 20 can look significant by chance alone, so check whether neighbouring divisions agree before trusting a single one.",
+      "Cross-check: NASA POWER (a weather-model product) shows a rising 1998-2025 monsoon trend that this satellite record does not; model rainfall trends can drift, so the satellite record is used here."
+    ],
+    "synthetic": false
+  },
+  {
+    "id": "land_submerged",
+    "group": "bangladesh",
+    "name": "Submerged coastal land",
+    "units": "km2",
+    "kind": "cumulative",
+    "frequency": "annual",
+    "period": [
+      "1985",
+      "2024"
+    ],
+    "periods": {
+      "bangladesh": [
+        "1985",
+        "2024"
+      ],
+      "bd_khulna": [
+        "1985",
+        "2024"
+      ],
+      "bd_barishal": [
+        "1985",
+        "2024"
+      ],
+      "bd_chattogram": [
+        "1985",
+        "2024"
+      ],
+      "bd_satkhira_district": [
+        "1985",
+        "2024"
+      ],
+      "bd_khulna_district": [
+        "1985",
+        "2024"
+      ],
+      "bd_bagerhat_district": [
+        "1985",
+        "2024"
+      ],
+      "bd_pirojpur_district": [
+        "1985",
+        "2024"
+      ],
+      "bd_barguna_district": [
+        "1985",
+        "2024"
+      ],
+      "bd_patuakhali_district": [
+        "1985",
+        "2024"
+      ],
+      "bd_bhola_district": [
+        "1985",
+        "2024"
+      ],
+      "bd_lakshmipur_district": [
+        "1985",
+        "2024"
+      ],
+      "bd_noakhali_district": [
+        "1985",
+        "2024"
+      ],
+      "bd_feni_district": [
+        "1985",
+        "2024"
+      ],
+      "bd_chattogram_district": [
+        "1985",
+        "2024"
+      ],
+      "bd_cox_s_bazar_district": [
+        "1985",
+        "2024"
+      ]
+    },
+    "regions": [
+      "bangladesh",
+      "bd_khulna",
+      "bd_barishal",
+      "bd_chattogram",
+      "bd_satkhira_district",
+      "bd_khulna_district",
+      "bd_bagerhat_district",
+      "bd_pirojpur_district",
+      "bd_barguna_district",
+      "bd_patuakhali_district",
+      "bd_bhola_district",
+      "bd_lakshmipur_district",
+      "bd_noakhali_district",
+      "bd_feni_district",
+      "bd_chattogram_district",
+      "bd_cox_s_bazar_district"
+    ],
+    "mapMode": null,
+    "chartTypes": [
+      "series",
+      "annual_change"
+    ],
+    "source": {
+      "name": "JRC Global Surface Water yearly water history (Landsat), test values in its format",
+      "url": "https://global-surface-water.appspot.com/",
+      "citation": "Synthetic data from pipeline/synthetic (Trend Detective). Shaped like the EC JRC Global Surface Water yearly classification (Pekel et al., Nature 540, 418-422, 2016, doi:10.1038/nature20584; Landsat, NASA/USGS); contains no JRC values."
+    },
+    "describe": {
+      "video": "/media/land_submerged_loop.webm",
+      "what": "How much land along the coast has turned into permanent water since 1985, mapped from Landsat satellite images (JRC Global Surface Water).",
+      "whyItMatters": "Land lost to the sea and rivers means lost fields, homes and mangroves. Rising seas, erosion and sinking land all push the coast inland."
+    },
+    "notes": [
+      "SYNTHETIC DATA: generated with a known injected trend for testing; not a measurement.",
+      "Cumulative area (km2) of land that became permanent water since 1985, inside the region.",
+      "Counts every cause of land turning to water: sea level rise, coastal and river-bank erosion, sinking land and new ponds. It cannot separate sea level rise from the others.",
+      "Landsat images are sparse before 2000, so some early years are missing."
+    ],
+    "synthetic": true
+  },
+  {
+    "id": "ice_mass_grace",
+    "group": "ice",
+    "name": "Ice mass from gravity (GRACE)",
+    "units": "Gt",
+    "kind": "cumulative",
+    "frequency": "monthly",
+    "period": [
+      "2002-04",
+      "2026-09"
+    ],
+    "periods": {
+      "greenland": [
+        "2002-04",
+        "2026-09"
+      ],
+      "antarctica": [
+        "2002-04",
+        "2026-09"
+      ],
+      "himalaya": [
+        "2002-04",
+        "2026-09"
+      ]
+    },
+    "regions": [
+      "greenland",
+      "antarctica",
+      "himalaya"
+    ],
+    "mapMode": "ice_mass_map",
+    "chartTypes": [
+      "series",
+      "anomaly",
+      "sea_level_equivalent"
+    ],
+    "source": {
+      "name": "GRACE/GRACE-FO JPL mascons RL06.3Mv04 CRI (PO.DAAC)",
+      "url": "https://doi.org/10.5067/TEMSC-3JC634",
+      "citation": "Wiese, D. N., Yuan, D.-N., Boening, C., Landerer, F. W., Watkins, M. M. (2023). JPL GRACE and GRACE-FO Mascon Ocean, Ice, and Hydrology Equivalent Water Height Coastal Resolution Improvement (CRI) Filtered JPL RL06.3Mv04. PO.DAAC. https://doi.org/10.5067/TEMSC-3JC634",
+      "doi": "10.5067/TEMSC-3JC634",
+      "version": "RL06.3Mv04",
+      "licence": "NASA open data (PO.DAAC data use and citation guidelines)",
+      "processing": [
+        "Downloaded the global monthly mascon grid unchanged.",
+        "Mass change = sum over the 0.5-degree cells whose centre lies inside the region outline of water-equivalent thickness x cell area (1 cm of water on 1 m2 = 10 kg), in Gt, relative to the source's 2004.0-2009.999 mean.",
+        "1-sigma = the source's per-cell uncertainty summed within each ~300 km mascon and combined as independent errors between mascons.",
+        "Months with no solution (including the 2017-2018 mission gap) stay as gaps, never interpolated."
+      ],
+      "accessed": "2026-11-13"
+    },
+    "describe": {
+      "video": "/media/ice_mass_grace_loop.webm",
+      "what": "Mass change of the ice in a region, weighed month by month by the GRACE and GRACE-FO satellites, which measure tiny changes in Earth's gravity.",
+      "whyItMatters": "The same method for Greenland, Antarctica and the Himalayas, so their losses can be compared directly; about 362 Gt of ice is 1 mm of global sea level."
+    },
+    "notes": [
+      "Relative to the 2004-2009 average.",
+      "GRACE sees about 300 km detail.",
+      "Measured by gravity: GRACE weighs all mass, so near the coast and in the Himalayas some of the signal is water or ocean mass, not ice.",
+      "Himalayas: the arc is about as wide as GRACE's resolution (~300 km); groundwater loss in the plains of northern India and Pakistan leaks into this signal, so treat the Himalayan trend as an upper bound on glacier loss.",
+      "Antarctica: GRACE totals depend strongly on the correction for land still rising after the last ice age (GIA); for 2002-2023 GRACE gives about -131 Gt/yr against IMBIE's reconciled -184 Gt/yr. Greenland agrees closely (about -249 against -253 Gt/yr).",
+      "A different method from the IMBIE ice mass record (which combines gravity, altimetry and input-output); the two are not independent but should agree closely for Greenland and Antarctica."
+    ],
+    "synthetic": false
+  }
+]

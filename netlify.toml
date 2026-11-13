@@ -1,0 +1,40 @@
+# Netlify: builds the static site from this repository.
+# The data (data/public), base map (basemap/) and videos (media/) are committed, and `pnpm build`
+# copies them into apps/web/dist next to the app. No server or database is needed.
+
+[build]
+  command = "pnpm build"
+  publish = "apps/web/dist"
+
+[build.environment]
+  NODE_VERSION = "24"
+  PNPM_VERSION = "12.18.0"
+
+# App code has hashed file names: cache forever.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Cesium engine files: change only on a library upgrade.
+[[headers]]
+  for = "/cesium/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+# Base map tiles never change.
+[[headers]]
+  for = "/basemap/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+# Data and videos can change on a redeploy: cache for an hour.
+[[headers]]
+  for = "/data/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/media/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
