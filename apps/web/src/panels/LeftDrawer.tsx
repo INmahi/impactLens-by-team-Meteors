@@ -22,9 +22,10 @@ const KIND_LABEL: Record<string, string> = {
   glacier_region: 'Glacier regions',
   coastal_sea: 'Coastal seas',
   country: 'Countries',
+  division: 'Divisions of Bangladesh',
   global: 'Global',
 }
-const KIND_ORDER = ['global', 'country', 'ice_sheet', 'ice_sheet_basin', 'glacier_region', 'coastal_sea']
+const KIND_ORDER = ['global', 'country', 'division', 'ice_sheet', 'ice_sheet_basin', 'glacier_region', 'coastal_sea']
 
 /** Group headings for variables that share `group` (contract `group` ids). */
 function groupLabel(group: string): string {

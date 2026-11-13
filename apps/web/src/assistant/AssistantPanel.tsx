@@ -2,6 +2,7 @@
 // It uses only four tools (assistant/tools.ts): it cannot compute statistics or change anything else.
 // The only online feature of the app (CLAUDE.md offline rule); the key stays in this browser.
 import { useEffect, useRef, useState } from 'react'
+import { Activity, ExternalLink, SendHorizontal, Settings2, Sparkles, WifiOff, X } from 'lucide-react'
 import { cn } from 'cn'
 import { useAppStore } from '@/state/store'
 import { chat, loadConfig, PRESETS, saveConfig, type ChatMessage, type LlmConfig } from './llm'
@@ -15,7 +16,13 @@ RULES: Never compute, estimate or invent a number: quote only tool outputs. Ever
 type Shown = { role: 'user' | 'assistant' | 'status' | 'error'; text: string }
 
 const WELCOME =
-  'Hi! I can set up and run a trend analysis for you, then explain the result. Try: "Is sea level rising faster in the Bay of Bengal than the world average?" or "How has Bangladesh monsoon rain changed?"'
+  'Hi! I can set up and run a trend analysis for you, then explain what the result means. Tell me what you would like to look at, or pick one of these:'
+
+const SUGGESTIONS = [
+  'Is sea level rising faster in the Bay of Bengal than the world average?',
+  'Compare monsoon rainfall in Rangpur and Sylhet divisions',
+  'Is Greenland losing ice faster over time?',
+]
 
 /** Light formatting: **bold** and line breaks only. */
 function Text({ text }: { text: string }) {
@@ -56,6 +63,13 @@ export default function AssistantPanel({ open, onClose, className }: { open: boo
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' })
   }, [shown, busy])
+  // Escape closes the pop-up (the conversation is kept).
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onClose])
 
   // When the user runs an analysis with the button, tell the assistant (so follow-up questions refer to it).
   const lastSeen = useRef<unknown>(null)
@@ -108,34 +122,48 @@ export default function AssistantPanel({ open, onClose, className }: { open: boo
 
   if (!open) return null
   const preset = cfg.provider === 'custom' ? null : PRESETS[cfg.provider]
+  const ready = online && !!cfg.apiKey
+  const started = shown.length > 1
 
   return (
-    <section aria-label="AI assistant" className={cn('glass-strong pointer-events-auto flex flex-col overflow-hidden text-white', className)}>
-      <header className="flex items-center justify-between gap-2 border-b border-white/10 px-4 pt-3 pb-2">
-        <div className="min-w-0">
-          <h2 className="text-sm font-semibold tracking-wide">AI assistant</h2>
-          <p className="truncate text-[11px] text-white/75" title={`${cfg.model} via ${cfg.baseUrl}`}>
-            {cfg.model} · {preset?.label ?? 'custom endpoint'} · needs internet
+    <section
+      role="dialog"
+      aria-label="AI assistant"
+      className={cn(
+        'pointer-events-auto flex flex-col overflow-hidden rounded-2xl border border-white/15 bg-slate-950/90 text-white shadow-2xl shadow-black/60 backdrop-blur-xl',
+        'animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200 motion-reduce:animate-none',
+        className,
+      )}
+    >
+      {/* Header */}
+      <header className="flex items-center gap-3 border-b border-white/10 bg-gradient-to-r from-sky-500/20 via-indigo-500/10 to-transparent px-4 py-3">
+        <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-sky-300 to-indigo-400 text-slate-950 shadow-md">
+          <Sparkles className="size-[18px]" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-[15px] leading-tight font-semibold">Trend Detective AI</h2>
+          <p className="flex items-center gap-1.5 truncate text-[11.5px] text-white/75" title={`${cfg.model} via ${cfg.baseUrl}`}>
+            <span aria-hidden className={cn('size-1.5 shrink-0 rounded-full', ready ? 'bg-emerald-400' : 'bg-amber-300')} />
+            {!online ? 'Offline' : !cfg.apiKey ? 'Add an API key in settings' : 'Online'} · {cfg.model}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            aria-expanded={showSettings}
-            onClick={() => setShowSettings((x) => !x)}
-            className="rounded-md px-2 py-0.5 text-xs text-white/90 hover:bg-white/10"
-          >
-            Settings
-          </button>
-          <button type="button" onClick={onClose} aria-label="Close the AI assistant" className="rounded-md px-2 py-0.5 text-base font-semibold text-white/90 hover:bg-white/10">
-            ×
-          </button>
-        </div>
+        <button
+          type="button"
+          aria-label="Assistant settings"
+          aria-expanded={showSettings}
+          onClick={() => setShowSettings((x) => !x)}
+          className={cn('grid size-8 place-items-center rounded-lg text-white/85 hover:bg-white/10', showSettings && 'bg-white/10')}
+        >
+          <Settings2 className="size-4" />
+        </button>
+        <button type="button" onClick={onClose} aria-label="Close the AI assistant" className="grid size-8 place-items-center rounded-lg text-white/85 hover:bg-white/10">
+          <X className="size-4" />
+        </button>
       </header>
 
       {showSettings && (
-        <div className="flex flex-col gap-2 border-b border-white/10 bg-black/20 px-4 py-3 text-[12.5px]">
-          <label className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2.5 border-b border-white/10 bg-black/30 px-4 py-3 text-[12.5px] animate-in fade-in slide-in-from-top-1 duration-150">
+          <label className="flex flex-col gap-1 text-white/85">
             Provider
             <select
               value={cfg.provider}
@@ -143,7 +171,7 @@ export default function AssistantPanel({ open, onClose, className }: { open: boo
                 const p = e.target.value as LlmConfig['provider']
                 update(p === 'custom' ? { provider: p } : { provider: p, baseUrl: PRESETS[p].baseUrl, model: PRESETS[p].model })
               }}
-              className="h-8 rounded-md border border-white/20 bg-slate-900 px-2 text-white"
+              className="h-8 rounded-lg border border-white/15 bg-slate-900 px-2 text-white"
             >
               <option value="groq">{PRESETS.groq.label}</option>
               <option value="openrouter">{PRESETS.openrouter.label}</option>
@@ -151,81 +179,129 @@ export default function AssistantPanel({ open, onClose, className }: { open: boo
             </select>
           </label>
           {cfg.provider === 'custom' && (
-            <label className="flex flex-col gap-1">
+            <label className="flex flex-col gap-1 text-white/85">
               Endpoint URL
-              <input value={cfg.baseUrl} onChange={(e) => update({ baseUrl: e.target.value })} className="h-8 rounded-md border border-white/20 bg-slate-900 px-2 text-white" />
+              <input value={cfg.baseUrl} onChange={(e) => update({ baseUrl: e.target.value })} className="h-8 rounded-lg border border-white/15 bg-slate-900 px-2 text-white" />
             </label>
           )}
-          <label className="flex flex-col gap-1">
+          <label className="flex flex-col gap-1 text-white/85">
             Model
-            <input value={cfg.model} onChange={(e) => update({ model: e.target.value })} className="h-8 rounded-md border border-white/20 bg-slate-900 px-2 text-white" />
+            <input value={cfg.model} onChange={(e) => update({ model: e.target.value })} className="h-8 rounded-lg border border-white/15 bg-slate-900 px-2 text-white" />
           </label>
-          <label className="flex flex-col gap-1">
-            API key (stored only in this browser)
+          <label className="flex flex-col gap-1 text-white/85">
+            API key <span className="text-[11px] text-white/60">stored only in this browser</span>
             <input
               type="password"
               autoComplete="off"
               value={cfg.apiKey}
               onChange={(e) => update({ apiKey: e.target.value.trim() })}
-              placeholder="paste your free key"
-              className="h-8 rounded-md border border-white/20 bg-slate-900 px-2 text-white"
+              placeholder="Paste your free key"
+              className="h-8 rounded-lg border border-white/15 bg-slate-900 px-2 text-white"
             />
           </label>
           {preset && (
-            <a href={preset.keyUrl} target="_blank" rel="noreferrer" className="text-sky-200 underline underline-offset-2">
-              Get a free key
+            <a href={preset.keyUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sky-200 underline underline-offset-2">
+              Get a free key <ExternalLink className="size-3" />
             </a>
           )}
         </div>
       )}
 
-      <div ref={listRef} className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-4 py-3 text-[13.5px] leading-snug" aria-live="polite">
+      {/* Conversation */}
+      <div ref={listRef} className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 py-4 text-[13.5px] leading-relaxed" aria-live="polite">
         {shown.map((m, i) =>
           m.role === 'status' ? (
-            <p key={i} className="self-center rounded-full bg-white/10 px-3 py-1 text-[12px] text-white/85 italic">
+            <p key={i} className="flex items-center gap-1.5 self-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11.5px] text-white/80">
+              <Activity aria-hidden className="size-3 text-sky-300" />
               {m.text}
             </p>
-          ) : (
-            <div
-              key={i}
-              className={cn(
-                'max-w-[92%] rounded-xl px-3 py-2',
-                m.role === 'user' && 'self-end bg-sky-300 text-slate-950',
-                m.role === 'assistant' && 'self-start bg-white/10',
-                m.role === 'error' && 'self-start border border-red-300/60 bg-red-400/15 text-red-50',
-              )}
-            >
+          ) : m.role === 'user' ? (
+            <div key={i} className="max-w-[85%] self-end rounded-2xl rounded-br-md bg-sky-300 px-3.5 py-2 text-slate-950 shadow-sm">
               <Text text={m.text} />
+            </div>
+          ) : (
+            <div key={i} className="flex max-w-[92%] items-start gap-2 self-start">
+              <span aria-hidden className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-gradient-to-br from-sky-300 to-indigo-400 text-slate-950">
+                <Sparkles className="size-3" />
+              </span>
+              <div
+                className={cn(
+                  'rounded-2xl rounded-tl-md px-3.5 py-2 shadow-sm',
+                  m.role === 'error' ? 'border border-red-300/50 bg-red-500/15 text-red-50' : 'border border-white/10 bg-white/[0.07]',
+                )}
+              >
+                <Text text={m.text} />
+              </div>
             </div>
           ),
         )}
-        {busy && <p className="self-start text-[12px] text-white/75 italic">Thinking…</p>}
+
+        {!started && (
+          <div className="flex flex-col gap-1.5 pl-8">
+            {SUGGESTIONS.map((q) => (
+              <button
+                key={q}
+                type="button"
+                disabled={busy}
+                onClick={() => void send(q)}
+                className="rounded-xl border border-white/15 bg-white/[0.04] px-3 py-1.5 text-left text-[12.5px] text-white/90 transition-colors hover:border-sky-300/60 hover:bg-sky-300/10"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {busy && (
+          <div className="flex items-center gap-2 self-start" aria-label="The assistant is thinking">
+            <span aria-hidden className="grid size-6 place-items-center rounded-full bg-gradient-to-br from-sky-300 to-indigo-400 text-slate-950">
+              <Sparkles className="size-3" />
+            </span>
+            <span className="flex gap-1 rounded-2xl border border-white/10 bg-white/[0.07] px-3 py-2.5">
+              {[0, 150, 300].map((d) => (
+                <span key={d} className="size-1.5 animate-bounce rounded-full bg-white/70 motion-reduce:animate-none" style={{ animationDelay: `${d}ms` }} />
+              ))}
+            </span>
+          </div>
+        )}
       </div>
 
-      {!online && <p className="border-t border-white/10 px-4 py-2 text-[12px] text-amber-100">Offline: the assistant needs internet. Everything else in the app works offline.</p>}
+      {!online && (
+        <p className="flex items-center gap-1.5 border-t border-amber-300/20 bg-amber-300/10 px-4 py-2 text-[12px] text-amber-100">
+          <WifiOff aria-hidden className="size-3.5" /> The assistant needs internet. Everything else works offline.
+        </p>
+      )}
+
+      {/* Composer */}
       <form
         onSubmit={(e) => {
           e.preventDefault()
           void send(input)
         }}
-        className="flex gap-2 border-t border-white/10 p-3"
+        className="border-t border-white/10 bg-black/20 p-3"
       >
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={analysis ? 'Ask about the result, or start a new analysis' : 'What would you like to analyse?'}
-          aria-label="Message to the AI assistant"
-          disabled={busy}
-          className="h-9 min-w-0 flex-1 rounded-lg border border-white/20 bg-white/5 px-3 text-sm text-white placeholder:text-white/60 disabled:opacity-60"
-        />
-        <button type="submit" disabled={busy || !input.trim()} className="h-9 rounded-lg bg-sky-300 px-3 text-sm font-medium text-slate-950 disabled:opacity-50">
-          Send
-        </button>
+        <div className="flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.06] py-1 pr-1 pl-3 focus-within:border-sky-300/70 focus-within:ring-2 focus-within:ring-sky-300/30">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={analysis ? 'Ask about this result, or start a new analysis…' : 'Ask me to analyse something…'}
+            aria-label="Message to the AI assistant"
+            disabled={busy}
+            className="h-8 min-w-0 flex-1 bg-transparent text-sm text-white placeholder:text-white/50 focus:outline-none disabled:opacity-60"
+          />
+          <button
+            type="submit"
+            aria-label="Send"
+            disabled={busy || !input.trim()}
+            className="grid size-8 shrink-0 place-items-center rounded-lg bg-sky-300 text-slate-950 transition-opacity hover:bg-sky-200 disabled:opacity-40"
+          >
+            <SendHorizontal className="size-4" />
+          </button>
+        </div>
+        <p className="mt-2 text-center text-[10.5px] text-white/55">
+          AI can make mistakes. Every number comes from the app&apos;s own analysis, never from the AI.
+        </p>
       </form>
-      <p className="px-4 pb-2 text-[10.5px] text-white/70">
-        AI answers can be wrong. All numbers come from the app&apos;s own analysis; the AI does not compute statistics.
-      </p>
     </section>
   )
 }
-

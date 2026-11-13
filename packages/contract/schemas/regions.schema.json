@@ -16,8 +16,8 @@
         "oneOf": [{ "$ref": "common.schema.json#/$defs/id" }, { "type": "null" }]
       },
       "kind": {
-        "description": "What the region is, for grouping in the picker. global means no outline geometry. coastal_sea is a sea area whose mean sea level is reported. country is a land area inside a national border (added 2026-11-13, Bangladesh).",
-        "enum": ["ice_sheet", "ice_sheet_basin", "glacier_region", "coastal_sea", "country", "global"]
+        "description": "What the region is, for grouping in the picker. global means no outline geometry. coastal_sea is a sea area whose mean sea level is reported. country is a land area inside a national border; division is a first-level administrative unit of a country, with the country as parent (both added 2026-11-13, Bangladesh).",
+        "enum": ["ice_sheet", "ice_sheet_basin", "glacier_region", "coastal_sea", "country", "division", "global"]
       },
       "variables": {
         "description": "Variables valid here. Must be the inverse of variables.json regions.",

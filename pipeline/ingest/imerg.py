@@ -45,6 +45,8 @@ NOTES = [
     "not the rain at any one station.",
     "1998-2014 comes from the TRMM-era satellites and 2014 onward from GPM, processed together in version 07.",
     "Monsoon rain swings a lot from year to year, so a trend needs many years to detect.",
+    "Testing many divisions at once: about 1 test in 20 can look significant by chance alone, so check whether "
+    "neighbouring divisions agree before trusting a single one.",
     "Cross-check: NASA POWER (a weather-model product) shows a rising 1998-2025 monsoon trend that this satellite "
     "record does not; model rainfall trends can drift, so the satellite record is used here.",
 ]

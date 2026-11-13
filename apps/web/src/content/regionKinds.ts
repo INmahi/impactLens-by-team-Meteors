@@ -12,6 +12,8 @@ export const REGION_KIND_TEXT: Record<string, string> = {
     'Satellite sea level averaged over an open-sea area at least about 100 km offshore; not the value at a town, and land sinking is not included.',
   country:
     'The mean over a whole country inside its national border (border from Natural Earth); not the value at any town or district.',
+  division:
+    'One of the 8 administrative divisions of Bangladesh (border from geoBoundaries); the mean over the whole division, not the value at any town.',
   global:
     'The mean over the whole ocean; not the value at any place.',
 };

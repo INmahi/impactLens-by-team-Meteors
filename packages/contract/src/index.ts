@@ -48,7 +48,7 @@ export interface Variable {
   synthetic: boolean;
 }
 
-export type RegionKind = 'ice_sheet' | 'ice_sheet_basin' | 'glacier_region' | 'coastal_sea' | 'country' | 'global';
+export type RegionKind = 'ice_sheet' | 'ice_sheet_basin' | 'glacier_region' | 'coastal_sea' | 'country' | 'division' | 'global';
 
 export interface Region {
   id: Id;

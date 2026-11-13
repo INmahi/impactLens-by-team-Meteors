@@ -116,8 +116,8 @@ function DesktopOverlay() {
         <LeftDrawer className="max-h-full" onCollapse={() => setLeftOpen(false)} />
       </div>
       <ReopenTab side="left" label="Show analysis inputs" show={!leftOpen} onClick={() => setLeftOpen(true)} />
-      {/* AI assistant: opens over the left panel so the results stay visible on the right. */}
-      <AssistantPanel open={aiOpen} onClose={() => setAiOpen(false)} className="absolute bottom-3 left-3 top-16 z-20 w-[24rem]" />
+      {/* AI assistant: a floating pop-up under the Ask AI button; the results stay visible on the right. */}
+      <AssistantPanel open={aiOpen} onClose={() => setAiOpen(false)} className="absolute left-3 top-16 z-30 h-[min(42rem,calc(100dvh-5.5rem))] w-[27rem] max-w-[calc(100vw-1.5rem)] origin-top-left" />
 
       <div
         className="absolute bottom-3 right-3 top-3 flex max-w-[calc(100vw-1.5rem)] flex-col items-end gap-3 transition-[width] duration-300 ease-out motion-reduce:transition-none"
