@@ -70,16 +70,32 @@ export const TOOLS: ToolSpec[] = [
 async function catalog() {
   const [variables, regions] = await Promise.all([getVariablesCached(), getRegionsCached()])
   const name = (id: string) => regions.find((r) => r.id === id)?.name ?? id
+  // Index first: which variables each main (non-district) region has, so a question like "the Himalayas" maps
+  // straight to every variable there. Districts are listed under each variable.
+  const main = regions.filter((r) => r.kind !== 'district')
   return {
+    variables_by_region: Object.fromEntries(
+      main
+        .map((r) => [`${r.id} (${r.name})`, variables.filter((v) => v.regions.includes(r.id)).map((v) => `${v.id} (${v.name}), record ${v.periods[r.id][0]} to ${v.periods[r.id][1]}`)] as const)
+        .filter(([, list]) => list.length),
+    ),
     variables: variables.map((v) => ({
       id: v.id,
       name: v.name,
+      about: v.describe.what,
       units: formatUnitsText(v.units),
       frequency: v.frequency,
       group: v.group ?? null,
       dataset: v.source.name,
-      regions: v.regions.map((id) => ({ id, name: name(id), from: v.periods[id][0], to: v.periods[id][1] })),
+      record: `${v.period[0]} to ${v.period[1]}`,
+      // from/to only where a region's record differs from the variable's overall record
+      regions: v.regions.map((id) => {
+        const [from, to] = v.periods[id]
+        return from === v.period[0] && to === v.period[1] ? { id, name: name(id) } : { id, name: name(id), from, to }
+      }),
     })),
+    // What each larger region is and its caveats (districts left out: their notes repeat the division's).
+    region_notes: Object.fromEntries(regions.filter((r) => r.kind !== 'district' && r.notes?.length).map((r) => [r.id, r.notes!.join(' ')])),
     compare: 'regions = same variable in another of its regions; variables = up to 3 other variables that have the same region',
   }
 }
