@@ -137,10 +137,10 @@ export default function AssistantPanel({ open, onClose, className }: { open: boo
     history.current.push({ role: 'user', content: '[The app now shows a new analysis result. Call get_result before answering questions about it.]' })
   }, [analysis])
 
-  async function send(text: string) {
+  async function send(text: string, display?: string) {
     if (!text.trim() || busy) return
     setInput('')
-    setShown((s) => [...s, { role: 'user', text }])
+    setShown((s) => [...s, { role: 'user', text: display ?? text }])
     history.current.push({ role: 'user', content: text })
     // Keep the request small (free tier: 8,000 tokens a minute): the last 14 messages, never starting on a tool reply.
     const trimmed = () => {
@@ -179,7 +179,7 @@ export default function AssistantPanel({ open, onClose, className }: { open: boo
   useEffect(() => {
     if (!open || !aiRequest || busy) return
     useAppStore.getState().setAiRequest(null)
-    void sendRef.current(aiRequest)
+    void sendRef.current(aiRequest, 'AI summary of this result')
   }, [open, aiRequest, busy])
 
   function update(c: Partial<LlmConfig>) {

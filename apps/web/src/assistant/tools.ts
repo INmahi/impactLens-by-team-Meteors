@@ -155,6 +155,7 @@ export async function resultSummary(a: AnalysisResult | null = useAppStore.getSt
   const verdict = trendVerdict(v, r, rep)
   const out: Record<string, unknown> = {
     variable: v.name,
+    what_is_measured: `${v.describe.what} (${v.frequency} values, ${formatUnitsText(v.units)})`,
     region: r.name,
     period: `${formatStep(a.start)} to ${formatStep(a.end)}`,
     dataset: `${v.source.name}${v.source.version ? `, version ${v.source.version}` : ''}${v.synthetic ? ' (SYNTHETIC test data)' : ' (real observations)'}`,
