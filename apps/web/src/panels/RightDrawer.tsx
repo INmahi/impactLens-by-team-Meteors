@@ -296,8 +296,8 @@ function DatasetBlock({ datasets }: { datasets: Variable[] }) {
           <span className="font-semibold text-white">{d.source.name}</span>
           {d.source.version && <span className="text-white/85">, version {d.source.version}</span>}
           <span className="block text-[11.5px] text-white/80">
-            {d.synthetic ? 'Test data' : 'Real observations'}
-            {d.source.doi ? ` · doi:${d.source.doi}` : ''}
+            {d.synthetic ? '' : 'Real observations'}
+            {d.source.doi ? `${d.synthetic ? '' : ' · '}doi:${d.source.doi}` : ''}
             {list.length > 1 ? ` · for ${d.name.toLowerCase()}` : ''}
           </span>
         </span>

@@ -62,14 +62,11 @@ export default function DataSourceCard({ a, v, variables }: { a: AnalysisResult;
     >
       <h3 id="res-source" className="mb-1.5 flex flex-wrap items-center gap-1.5 text-xs font-semibold tracking-wide uppercase">
         Data source &amp; honesty
-        <span
-          className={cn(
-            'rounded-full px-2 py-0.5 text-[11px] font-semibold tracking-normal normal-case',
-            synthetic ? 'bg-white/15 text-white' : 'bg-emerald-300 text-slate-950',
-          )}
-        >
-          {synthetic ? 'Test data' : 'Real observations'}
-        </span>
+        {!synthetic && (
+          <span className="rounded-full bg-emerald-300 px-2 py-0.5 text-[11px] font-semibold tracking-normal text-slate-950 normal-case">
+            Real observations
+          </span>
+        )}
       </h3>
 
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[12.5px] leading-snug">
