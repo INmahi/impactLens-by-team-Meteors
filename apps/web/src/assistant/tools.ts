@@ -67,36 +67,34 @@ export const TOOLS: ToolSpec[] = [
   },
 ]
 
+// Compact on purpose (about 3,000 characters): every request re-sends the conversation, and the free tier
+// allows about 8,000 tokens a minute. The old catalogue (regions per variable with names, notes) was ~15,000
+// characters and was cut off mid-JSON. Region caveats now come with the result (resultSummary notes).
 async function catalog() {
   const [variables, regions] = await Promise.all([getVariablesCached(), getRegionsCached()])
-  const name = (id: string) => regions.find((r) => r.id === id)?.name ?? id
-  // Index first: which variables each main (non-district) region has, so a question like "the Himalayas" maps
-  // straight to every variable there. Districts are listed under each variable.
+  const isDistrict = (id: string) => regions.find((r) => r.id === id)?.kind === 'district'
+  const span = ([from, to]: [string, string]) => `${from} to ${to}`
+  // Which variables each larger region has, with the exact record years there.
   const main = regions.filter((r) => r.kind !== 'district')
+  const byRegion = Object.fromEntries(
+    main
+      .map((r) => [r.id, `${r.name}: ${variables.filter((v) => v.regions.includes(r.id)).map((v) => `${v.id} ${span(v.periods[r.id])}`).join('; ')}`] as const)
+      .filter(([id]) => variables.some((v) => v.regions.includes(id))),
+  )
+  // Districts: named per variable (or "all N"), with the record when it is the same for all of them.
+  const districts = variables
+    .filter((v) => v.regions.some(isDistrict))
+    .map((v) => {
+      const ds = v.regions.filter(isDistrict)
+      const spans = [...new Set(ds.map((id) => span(v.periods[id])))]
+      const which = ds.length > 20 ? `all ${ds.length} Bangladesh districts` : ds.map((id) => regions.find((r) => r.id === id)!.name).join(', ')
+      return `${v.id}: ${which}${spans.length === 1 ? `, record ${spans[0]}` : ''}`
+    })
   return {
-    variables_by_region: Object.fromEntries(
-      main
-        .map((r) => [`${r.id} (${r.name})`, variables.filter((v) => v.regions.includes(r.id)).map((v) => `${v.id} (${v.name}), record ${v.periods[r.id][0]} to ${v.periods[r.id][1]}`)] as const)
-        .filter(([, list]) => list.length),
-    ),
-    variables: variables.map((v) => ({
-      id: v.id,
-      name: v.name,
-      about: v.describe.what,
-      units: formatUnitsText(v.units),
-      frequency: v.frequency,
-      group: v.group ?? null,
-      dataset: v.source.name,
-      record: `${v.period[0]} to ${v.period[1]}`,
-      // from/to only where a region's record differs from the variable's overall record
-      regions: v.regions.map((id) => {
-        const [from, to] = v.periods[id]
-        return from === v.period[0] && to === v.period[1] ? { id, name: name(id) } : { id, name: name(id), from, to }
-      }),
-    })),
-    // What each larger region is and its caveats (districts left out: their notes repeat the division's).
-    region_notes: Object.fromEntries(regions.filter((r) => r.kind !== 'district' && r.notes?.length).map((r) => [r.id, r.notes!.join(' ')])),
-    compare: 'regions = same variable in another of its regions; variables = up to 3 other variables that have the same region',
+    variables: variables.map((v) => `${v.id} = ${v.name} (${formatUnitsText(v.units)}, ${v.frequency}; ${v.source.name})`),
+    regions: byRegion,
+    districts,
+    how: 'Pass region ids from "regions"; for a district pass its name, e.g. "Satkhira District". Compare: regions = same variable in another of its regions; variables = up to 3 other variables with the same region.',
   }
 }
 

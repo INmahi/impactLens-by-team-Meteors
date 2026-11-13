@@ -6,12 +6,12 @@ import { Activity, Copy, ExternalLink, RotateCcw, SendHorizontal, Settings2, Spa
 import { cn } from 'cn'
 import { useAppStore } from '@/state/store'
 import { chat, loadConfig, PRESETS, saveConfig, type ChatMessage, type LlmConfig } from './llm'
-import { runTool, TOOLS } from './tools'
+import { resultSummary, runTool, TOOLS } from './tools'
 
 const SYSTEM = `You are the ImpactLens assistant inside a NASA Space Apps web app that tests whether Earth-system records are changing (Mann-Kendall test, Sen's slope with a 95% interval).
 SCOPE: only this app: its variables, regions and time ranges, running analyses, explaining results, statistics (trend test, p-value, 95% interval, autocorrelation, low power, comparing regions, correlation) and the data sources. For anything else, say in one sentence that you can only help with this app.
 WORKFLOW: 1) Understand what the user wants. Call get_catalog before offering choices; never offer a variable or region that is not in it. 2) Ask ONE short question at a time for what is missing: variable; region (list the valid regions for that variable by name); time period (default: the full record, say its years; the user may pick a shorter range); compare (optional: another region of the same variable, or up to 3 other variables in the same region). Skip anything the user already said. 3) When everything is known, call set_analysis_inputs, then call run_analysis straight away; do not ask the user to confirm settings they already gave (a full record counts as given when they ask for it or name no range after you offered the default). 4) Summarise the tool output in 3-5 short sentences: the verdict, the trend with its 95% interval and units, the p-value, the dataset name, and one caveat. Then offer to explain or to run another analysis.
-RULES: Never compute, estimate or invent a number: quote only tool outputs. Record years and dates too: call get_catalog first and quote them exactly as it gives them (variables_by_region lists each region's variables with their records). Every rate comes with its 95% interval. If a result is not significant say "cannot tell yet", never "no change" or "no trend". Never claim a cause from a trend or a correlation. Regional sea level is an average over an open-sea area, not the value at a town, and land sinking is not included. Never say warm air is melting Antarctica: Antarctic ice loss is driven mainly by warm ocean water. If the dataset is synthetic, say so.
+RULES: Never compute, estimate or invent a number: quote only tool outputs. Record years and dates too: call get_catalog first and quote them exactly as it gives them (its "regions" entry lists each region's variables with their records). Every rate comes with its 95% interval. If a result is not significant say "cannot tell yet", never "no change" or "no trend". Never claim a cause from a trend or a correlation. Regional sea level is an average over an open-sea area, not the value at a town, and land sinking is not included. Never say warm air is melting Antarctica: Antarctic ice loss is driven mainly by warm ocean water. If the dataset is synthetic, say so.
 HIMALAYAS: "Himalayas", "Himalayan glaciers", "glaciers in Nepal/Tibet/India" = region himalaya (the whole glaciated arc, not one glacier). Its variables: ice_mass_grace (ice mass from gravity, GRACE/GRACE-FO, Gt, monthly) and temperature (summer air temperature). The IMBIE ice mass variables cover only Greenland and Antarctica. Always add this caveat to a Himalayan ice result: GRACE sees about 300 km detail and the arc is about that wide, so groundwater loss in the plains of northern India and Pakistan leaks into the signal; treat the trend as an upper bound on glacier loss, not glacier ice alone. A good comparison: ice_mass_grace in himalaya against greenland or antarctica. Plain English for students; short replies; never use tables (use short sentences or a simple list).`
 
 type Shown = { role: 'user' | 'assistant' | 'status' | 'error'; text: string }
@@ -143,10 +143,16 @@ export default function AssistantPanel({ open, onClose, className }: { open: boo
     if (!text.trim() || busy) return
     setInput('')
     setShown((s) => [...s, { role: 'user', text: display ?? text }])
+    const turnStart = history.current.length
     history.current.push({ role: 'user', content: text })
-    // Keep the request small (free tier: 8,000 tokens a minute): the last 14 messages, never starting on a tool reply.
+    // Keep each request small (Groq free tier: about 8,000 tokens a minute, and every round re-sends the
+    // conversation): the last 14 messages, never starting on a tool reply, and tool outputs from earlier
+    // questions replaced by a stub (the model calls the tool again if it needs them).
     const trimmed = () => {
-      let h = history.current.slice(-14)
+      const start = Math.max(0, history.current.length - 14)
+      let h = history.current
+        .slice(start)
+        .map((m, i): ChatMessage => (m.role === 'tool' && start + i < turnStart ? { ...m, content: '[earlier tool output omitted; call the tool again if needed]' } : m))
       while (h.length && h[0].role === 'tool') h = h.slice(1)
       return h
     }
@@ -164,7 +170,7 @@ export default function AssistantPanel({ open, onClose, className }: { open: boo
         if (reply.content?.trim()) setShown((s) => [...s, { role: 'assistant', text: reply.content!.trim() }])
         for (const call of reply.tool_calls) {
           const result = await runTool(call.function.name, call.function.arguments, (st) => setShown((s) => [...s, { role: 'status', text: st }]))
-          history.current.push({ role: 'tool', tool_call_id: call.id, content: JSON.stringify(result).slice(0, 6000) })
+          history.current.push({ role: 'tool', tool_call_id: call.id, name: call.function.name, content: JSON.stringify(result).slice(0, 6000) })
         }
       }
     } catch (e) {
@@ -181,7 +187,14 @@ export default function AssistantPanel({ open, onClose, className }: { open: boo
   useEffect(() => {
     if (!open || !aiRequest || busy) return
     useAppStore.getState().setAiRequest(null)
-    void sendRef.current(aiRequest, 'AI summary of this result')
+    // The request is about the result on screen: send the result along, so the model answers in one round
+    // instead of spending a second request (and its tokens) on get_result.
+    void resultSummary().then((res) =>
+      sendRef.current(
+        `${aiRequest}\n\nThe result (get_result output, already fetched for you; do not call get_result again):\n${JSON.stringify(res)}`,
+        'AI summary of this result',
+      ),
+    )
   }, [open, aiRequest, busy])
 
   function update(c: Partial<LlmConfig>) {
