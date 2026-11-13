@@ -6,6 +6,7 @@
   --glass-radius: 18px;
   --glass-tint: rgba(12, 16, 24, 0.62);
   --glass-tint-strong: rgba(12, 16, 24, 0.78);
+  --glass-tint-sidebar: rgba(12, 16, 24, 0.86); /* left + right drawers: a little less see-through (boss, 2026-11-13) */
   --glass-border-color: rgba(255, 255, 255, 0.12);
   --glass-solid: rgb(14, 18, 27);
   --glass-gap: 12px;
@@ -29,6 +30,15 @@
   pointer-events: auto;
 }
 
+@utility glass-sidebar {
+  background: var(--glass-tint-sidebar);
+  border: 1px solid var(--glass-border-color);
+  border-radius: var(--glass-radius);
+  backdrop-filter: blur(var(--glass-blur)) saturate(120%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(120%);
+  pointer-events: auto;
+}
+
 @utility overlay-root {
   position: fixed;
   inset: 0;
@@ -39,6 +49,7 @@
   :root {
     --glass-tint: var(--glass-solid);
     --glass-tint-strong: var(--glass-solid);
+    --glass-tint-sidebar: var(--glass-solid);
   }
 }
 
@@ -46,5 +57,6 @@
 :root[data-glass='solid'] {
   --glass-tint: var(--glass-solid);
   --glass-tint-strong: var(--glass-solid);
+  --glass-tint-sidebar: var(--glass-solid);
   --glass-blur: 0px;
 }

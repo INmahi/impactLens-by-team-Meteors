@@ -43,7 +43,7 @@ export default function LeftDrawer({ className, onCollapse }: { className?: stri
   const { data: regions } = useRegionsData()
 
   return (
-    <section aria-label="Analysis inputs" className={cn('glass-strong flex w-80 flex-col overflow-hidden', className)}>
+    <section aria-label="Analysis inputs" className={cn('glass-sidebar flex w-80 flex-col overflow-hidden', className)}>
       <header className="flex items-center justify-between gap-2 px-4 pt-3 pb-2">
         <h2 className="text-sm font-semibold tracking-wide text-white">Analyse a trend</h2>
         {onCollapse && (

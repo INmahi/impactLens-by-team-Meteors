@@ -35,7 +35,7 @@ export default function RightDrawer({
 
   const iconBtn = 'rounded-md px-2 py-0.5 text-base font-semibold text-white/90 hover:bg-white/10'
   return (
-    <section aria-label="Results" aria-busy={status === 'running'} className={cn('glass-strong flex w-full flex-col overflow-hidden text-white', className)}>
+    <section aria-label="Results" aria-busy={status === 'running'} className={cn('glass-sidebar flex w-full flex-col overflow-hidden text-white', className)}>
       <header className="flex items-center justify-between gap-2 px-4 pt-3 pb-2">
         <h2 className="text-sm font-semibold tracking-wide">Results</h2>
         <span className="flex items-center gap-1">
