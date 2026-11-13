@@ -83,15 +83,18 @@ def read_native(raw: Path) -> dict[str, Any]:
         unc = (ds["uncertainty"].transpose("time", "lat", "lon").values.astype(np.float64)
                if "uncertainty" in ds.variables else None)
         land = ds["land_mask"].transpose("lat", "lon").values
+        mascon = ds["mascon_ID"].transpose("lat", "lon").values if "mascon_ID" in ds.variables else None
         tb = ds["time_bounds"].values
     # Orientation: row 0 = north, columns from -180.
     if lat[0] < lat[-1]:
         lwe, land, lat = lwe[:, ::-1, :], land[::-1, :], lat[::-1]
+        mascon = mascon[::-1, :] if mascon is not None else None
         unc = unc[:, ::-1, :] if unc is not None else None
     shift = int(np.argmin(np.abs(((lon + 180) % 360) - 180 - (-179.75))))
     lwe = np.roll(lwe, -shift, axis=2)
     unc = np.roll(unc, -shift, axis=2) if unc is not None else None
     land = np.roll(land, -shift, axis=1)
+    mascon = np.roll(mascon, -shift, axis=1) if mascon is not None else None
     lon = ((np.roll(lon, -shift) + 180) % 360) - 180
     for a in (lwe, unc):
         if a is not None:
@@ -115,7 +118,7 @@ def read_native(raw: Path) -> dict[str, Any]:
         keep.append(i)
     keep.sort(key=lambda i: months[i])
     return {"months": [months[i] for i in keep], "lwe": lwe[keep], "unc": unc[keep] if unc is not None else None,
-            "land": land, "lat": lat, "lon": lon, "warnings": warnings}
+            "land": land, "mascon": mascon, "lat": lat, "lon": lon, "warnings": warnings}
 
 
 def read_grace(raw: Path) -> tuple[list[str], np.ndarray, list[str], list[str]]:
@@ -136,8 +139,8 @@ R_EARTH_M = 6_371_008.8
 
 def region_mass(raw: Path, parts: Any) -> tuple[list[str], list[float | None], list[float | None], int]:
     """Mass change in Gt over the 0.5-degree cells whose centre is inside the outline: sum of water-equivalent
-    thickness x cell area (1 cm of water over 1 m2 = 10 kg). 1-sigma = the same sum of the per-cell uncertainty
-    (errors treated as fully correlated over the region, the cautious choice). Every month from the first to the
+    thickness x cell area (1 cm of water over 1 m2 = 10 kg). 1-sigma: the per-cell uncertainty summed within each
+    mascon (fully correlated there) and combined in quadrature between mascons (independent). Every month from the first to the
     last solution; months without a solution stay None. Returns (months, Gt, sigma Gt, cells)."""
     import math
 
@@ -149,6 +152,7 @@ def region_mass(raw: Path, parts: Any) -> tuple[list[str], list[float | None], l
     if not mask.any():
         raise IngestError("no GRACE cell centre falls inside the region outline")
     area_m2 = grid.weights[mask] * (R_EARTH_M**2) * math.radians(0.5)
+    mascon_ids = grid.apply(nat["mascon"])[mask] if nat.get("mascon") is not None else None
     by_month: dict[str, tuple[float, float | None]] = {}
     for i, m in enumerate(nat["months"]):
         v = grid.apply(nat["lwe"][i])[mask]
@@ -160,7 +164,16 @@ def region_mass(raw: Path, parts: Any) -> tuple[list[str], list[float | None], l
         if nat["unc"] is not None:
             u = grid.apply(nat["unc"][i])[mask]
             okc = np.isfinite(u)
-            sig = float((u[okc] * area_m2[okc]).sum() * 10.0 / 1e12) if okc.any() else None
+            if okc.any():
+                part = u * area_m2 * 10.0 / 1e12  # Gt per cell
+                if mascon_ids is not None:
+                    # Errors are shared within a mascon (~300 km block) and independent between mascons.
+                    per = {}
+                    for mid, val in zip(mascon_ids[okc], part[okc]):
+                        per[mid] = per.get(mid, 0.0) + float(val)
+                    sig = float(math.sqrt(sum(x * x for x in per.values())))
+                else:
+                    sig = float(part[okc].sum())
         by_month[m] = (gt, sig)
     months = _months(min(by_month), max(by_month))
     return (months, [by_month[m][0] if m in by_month else None for m in months],
@@ -173,7 +186,8 @@ MASS_SOURCE = {
         "Downloaded the global monthly mascon grid unchanged.",
         "Mass change = sum over the 0.5-degree cells whose centre lies inside the region outline of water-equivalent "
         "thickness x cell area (1 cm of water on 1 m2 = 10 kg), in Gt, relative to the source's 2004.0-2009.999 mean.",
-        "1-sigma = the same sum of the source's per-cell uncertainty (errors treated as fully correlated, cautious).",
+        "1-sigma = the source's per-cell uncertainty summed within each ~300 km mascon and combined as independent "
+        "errors between mascons.",
         "Months with no solution (including the 2017-2018 mission gap) stay as gaps, never interpolated.",
     ],
 }
