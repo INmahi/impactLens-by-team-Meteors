@@ -3,44 +3,72 @@
 // each map layer (from its manifest) and the NASA base map. Real/synthetic status, source, version, DOI,
 // licence, download date, years per region, full citation and the processing steps. Nothing is hard-coded
 // about a dataset here: it is all read from the data files.
-import { useEffect, useState } from 'react'
-import type { Manifest, Region, Source, Variable } from '@trend/contract'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { getManifest, GIBS_CREDIT } from '@/globe'
-import { loadConfig } from '@/assistant/llm'
-import { formatStep, useRegionsData, useVariablesData } from '@/lib/useData'
-import { cn } from 'cn'
+import { loadConfig } from "@/assistant/llm";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { getManifest, GIBS_CREDIT } from "@/globe";
+import { formatStep, useRegionsData, useVariablesData } from "@/lib/useData";
+import type { Manifest, Region, Source, Variable } from "@trend/contract";
+import { cn } from "cn";
+import { Info } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const PROMISES = [
-  'Real data from NASA archives (PO.DAAC, NSIDC, GES DISC) and the NASA- and ESA-supported IMBIE assessment; the version, DOI and download date of every dataset are listed below.',
-  'Nothing is padded, gap-filled or extrapolated by us. Missing months stay as gaps and are counted in every result.',
+  "Real data from NASA archives (PO.DAAC, NSIDC, GES DISC) and the NASA- and ESA-supported IMBIE assessment; the version, DOI and download date of every dataset are listed below.",
+  "Nothing is padded, gap-filled or extrapolated by us. Missing months stay as gaps and are counted in every result.",
   'Every trend comes with its 95% interval and a p-value. A result that is not significant reads "cannot tell yet", never "no change".',
-  'A trend says what changed, not why. Two series moving together are never presented as cause and effect.',
-  'Regional sea level is an average over an open-sea area, never the value at a town; land sinking is not included and the app says so.',
-  'The statistics run in your browser from the files listed here. You can download every chart.',
-]
+  "A trend says what changed, not why. Two series moving together are never presented as cause and effect.",
+  "Regional sea level is an average over an open-sea area, never the value at a town; land sinking is not included and the app says so.",
+  "The statistics run in your browser from the files listed here. You can download every chart.",
+];
 
 function link(s: Source): string {
-  return s.doi ? `https://doi.org/${s.doi}` : s.url
+  return s.doi ? `https://doi.org/${s.doi}` : s.url;
 }
 
 function Status({ synthetic }: { synthetic: boolean }) {
   return (
     <span
       className={cn(
-        'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold',
-        synthetic ? 'bg-amber-300 text-slate-950' : 'bg-emerald-300 text-slate-950',
+        "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold",
+        synthetic
+          ? "bg-amber-300 text-slate-950"
+          : "bg-emerald-300 text-slate-950",
       )}
     >
-      {synthetic ? 'Synthetic test data' : 'Real observations'}
+      {synthetic ? "Synthetic test data" : "Real observations"}
     </span>
-  )
+  );
 }
 
-function SourceBlock({ title, source, synthetic, extra }: { title: string; source: Source; synthetic: boolean; extra?: React.ReactNode }) {
+function SourceBlock({
+  title,
+  source,
+  synthetic,
+  extra,
+}: {
+  title: string;
+  source: Source;
+  synthetic: boolean;
+  extra?: React.ReactNode;
+}) {
   return (
-    <article className={cn('rounded-xl border p-3', synthetic ? 'border-amber-300/50 bg-amber-300/10' : 'border-emerald-300/40 bg-emerald-300/[0.07]')}>
+    <article
+      className={cn(
+        "rounded-xl border p-3",
+        synthetic
+          ? "border-amber-300/50 bg-amber-300/10"
+          : "border-emerald-300/40 bg-emerald-300/[0.07]",
+      )}
+    >
       <header className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-white">{title}</h3>
         <Status synthetic={synthetic} />
@@ -48,7 +76,12 @@ function SourceBlock({ title, source, synthetic, extra }: { title: string; sourc
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[12.5px] leading-snug text-white/90">
         <dt className="text-white/75">Source</dt>
         <dd>
-          <a href={link(source)} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+          <a
+            href={link(source)}
+            target="_blank"
+            rel="noreferrer"
+            className="underline underline-offset-2"
+          >
             {source.name}
           </a>
           {source.version && `, version ${source.version}`}
@@ -64,7 +97,7 @@ function SourceBlock({ title, source, synthetic, extra }: { title: string; sourc
             <dt className="text-white/75">Access</dt>
             <dd>
               {source.accessed && `Downloaded ${source.accessed}`}
-              {source.accessed && source.licence && '; '}
+              {source.accessed && source.licence && "; "}
               {source.licence}
             </dd>
           </>
@@ -72,7 +105,9 @@ function SourceBlock({ title, source, synthetic, extra }: { title: string; sourc
         {extra}
       </dl>
       <details className="mt-1.5">
-        <summary className="cursor-pointer text-[12px] text-white/85">Citation and processing</summary>
+        <summary className="cursor-pointer text-[12px] text-white/85">
+          Citation and processing
+        </summary>
         <p className="mt-1 text-[12px] text-white/90">{source.citation}</p>
         {source.processing?.length ? (
           <ol className="mt-1 flex list-decimal flex-col gap-0.5 pl-4 text-[12px] text-white/90">
@@ -83,7 +118,7 @@ function SourceBlock({ title, source, synthetic, extra }: { title: string; sourc
         ) : null}
       </details>
     </article>
-  )
+  );
 }
 
 function Coverage({ v, regions }: { v: Variable; regions: Region[] }) {
@@ -92,60 +127,95 @@ function Coverage({ v, regions }: { v: Variable; regions: Region[] }) {
       <dt className="text-white/75">Records</dt>
       <dd>
         {v.regions.map((id) => {
-          const [a, b] = v.periods[id]
+          const [a, b] = v.periods[id];
           return (
             <span key={id} className="mr-2 inline-block tabular-nums">
-              {regions.find((r) => r.id === id)?.name ?? id}: {formatStep(a)} – {formatStep(b)}
+              {regions.find((r) => r.id === id)?.name ?? id}: {formatStep(a)} –{" "}
+              {formatStep(b)}
             </span>
-          )
+          );
         })}
       </dd>
     </>
-  )
+  );
 }
 
-export default function DataSourcesDialog({ compact = false }: { compact?: boolean }) {
-  const [open, setOpen] = useState(false)
-  const { data: variables } = useVariablesData()
-  const { data: regions } = useRegionsData()
-  const [layers, setLayers] = useState<Manifest[]>([])
+export default function DataSourcesDialog({
+  compact = false,
+}: {
+  compact?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const { data: variables } = useVariablesData();
+  const { data: regions } = useRegionsData();
+  const [layers, setLayers] = useState<Manifest[]>([]);
 
   useEffect(() => {
-    if (!open || !variables) return
-    const ids = [...new Set(variables.map((v) => v.mapMode).filter((x): x is string => !!x))]
-    Promise.all(ids.map((id) => getManifest(id).catch(() => null))).then((ms) => setLayers(ms.filter((m): m is Manifest => !!m)))
-  }, [open, variables])
+    if (!open || !variables) return;
+    const ids = [
+      ...new Set(
+        variables.map((v) => v.mapMode).filter((x): x is string => !!x),
+      ),
+    ];
+    Promise.all(ids.map((id) => getManifest(id).catch(() => null))).then((ms) =>
+      setLayers(ms.filter((m): m is Manifest => !!m)),
+    );
+  }, [open, variables]);
 
-  const anySynthetic = !!variables?.some((v) => v.synthetic) || layers.some((m) => m.synthetic)
+  const anySynthetic =
+    !!variables?.some((v) => v.synthetic) || layers.some((m) => m.synthetic);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
-        render={
-          <button
-            type="button"
-            className={cn(
-              'glass pointer-events-auto flex items-center gap-1.5 font-medium text-white hover:bg-white/10',
-              compact ? 'px-2.5 py-1.5 text-xs' : 'px-3 py-1.5 text-sm',
-            )}
-          />
-        }
+        type="button"
+        className={cn(
+          "glass pointer-events-auto group relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 text-white transition-[width,background-color] duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none hover:bg-white/10 focus-visible:bg-white/10",
+          compact ? "h-8 w-8" : "h-9 w-9",
+          "hover:w-32 focus-visible:w-32",
+        )}
+        aria-label="Open data sources and honesty"
+        title="Data Sources"
       >
-        <span aria-hidden className={cn('size-2 rounded-full', anySynthetic ? 'bg-amber-300' : 'bg-emerald-300')} />
-        Data sources
+        <span
+          className={cn(
+            "pointer-events-none absolute left-1/2 flex -translate-x-1/2 items-center justify-center text-white/95 transition-[left,transform] duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none group-hover:left-3 group-hover:translate-x-0 group-focus-visible:left-3 group-focus-visible:translate-x-0",
+          )}
+        >
+          <Info
+            className={cn("shrink-0", compact ? "size-3.5" : "size-4")}
+            aria-hidden
+          />
+        </span>
+        <span
+          className={cn(
+            "pointer-events-none absolute left-9 top-1/2 -translate-y-1/2 translate-x-1 whitespace-nowrap text-white opacity-0 transition-[transform,opacity] duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100",
+            compact ? "text-[10.5px]" : "text-xs",
+          )}
+        >
+          Data Sources
+        </span>
       </DialogTrigger>
       <DialogContent className="glass-strong no-scrollbar max-h-[90dvh] overflow-y-auto border-0 text-white sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-base text-white">Data sources and honesty</DialogTitle>
+          <DialogTitle className="text-base text-white">
+            Data sources and honesty
+          </DialogTitle>
           <DialogDescription className="text-[13px] text-white/85">
             {anySynthetic
-              ? 'Some data below is synthetic test data (marked in amber). Results from it are not findings.'
-              : 'Every dataset below is real data: NASA archives plus the NASA- and ESA-supported IMBIE assessment.'}
+              ? "Some data below is synthetic test data (marked in amber). Results from it are not findings."
+              : "Every dataset below is real data: NASA archives plus the NASA- and ESA-supported IMBIE assessment."}
           </DialogDescription>
         </DialogHeader>
 
-        <section aria-labelledby="ds-promises" className="rounded-xl border-2 border-emerald-300/60 bg-emerald-300/10 p-3">
-          <h3 id="ds-promises" className="mb-1 text-xs font-semibold tracking-wide uppercase">
+        <section
+          aria-labelledby="ds-promises"
+          className="rounded-xl border-2 border-emerald-300/60 bg-emerald-300/10 p-3"
+        >
+          <h3
+            id="ds-promises"
+            className="mb-1 text-xs font-semibold tracking-wide uppercase"
+          >
             Our data honesty promises
           </h3>
           <ul className="flex list-disc flex-col gap-1 pl-4 text-[13px] leading-snug text-white/90">
@@ -155,18 +225,28 @@ export default function DataSourcesDialog({ compact = false }: { compact?: boole
           </ul>
         </section>
 
-        <h3 className="mt-1 text-xs font-semibold tracking-wide text-white/90 uppercase">Variables (what the trend tests use)</h3>
+        <h3 className="mt-1 text-xs font-semibold tracking-wide text-white/90 uppercase">
+          Variables (what the trend tests use)
+        </h3>
         <div className="flex flex-col gap-2">
           {variables && regions
             ? variables.map((v) => (
-                <SourceBlock key={v.id} title={v.name} source={v.source} synthetic={v.synthetic} extra={<Coverage v={v} regions={regions} />} />
+                <SourceBlock
+                  key={v.id}
+                  title={v.name}
+                  source={v.source}
+                  synthetic={v.synthetic}
+                  extra={<Coverage v={v} regions={regions} />}
+                />
               ))
-            : 'Loading…'}
+            : "Loading…"}
         </div>
 
         {layers.length > 0 && (
           <>
-            <h3 className="mt-1 text-xs font-semibold tracking-wide text-white/90 uppercase">Globe map layers</h3>
+            <h3 className="mt-1 text-xs font-semibold tracking-wide text-white/90 uppercase">
+              Globe map layers
+            </h3>
             <div className="flex flex-col gap-2">
               {layers.map((m) =>
                 m.source ? (
@@ -179,8 +259,14 @@ export default function DataSourcesDialog({ compact = false }: { compact?: boole
                       <>
                         <dt className="text-white/75">Frames</dt>
                         <dd className="tabular-nums">
-                          {m.frames.length} months, {formatStep(m.frames[0]?.date ?? '')} – {formatStep(m.frames[m.frames.length - 1]?.date ?? '')}
-                          {m.missing.length ? `; ${m.missing.length} months without data shown as gaps` : ''}
+                          {m.frames.length} months,{" "}
+                          {formatStep(m.frames[0]?.date ?? "")} –{" "}
+                          {formatStep(
+                            m.frames[m.frames.length - 1]?.date ?? "",
+                          )}
+                          {m.missing.length
+                            ? `; ${m.missing.length} months without data shown as gaps`
+                            : ""}
                         </dd>
                       </>
                     }
@@ -191,38 +277,61 @@ export default function DataSourcesDialog({ compact = false }: { compact?: boole
           </>
         )}
 
-        <h3 className="mt-1 text-xs font-semibold tracking-wide text-white/90 uppercase">Base map</h3>
+        <h3 className="mt-1 text-xs font-semibold tracking-wide text-white/90 uppercase">
+          Base map
+        </h3>
         <p className="text-[12.5px] text-white/90">
-          {GIBS_CREDIT}. Served by NASA&apos;s Global Imagery Browse Services; a copy of the coarser zoom levels is stored with the app
-          so the globe works offline. Background imagery only: no analysis uses it.
+          {GIBS_CREDIT}. Served by NASA&apos;s Global Imagery Browse Services; a
+          copy of the coarser zoom levels is stored with the app so the globe
+          works offline. Background imagery only: no analysis uses it.
         </p>
 
-        <h3 className="mt-1 text-xs font-semibold tracking-wide text-white/90 uppercase">AI assistant (the only online feature)</h3>
+        <h3 className="mt-1 text-xs font-semibold tracking-wide text-white/90 uppercase">
+          AI assistant (the only online feature)
+        </h3>
         <p className="text-[12.5px] text-white/90">
-          The &quot;Ask AI&quot; chat uses a large language model ({loadConfig().model}, by default the open-weights gpt-oss-120b served by
-          Groq; OpenRouter or another endpoint can be chosen in its settings). It can only list the app&apos;s variables and regions, set
-          the analysis inputs, press Run analysis, and read the result summary the app produced. It never computes statistics: every
-          number it quotes comes from the app&apos;s own engine, which runs in your browser. What it sends to the AI service: your chat
-          messages, the list of variables and regions, and the result summary. No other data, and no personal data, is sent. AI answers
-          can be wrong; the results panel is the reference.
+          The &quot;Ask AI&quot; chat uses a large language model (
+          {loadConfig().model}, by default the open-weights gpt-oss-120b served
+          by Groq; OpenRouter or another endpoint can be chosen in its
+          settings). It can only list the app&apos;s variables and regions, set
+          the analysis inputs, press Run analysis, and read the result summary
+          the app produced. It never computes statistics: every number it quotes
+          comes from the app&apos;s own engine, which runs in your browser. What
+          it sends to the AI service: your chat messages, the list of variables
+          and regions, and the result summary. No other data, and no personal
+          data, is sent. AI answers can be wrong; the results panel is the
+          reference.
         </p>
 
-        <h3 className="mt-1 text-xs font-semibold tracking-wide text-white/90 uppercase">Region borders</h3>
+        <h3 className="mt-1 text-xs font-semibold tracking-wide text-white/90 uppercase">
+          Region borders
+        </h3>
         <p className="text-[12.5px] text-white/90">
-          Bangladesh, its 8 divisions and 64 districts come from the Bangladesh Bureau of Statistics (via OCHA and{' '}
-          <a href="https://www.geoboundaries.org/" target="_blank" rel="noreferrer" className="underline underline-offset-2">
+          Bangladesh, its 8 divisions and 64 districts come from the Bangladesh
+          Bureau of Statistics (via OCHA and{" "}
+          <a
+            href="https://www.geoboundaries.org/"
+            target="_blank"
+            rel="noreferrer"
+            className="underline underline-offset-2"
+          >
             geoBoundaries
           </a>
-          , 2020, CC BY 3.0 IGO), simplified to about 1 km with shared borders kept identical; divisions and the country are
-          the union of their districts. Ice-sheet and coastal-sea outlines are drawn by this project for averaging.
+          , 2020, CC BY 3.0 IGO), simplified to about 1 km with shared borders
+          kept identical; divisions and the country are the union of their
+          districts. Ice-sheet and coastal-sea outlines are drawn by this
+          project for averaging.
         </p>
 
         <DialogFooter>
-          <Button onClick={() => setOpen(false)} className="bg-sky-300 text-slate-950 hover:bg-sky-200">
+          <Button
+            onClick={() => setOpen(false)}
+            className="bg-sky-300 text-slate-950 hover:bg-sky-200"
+          >
             Close
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

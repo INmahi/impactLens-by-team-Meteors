@@ -8,7 +8,7 @@ import { ChevronDown, EyeOff, Info } from 'lucide-react'
 import { cn } from 'cn'
 import { useAppStore } from '@/state/store'
 import { modeLabel } from './mapModes'
-import { iconFor, useGridManifests, yearSpan } from './MapModeTray'
+import { iconFor, useGridManifests } from './MapModeTray'
 import { useMapModes, useVariables, useVariableWithoutMap } from './useLayerInfo'
 
 export default function MapModeMenu({
@@ -50,10 +50,9 @@ export default function MapModeMenu({
     ...modes.map((m) => ({
       value: m.id as string | null,
       label: modeLabel(variables, m, manifests.get(m.id)),
-      span: yearSpan(m, manifests.get(m.id)),
       Icon: iconFor(m, manifests.get(m.id)),
     })),
-    { value: null as string | null, label: 'No map layer', span: null, Icon: EyeOff },
+    { value: null as string | null, label: 'No map layer', Icon: EyeOff },
   ]
   const current = noMap ? options[options.length - 1] : (options.find((o) => o.value === selected) ?? options[options.length - 1])
   const menuId = `${id}-menu`
@@ -105,7 +104,7 @@ export default function MapModeMenu({
           open ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-1 opacity-0',
         )}
       >
-        <div className="glass-strong flex w-72 flex-col gap-1 p-1.5 text-sm">
+        <div className="glass-strong flex w-60 flex-col gap-1 p-1.5 text-sm">
           <fieldset data-testid="map-mode-picker" disabled={!!noMap} className="m-0 flex min-w-0 flex-col gap-0.5 border-0 p-0">
             <legend className="mb-1 px-2 pt-1 text-xs font-semibold uppercase tracking-wide text-white/70">Map layer</legend>
             {options.map((o) => {
@@ -114,7 +113,7 @@ export default function MapModeMenu({
                 <label
                   key={o.value ?? '__none'}
                   className={cn(
-                    'flex cursor-pointer items-center gap-2.5 rounded-xl px-2 py-1.5 text-white/90',
+                    'flex cursor-pointer items-center gap-2 rounded-xl px-1.5 py-1 text-white/90',
                     'has-focus-visible:outline-2 has-focus-visible:outline-offset-1 has-focus-visible:outline-ring',
                     checked ? 'bg-sky-300 text-slate-950' : 'hover:bg-white/10',
                     noMap && 'cursor-not-allowed opacity-50 hover:bg-transparent',
@@ -130,9 +129,8 @@ export default function MapModeMenu({
                       setMapLayer(o.value)
                     }}
                   />
-                  <o.Icon className="size-4 shrink-0" aria-hidden />
-                  <span className="min-w-0 flex-1 leading-tight">{o.label}</span>
-                  {o.span && <span className={cn('shrink-0 text-xs tabular-nums', checked ? 'text-slate-900/80' : 'text-white/65')}>{o.span}</span>}
+                  <o.Icon className="size-3.5 shrink-0" aria-hidden />
+                  <span className="min-w-0 flex-1 text-[0.78rem] leading-tight">{o.label}</span>
                 </label>
               )
             })}
@@ -143,7 +141,7 @@ export default function MapModeMenu({
             type="button"
             aria-pressed={legendOpen}
             onClick={onToggleLegend}
-            className={cn('flex items-center gap-2.5 rounded-xl px-2 py-1.5 text-left text-white/90 hover:bg-white/10', legendOpen && 'text-white')}
+            className={cn('flex items-center gap-2 rounded-xl px-1.5 py-1 text-left text-[0.78rem] text-white/90 hover:bg-white/10', legendOpen && 'text-white')}
           >
             <Info className="size-4 shrink-0" aria-hidden />
             <span className="flex-1">{legendOpen ? 'Hide map legend' : 'Show map legend'}</span>

@@ -151,7 +151,7 @@
   {
     "id": "ice_extent",
     "group": "ice",
-    "name": "Ice extent",
+    "name": "Ice Extent",
     "units": "km2",
     "kind": "level",
     "frequency": "monthly",

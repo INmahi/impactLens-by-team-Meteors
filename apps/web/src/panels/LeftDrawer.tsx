@@ -201,7 +201,7 @@ function Inputs({ variables, regions }: { variables: Variable[]; regions: Region
   let n = 0
   return (
     <>
-      <div className="px-4 pb-2">
+      <div className="shrink-0 px-4 pb-2">
         <button
           type="button"
           role="switch"
@@ -229,7 +229,7 @@ function Inputs({ variables, regions }: { variables: Variable[]; regions: Region
         </button>
       </div>
 
-      <div className="no-scrollbar flex min-h-0 flex-col gap-2 overflow-y-auto overscroll-contain px-4 pb-3">
+      <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-4 pb-3">
         <Step n={++n} title="Variable" summary={variable?.name} done={!!variable} open={open.has('variable')} onToggle={() => toggle('variable')}>
           <VariablePicker variables={variables} selected={variableId} onSelect={chooseVariable} />
         </Step>
@@ -266,7 +266,7 @@ function Inputs({ variables, regions }: { variables: Variable[]; regions: Region
         </Step>
       </div>
 
-      <div className="border-t border-white/10 px-4 pt-3 pb-4">
+      <div className="mt-auto shrink-0 border-t border-white/10 px-4 pt-3 pb-4">
         {hasRecord ? <RunAnalysis variable={variable!} regionId={regionId!} blocked={blocked} /> : <p className="text-xs text-white/80">{blocked}</p>}
       </div>
     </>
