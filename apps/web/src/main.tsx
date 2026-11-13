@@ -20,7 +20,7 @@ function hideSplash() {
     el.classList.add('splash-out')
     const remove = () => el.remove()
     el.addEventListener('transitionend', remove, { once: true })
-    setTimeout(remove, 1500) // reduced motion: no transition event
+    setTimeout(remove, 2400) // reduced motion: no transition event
   }, wait)
 }
 if (document.readyState === 'complete') hideSplash()
