@@ -128,8 +128,8 @@ function trendLine(p: Pts, slopePerYear: number): [number, number][] {
   })
   if (!res.length) return []
   const b = median(res)
-  const ends = [p.dates[0], p.dates[p.dates.length - 1]]
-  return ends.map((d) => [toTime(d), b + slopePerYear * toYear(d)])
+  // A point at every date (not just the ends) so the line survives zooming into a window.
+  return p.dates.map((d) => [toTime(d), b + slopePerYear * toYear(d)])
 }
 
 const pair = (dates: string[], vals: (number | null)[]) => dates.map((d, i) => [toTime(d), vals[i]] as [number, number | null])
@@ -229,13 +229,13 @@ export function buildChart(input: ChartInput): ChartOutput {
   })
   if (showTrend) {
     const tl = trendLine(pts, report.slope.perYear)
-    if (tl.length) seriesList.push({ name: "Trend (Sen's slope)", type: 'line', data: tl, symbol: 'none', lineStyle: { width: 2.2, color: '#fbbf24', type: 'solid' } })
+    if (tl.length) seriesList.push({ name: "Trend (Sen's slope)", type: 'line', data: tl, symbol: 'none', lineStyle: { width: 2.2, color: '#fbbf24', type: 'solid' }, itemStyle: { color: '#fbbf24' } })
   }
   // Global mean alongside a coastal sea (series view only): compare trends, not levels.
   if (reference && (type === 'series' || type === 'anomaly')) {
     const ref0 = slice(reference.series, start, end)
     const ref = type === 'anomaly' ? removeSeasonal(ref0) : ref0
-    seriesList.push({ name: reference.region.name, type: 'line', data: pair(ref.dates, ref.values), symbol: 'none', lineStyle: { width: 1.2, color: '#cbd5e1', type: 'dashed' } })
+    seriesList.push({ name: reference.region.name, type: 'line', data: pair(ref.dates, ref.values), symbol: 'none', lineStyle: { width: 1.2, color: '#cbd5e1', type: 'dashed' }, itemStyle: { color: '#cbd5e1' } })
   }
   // Marks at joins between sources (segments after the first, inside the range).
   const joins = (series.segments ?? []).slice(1).map((s) => s.start).filter((d) => inRange(d, start, end))

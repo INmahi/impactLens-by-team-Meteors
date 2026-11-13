@@ -3,7 +3,7 @@
 // renderer). Exports carry the source line and the SYNTHETIC label drawn in the chart.
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { BarChart, LineChart } from 'echarts/charts'
-import { GraphicComponent, GridComponent, LegendComponent, MarkLineComponent, TitleComponent, TooltipComponent } from 'echarts/components'
+import { DataZoomInsideComponent, DataZoomSliderComponent, GraphicComponent, GridComponent, LegendComponent, MarkLineComponent, TitleComponent, TooltipComponent } from 'echarts/components'
 import * as echarts from 'echarts/core'
 import { CanvasRenderer, SVGRenderer } from 'echarts/renderers'
 import type { Region, Series, Variable } from '@trend/contract'
@@ -12,7 +12,7 @@ import { useAppStore, type AnalysisResult } from '@/state/store'
 import { cn } from 'cn'
 import { buildChart, buildCompareChart, buildTogetherChart, CHART_LABELS } from './buildChart'
 
-echarts.use([LineChart, BarChart, GridComponent, TooltipComponent, LegendComponent, TitleComponent, MarkLineComponent, GraphicComponent, CanvasRenderer, SVGRenderer])
+echarts.use([LineChart, BarChart, DataZoomInsideComponent, DataZoomSliderComponent, GridComponent, TooltipComponent, LegendComponent, TitleComponent, MarkLineComponent, GraphicComponent, CanvasRenderer, SVGRenderer])
 
 // The link must be in the document and the blob URL must outlive a "Save as" prompt; revoking it
 // early makes some browsers save the file under the blob's UUID with no extension.
@@ -100,6 +100,7 @@ function ChartBody({ a, v, r, regions, variables }: { a: AnalysisResult; v: Vari
   const [seriesB, setSeriesB] = useState<Series | null>(null)
   const [extraSeries, setExtraSeries] = useState<{ variable: Variable; series: Series }[]>([])
   const el = useRef<HTMLDivElement | null>(null)
+  const [zoomed, setZoomed] = useState(false)
   const chart = useRef<echarts.ECharts | null>(null)
 
   // Data: the analysed series, plus the global mean of the same variable for a coastal sea.
@@ -143,8 +144,15 @@ function ChartBody({ a, v, r, regions, variables }: { a: AnalysisResult; v: Vari
       chart.current.dispose()
       chart.current = null
     }
-    chart.current ??= echarts.init(el.current, null, { renderer: 'canvas' })
-    chart.current.setOption(out.option, true)
+    if (!chart.current) {
+      chart.current = echarts.init(el.current, null, { renderer: 'canvas' })
+      chart.current.on('datazoom', () => {
+        const dz = currentWindow(chart.current)
+        setZoomed(!!dz)
+      })
+    }
+    chart.current.setOption(withZoom(out.option), true)
+    setZoomed(false)
     const ro = new ResizeObserver(() => chart.current?.resize())
     ro.observe(el.current)
     return () => ro.disconnect()
@@ -159,17 +167,34 @@ function ChartBody({ a, v, r, regions, variables }: { a: AnalysisResult; v: Vari
 
   const fileBase = `trend-detective_${v.id}_${r.id}_${a.start}_${a.end}_${type}`
 
+  // Exports show what is on screen (the zoomed window, y rescaled) but without the zoom slider.
+  function exportOption(): echarts.EChartsCoreOption {
+    const win = currentWindow(chart.current)
+    if (!win) return out!.option!
+    // Say which years the zoomed picture shows; the trend numbers in the subtitle stay for the analysed range.
+    const o = out!.option as Record<string, unknown>
+    const t = (Array.isArray(o.title) ? o.title[0] : o.title) as Record<string, unknown> | undefined
+    const yr = (x: number) => new Date(x).getUTCFullYear()
+    const title = t ? { ...t, subtext: `${t.subtext ?? ''}   ·   Showing ${yr(win.startValue)} to ${yr(win.endValue)}` } : o.title
+    return { ...o, title, dataZoom: [{ type: 'inside', xAxisIndex: 0, filterMode: 'filter', ...win }] }
+  }
   function savePng() {
-    if (!chart.current) return
-    const url = chart.current.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#0b1220' })
+    if (!out?.option || !el.current) return
+    const w = el.current.clientWidth || 900
+    const h = el.current.clientHeight || 320
+    const div = document.createElement('div')
+    const pngChart = echarts.init(div, null, { renderer: 'canvas', width: w, height: h - ZOOM_EXTRA })
+    pngChart.setOption({ ...exportOption(), animation: false })
+    const url = pngChart.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#0b1220' })
+    pngChart.dispose()
     download(`${fileBase}.png`, dataUrlToBlob(url))
   }
   function saveSvg() {
     if (!out?.option || !el.current) return
     const w = el.current.clientWidth || 900
     const h = el.current.clientHeight || 320
-    const svgChart = echarts.init(null, null, { renderer: 'svg', ssr: true, width: w, height: h })
-    svgChart.setOption(out.option)
+    const svgChart = echarts.init(null, null, { renderer: 'svg', ssr: true, width: w, height: h - ZOOM_EXTRA })
+    svgChart.setOption(exportOption())
     const svg = svgChart.renderToSVGString()
     download(`${fileBase}.svg`, svg.startsWith('<?xml') ? svg : `<?xml version="1.0" encoding="UTF-8"?>
 ${svg}`, 'image/svg+xml')
@@ -196,7 +221,16 @@ ${svg}`, 'image/svg+xml')
             </button>
           ))}
         </div>
-        <div className="flex gap-1" aria-label="Downloads">
+        <div className="flex items-center gap-1" aria-label="Zoom and downloads">
+          <span className="hidden text-[11px] text-white/75 sm:inline">Scroll to zoom, drag to pan</span>
+          <button
+            type="button"
+            disabled={!zoomed}
+            onClick={() => chart.current?.dispatchAction({ type: 'dataZoom', start: 0, end: 100 })}
+            className="rounded-md border border-white/20 px-2 py-1 text-xs text-white hover:bg-white/10 disabled:opacity-40"
+          >
+            Reset zoom
+          </button>
           {(['PNG', 'SVG'] as const).map((k) => (
             <button
               key={k}
@@ -214,8 +248,52 @@ ${svg}`, 'image/svg+xml')
       {out?.message ? (
         <p className="rounded-lg border border-white/10 p-3 text-sm text-white/90">{out.message}</p>
       ) : (
-        <div ref={el} role="img" aria-label={`${out?.title ?? 'Chart'}: ${CHART_LABELS[type] ?? type}`} className="h-72 w-full" />
+        <div ref={el} role="img" aria-label={`${out?.title ?? 'Chart'}: ${CHART_LABELS[type] ?? type}`} className="h-80 w-full" />
       )}
     </div>
   )
+}
+
+/** Extra height the live chart gives the zoom slider (exports leave it out). */
+const ZOOM_EXTRA = 36
+
+/** Live chart only: wheel/pinch zoom and drag-to-pan on the time axis, plus a slider under the legend.
+ *  filterMode 'filter' drops points outside the window, so the y-axis rescales to what is visible. */
+function withZoom(option: echarts.EChartsCoreOption | undefined): echarts.EChartsCoreOption {
+  const o = (option ?? {}) as Record<string, unknown>
+  const grid = (o.grid ?? {}) as Record<string, unknown>
+  const legend = (o.legend ?? {}) as Record<string, unknown>
+  return {
+    ...o,
+    grid: { ...grid, bottom: ((grid.bottom as number) ?? 64) + ZOOM_EXTRA },
+    legend: { ...legend, bottom: ((legend.bottom as number) ?? 26) + ZOOM_EXTRA },
+    dataZoom: [
+      { type: 'inside', xAxisIndex: 0, filterMode: 'filter', zoomOnMouseWheel: true, moveOnMouseMove: true, moveOnMouseWheel: false, minSpan: 2 },
+      {
+        type: 'slider',
+        xAxisIndex: 0,
+        filterMode: 'filter',
+        height: 16,
+        bottom: 30,
+        left: 64,
+        right: 44,
+        borderColor: 'rgba(255,255,255,0.25)',
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        fillerColor: 'rgba(125,211,252,0.25)',
+        dataBackground: { lineStyle: { color: 'rgba(255,255,255,0.4)' }, areaStyle: { color: 'rgba(255,255,255,0.08)' } },
+        handleStyle: { color: '#7dd3fc', borderColor: '#0b1220' },
+        moveHandleStyle: { color: 'rgba(125,211,252,0.6)' },
+        textStyle: { color: '#e2e8f0', fontSize: 10 },
+        labelFormatter: (value: number) => new Date(value).getUTCFullYear().toString(),
+        brushSelect: false,
+      },
+    ],
+  }
+}
+
+/** The zoom window of the live chart as axis values, or null when showing the full range. */
+function currentWindow(c: echarts.ECharts | null): { startValue: number; endValue: number } | null {
+  const dz = (c?.getOption() as { dataZoom?: { start?: number; end?: number; startValue?: number; endValue?: number }[] } | undefined)?.dataZoom?.[0]
+  if (!dz || ((dz.start ?? 0) <= 0.01 && (dz.end ?? 100) >= 99.99)) return null
+  return dz.startValue != null && dz.endValue != null ? { startValue: dz.startValue, endValue: dz.endValue } : null
 }
