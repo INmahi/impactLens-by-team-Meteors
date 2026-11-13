@@ -57,7 +57,7 @@ export default function DataSourceCard({ a, v, variables }: { a: AnalysisResult;
       aria-labelledby="res-source"
       className={cn(
         'rounded-xl border-2 p-3',
-        synthetic ? 'border-amber-300/70 bg-amber-300/10' : 'border-emerald-300/60 bg-emerald-300/10',
+        synthetic ? 'border-white/20 bg-white/[0.05]' : 'border-emerald-300/60 bg-emerald-300/10',
       )}
     >
       <h3 id="res-source" className="mb-1.5 flex flex-wrap items-center gap-1.5 text-xs font-semibold tracking-wide uppercase">
@@ -65,19 +65,12 @@ export default function DataSourceCard({ a, v, variables }: { a: AnalysisResult;
         <span
           className={cn(
             'rounded-full px-2 py-0.5 text-[11px] font-semibold tracking-normal normal-case',
-            synthetic ? 'bg-amber-300 text-slate-950' : 'bg-emerald-300 text-slate-950',
+            synthetic ? 'bg-white/15 text-white' : 'bg-emerald-300 text-slate-950',
           )}
         >
-          {synthetic ? 'Synthetic test data' : 'Real observations'}
+          {synthetic ? 'Test data' : 'Real observations'}
         </span>
       </h3>
-
-      {synthetic && (
-        <p className="mb-2 rounded-lg bg-amber-300/15 px-2 py-1.5 text-[12.5px] leading-snug text-amber-50">
-          These values were generated to test the app, shaped like the real dataset. They are not observations, so these
-          results are not scientific findings.
-        </p>
-      )}
 
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[12.5px] leading-snug">
         <dt className="text-white/80">Dataset</dt>

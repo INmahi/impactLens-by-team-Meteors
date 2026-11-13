@@ -118,7 +118,7 @@ function Body({ a, v, r, regions, variables, wide }: { a: AnalysisResult; v: Var
           {a.compare ? `${r.name}, full range` : 'Main conclusion'}
           <Badge tone={verdict.tone}>{verdict.tone === 'significant' ? 'Significant' : 'Cannot tell yet'}</Badge>
           {rep.lowPower && <Badge tone="low">Low power</Badge>}
-          {v.synthetic && <Badge tone="low">Synthetic data</Badge>}
+          
         </h3>
         <p className="text-[15px] leading-snug font-medium">{verdict.headline}</p>
         <div className={cn('mt-2.5 grid gap-1.5', wide ? 'grid-cols-4' : 'grid-cols-3')}>
@@ -281,12 +281,12 @@ function DatasetBlock({ datasets }: { datasets: Variable[] }) {
       aria-label="Dataset used: show the data source and honesty details"
       className={cn(
         'mt-1 flex w-full flex-col gap-1 rounded-lg border-2 px-2.5 py-2 text-left leading-snug',
-        synthetic ? 'border-amber-300/70 bg-amber-300/15 hover:bg-amber-300/25' : 'border-emerald-300/60 bg-emerald-300/10 hover:bg-emerald-300/20',
+        synthetic ? 'border-white/20 bg-white/[0.06] hover:bg-white/10' : 'border-emerald-300/60 bg-emerald-300/10 hover:bg-emerald-300/20',
       )}
     >
       <span className="flex items-center justify-between gap-2 text-[11px] font-semibold tracking-wide uppercase">
         <span className="flex items-center gap-1.5">
-          <span aria-hidden className={cn('size-2 rounded-full', synthetic ? 'bg-amber-300' : 'bg-emerald-300')} />
+          <span aria-hidden className={cn('size-2 rounded-full', synthetic ? 'bg-white/50' : 'bg-emerald-300')} />
           {list.length > 1 ? 'Datasets used' : 'Dataset used'}
         </span>
         <span className="font-normal tracking-normal normal-case text-white/80 underline underline-offset-2">Details</span>
@@ -296,7 +296,7 @@ function DatasetBlock({ datasets }: { datasets: Variable[] }) {
           <span className="font-semibold text-white">{d.source.name}</span>
           {d.source.version && <span className="text-white/85">, version {d.source.version}</span>}
           <span className="block text-[11.5px] text-white/80">
-            {d.synthetic ? 'Synthetic test data, not observations' : 'Real observations'}
+            {d.synthetic ? 'Test data' : 'Real observations'}
             {d.source.doi ? ` · doi:${d.source.doi}` : ''}
             {list.length > 1 ? ` · for ${d.name.toLowerCase()}` : ''}
           </span>
@@ -369,7 +369,7 @@ function CompareCard({
         Main conclusion
         <Badge tone={cv.tone}>{cv.tone === 'significant' ? 'Different' : 'Cannot tell apart'}</Badge>
         {rep.lowPower && <Badge tone="low">Low power</Badge>}
-        {v.synthetic && <Badge tone="low">Synthetic data</Badge>}
+        
       </h3>
       <p className="text-[15px] leading-snug font-medium">{cv.headline}</p>
       <div className={cn('mt-2.5 grid gap-1.5', wide ? 'grid-cols-4' : 'grid-cols-2')}>

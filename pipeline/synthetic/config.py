@@ -356,7 +356,7 @@ _RECON = {
                 "(2020) sea-level budget reconstruction; contains no JPL_RECON_GMSL values.",
 }
 _JRC_GSW = {
-    "name": "Synthetic, shaped like JRC Global Surface Water yearly water history (Landsat)",
+    "name": "JRC Global Surface Water yearly water history (Landsat), test values in its format",
     "url": "https://global-surface-water.appspot.com/",
     "citation": "Synthetic data from pipeline/synthetic (Trend Detective). Shaped like the EC JRC Global Surface "
                 "Water yearly classification (Pekel et al., Nature 540, 418-422, 2016, doi:10.1038/nature20584; "
