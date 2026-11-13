@@ -8,6 +8,7 @@ import type { Manifest, Region, Source, Variable } from '@trend/contract'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { getManifest, GIBS_CREDIT } from '@/globe'
+import { loadConfig } from '@/assistant/llm'
 import { formatStep, useRegionsData, useVariablesData } from '@/lib/useData'
 import { cn } from 'cn'
 
@@ -194,6 +195,26 @@ export default function DataSourcesDialog({ compact = false }: { compact?: boole
         <p className="text-[12.5px] text-white/90">
           {GIBS_CREDIT}. Served by NASA&apos;s Global Imagery Browse Services; a copy of the coarser zoom levels is stored with the app
           so the globe works offline. Background imagery only: no analysis uses it.
+        </p>
+
+        <h3 className="mt-1 text-xs font-semibold tracking-wide text-white/90 uppercase">AI assistant (the only online feature)</h3>
+        <p className="text-[12.5px] text-white/90">
+          The &quot;Ask AI&quot; chat uses a large language model ({loadConfig().model}, by default the open-weights gpt-oss-120b served by
+          Groq; OpenRouter or another endpoint can be chosen in its settings). It can only list the app&apos;s variables and regions, set
+          the analysis inputs, press Run analysis, and read the result summary the app produced. It never computes statistics: every
+          number it quotes comes from the app&apos;s own engine, which runs in your browser. What it sends to the AI service: your chat
+          messages, the list of variables and regions, and the result summary. No other data, and no personal data, is sent. AI answers
+          can be wrong; the results panel is the reference.
+        </p>
+
+        <h3 className="mt-1 text-xs font-semibold tracking-wide text-white/90 uppercase">Region borders</h3>
+        <p className="text-[12.5px] text-white/90">
+          The Bangladesh border comes from{' '}
+          <a href="https://www.naturalearthdata.com/" target="_blank" rel="noreferrer" className="underline underline-offset-2">
+            Natural Earth
+          </a>{' '}
+          (1:50m admin 0 countries, public domain), simplified to about 2 km. Ice-sheet and coastal-sea outlines are drawn by this
+          project for averaging; they are shown on the globe and described in each region&apos;s notes.
         </p>
 
         <DialogFooter>

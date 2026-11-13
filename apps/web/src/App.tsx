@@ -9,6 +9,7 @@ import { Globe, GlobeControls, SyntheticWatermark, useActiveMode } from '@/globe
 import { usePhone } from '@/lib/useMedia'
 import { useRegionsData } from '@/lib/useData'
 import LeftDrawer from '@/panels/LeftDrawer'
+import AssistantPanel from '@/assistant/AssistantPanel'
 import DataSourcesDialog from '@/panels/DataSourcesDialog'
 import MapPanel from '@/panels/MapPanel'
 import RightDrawer from '@/panels/RightDrawer'
@@ -62,10 +63,30 @@ function ReopenTab({ side, label, show, onClick }: { side: 'left' | 'right'; lab
   )
 }
 
+/** Header button that opens the AI assistant (the app's only online feature). */
+function AskAiButton({ open, onClick, compact = false }: { open: boolean; onClick: () => void; compact?: boolean }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={open}
+      onClick={onClick}
+      className={cn(
+        'glass pointer-events-auto flex items-center gap-1.5 font-medium text-white hover:bg-white/10',
+        compact ? 'px-2.5 py-1.5 text-xs' : 'px-3 py-1.5 text-sm',
+        open && 'ring-2 ring-sky-300/70',
+      )}
+    >
+      <span aria-hidden>✦</span>
+      Ask AI
+    </button>
+  )
+}
+
 function DesktopOverlay() {
   // Side drawers run full height and slide out sideways; the scroller and chart drawer sit between
   // them and widen (animated) when a drawer is closed.
   const [leftOpen, setLeftOpen] = useState(true)
+  const [aiOpen, setAiOpen] = useState(false)
   const [rightOpen, setRightOpen] = useState(true)
   const analysis = useAppStore((s) => s.analysis)
   const status = useAppStore((s) => s.analysisStatus)
@@ -83,6 +104,7 @@ function DesktopOverlay() {
       <header className="absolute left-3 top-3 flex items-center gap-3">
         <h1 className="glass pointer-events-auto px-3 py-1.5 text-base font-semibold">Trend Detective</h1>
         <DataSourcesDialog />
+        <AskAiButton open={aiOpen} onClick={() => setAiOpen((x) => !x)} />
         <RegionChip />
       </header>
       <SyntheticWatermark className="absolute left-1/2 top-3 -translate-x-1/2" />
@@ -94,6 +116,8 @@ function DesktopOverlay() {
         <LeftDrawer className="max-h-full" onCollapse={() => setLeftOpen(false)} />
       </div>
       <ReopenTab side="left" label="Show analysis inputs" show={!leftOpen} onClick={() => setLeftOpen(true)} />
+      {/* AI assistant: opens over the left panel so the results stay visible on the right. */}
+      <AssistantPanel open={aiOpen} onClose={() => setAiOpen(false)} className="absolute bottom-3 left-3 top-16 z-20 w-[24rem]" />
 
       <div
         className="absolute bottom-3 right-3 top-3 flex max-w-[calc(100vw-1.5rem)] flex-col items-end gap-3 transition-[width] duration-300 ease-out motion-reduce:transition-none"
@@ -132,6 +156,7 @@ type Sheet = 'inputs' | 'results' | 'charts' | 'map' | null
 
 function PhoneOverlay() {
   const [sheet, setSheet] = useState<Sheet>('inputs')
+  const [aiOpen, setAiOpen] = useState(false)
   const analysis = useAppStore((s) => s.analysis)
   const hasTimeline = useActiveMode() != null
   // A new result opens the results sheet.
@@ -151,7 +176,7 @@ function PhoneOverlay() {
       <header className="absolute inset-x-2 top-[max(0.5rem,env(safe-area-inset-top))] flex items-center gap-2">
         <h1 className="glass pointer-events-auto shrink-0 px-3 py-1.5 text-sm font-semibold">Trend Detective</h1>
         <DataSourcesDialog compact />
-        <RegionChip />
+        <AskAiButton compact open={aiOpen} onClick={() => setAiOpen((x) => !x)} />
       </header>
       <div className="pointer-events-auto absolute right-2 top-[calc(max(0.5rem,env(safe-area-inset-top))+2.75rem)]">
         <GlobeControls />
@@ -174,6 +199,11 @@ function PhoneOverlay() {
         )}
       </div>
 
+      <AssistantPanel
+        open={aiOpen}
+        onClose={() => setAiOpen(false)}
+        className="absolute inset-x-2 top-[calc(max(0.5rem,env(safe-area-inset-top))+2.75rem)] bottom-[calc(3.75rem+env(safe-area-inset-bottom))] z-20"
+      />
       <nav
         aria-label="Panels"
         className="glass-strong pointer-events-auto absolute inset-x-2 bottom-[max(0.5rem,env(safe-area-inset-bottom))] flex gap-1 p-1"

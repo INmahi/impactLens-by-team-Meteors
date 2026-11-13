@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import DescribeDialog from '@/panels/DescribeDialog'
 import { mapModeForVariable, mapModes } from '@/globe'
-import { runStats, runTrend } from '@/lib/stats'
-import { dateSteps, formatStep, getSeriesCached, spanYears, useRegionsData, useVariablesData } from '@/lib/useData'
+import { runAnalysisFromStore } from '@/lib/runAnalysis'
+import { dateSteps, formatStep, spanYears, useRegionsData, useVariablesData } from '@/lib/useData'
 import { useAppStore } from '@/state/store'
 import { cn } from 'cn'
 
@@ -21,9 +21,10 @@ const KIND_LABEL: Record<string, string> = {
   ice_sheet_basin: 'Ice sheet basins',
   glacier_region: 'Glacier regions',
   coastal_sea: 'Coastal seas',
+  country: 'Countries',
   global: 'Global',
 }
-const KIND_ORDER = ['global', 'ice_sheet', 'ice_sheet_basin', 'glacier_region', 'coastal_sea']
+const KIND_ORDER = ['global', 'country', 'ice_sheet', 'ice_sheet_basin', 'glacier_region', 'coastal_sea']
 
 /** Group headings for variables that share `group` (contract `group` ids). */
 function groupLabel(group: string): string {
@@ -520,67 +521,14 @@ function RunAnalysis({ variable, regionId, blocked }: { variable: Variable; regi
   const error = useAppStore((s) => s.analysisError)
   const rangeStart = useAppStore((s) => s.rangeStart)
   const rangeEnd = useAppStore((s) => s.rangeEnd)
-  const running = useAppStore.getState
-  const [recStart, recEnd] = variable.periods[regionId]
 
   // Drop a stale error when the inputs change.
   useEffect(() => {
     if (useAppStore.getState().analysisStatus === 'error') useAppStore.setState({ analysisStatus: 'idle', analysisError: null })
   }, [variable.id, regionId, rangeStart, rangeEnd])
 
-  async function run() {
-    const s = running()
-    s.setAnalysisRunning()
-    const start = rangeStart ?? recStart
-    const end = rangeEnd ?? recEnd
-    const { compareMode, compareRegion, compareVariables } = useAppStore.getState()
-    try {
-      const series = await getSeriesCached(variable.id, regionId)
-      const asInput = (x: typeof series) => ({ dates: x.dates, values: x.values, frequency: x.frequency, kind: x.kind })
-      const input = { ...asInput(series), start, end }
-      const report = await runTrend(input)
-
-      // Compare two regions: difference of trends on the common period (paired bootstrap).
-      let compare: { region: string; report: Awaited<ReturnType<typeof runStats<'compare'>>> } | null = null
-      if (compareMode === 'regions' && compareRegion && compareRegion !== regionId && variable.regions.includes(compareRegion)) {
-        const b = await getSeriesCached(variable.id, compareRegion)
-        compare = { region: compareRegion, report: await runStats('compare', { a: asInput(series), b: asInput(b), start, end }) }
-      }
-
-      // More variables in the same region: each one's trend, and its correlation with the main variable.
-      const extras: { variable: string; report: Awaited<ReturnType<typeof runTrend>>; correlation: Awaited<ReturnType<typeof runStats<'correlate'>>> | null }[] = []
-      if (compareMode === 'variables') {
-        for (const id of compareVariables) {
-          const other = await getSeriesCached(id, regionId).catch(() => null)
-          if (!other) continue
-          const rep = await runTrend({ ...asInput(other), start, end }).catch(() => null)
-          if (!rep) continue
-          const correlation = await runStats('correlate', { x: asInput(series), y: asInput(other), start, end }).catch(() => null)
-          extras.push({ variable: id, report: rep, correlation })
-        }
-      }
-
-      // Show the result now; the slow extras ("years needed" when not significant, and the Monte Carlo of the
-      // source's stated uncertainty, ~4 s for 600 points) fill in when ready. They are queued after the
-      // compare / correlation jobs, because the worker runs one job at a time.
-      const sigma = series.sigma
-      const wantDetect = !report.test.significant
-      const wantUnc = !!sigma && sigma.some((x) => x != null)
-      const pending = [...(wantDetect ? (['detect'] as const) : []), ...(wantUnc ? (['uncertainty'] as const) : [])]
-      useAppStore.getState().setAnalysisDone({ variable: variable.id, region: regionId, start, end, report, detect: null, uncertainty: null, compare, extras, pending })
-      const st = useAppStore.getState()
-      if (wantDetect)
-        runStats('detectability', input)
-          .catch(() => null)
-          .then((detect) => st.patchAnalysis(report, { detect }, 'detect'))
-      if (wantUnc)
-        runStats('uncertainty', { ...input, sigma: sigma! })
-          .catch(() => null)
-          .then((uncertainty) => st.patchAnalysis(report, { uncertainty }, 'uncertainty'))
-    } catch (e) {
-      useAppStore.getState().setAnalysisError(e instanceof Error ? e.message : String(e))
-    }
-  }
+  // Same action as the AI assistant's run_analysis tool (lib/runAnalysis.ts).
+  const run = () => void runAnalysisFromStore()
 
   return (
     <div className="flex flex-col gap-2">

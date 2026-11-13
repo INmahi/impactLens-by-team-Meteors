@@ -23,6 +23,8 @@ import math
 from dataclasses import dataclass, field
 from typing import Any
 
+from .bangladesh import BANGLADESH
+
 DEFAULT_SEED = 20261112
 
 Ring = list[tuple[float, float]]  # closed or open lon/lat ring; the writer closes it
@@ -156,7 +158,7 @@ class RegionSpec:
     id: str
     name: str
     parent: str | None
-    kind: str  # ice_sheet | ice_sheet_basin | glacier_region | coastal_sea | global
+    kind: str  # ice_sheet | ice_sheet_basin | glacier_region | coastal_sea | country | global
     bbox: tuple[float, float, float, float]
     camera: dict[str, float]
     # None for kind "global"; one ring for a Polygon; a list of rings for a MultiPolygon.
@@ -210,6 +212,10 @@ REGIONS: list[RegionSpec] = [
     RegionSpec("antarctica_peninsula", "Antarctic Peninsula", "antarctica", "ice_sheet_basin", (-76, -75, -55, -63),
                _cam(-63, -68, 2_500_000), ANTARCTICA_PENINSULA),
     RegionSpec("global", "Global", None, "global", (-180, -90, 180, 90), _cam(0, 20, 20_000_000), None),
+    # Bangladesh (M12): country outline from Natural Earth (public domain), see bangladesh.py.
+    RegionSpec("bangladesh", "Bangladesh", None, "country", (88.0, 20.7, 92.7, 26.7), _cam(90.3, 23.6, 1_600_000),
+               BANGLADESH,
+               ("A mean over the whole country inside its border (Natural Earth outline); not the value at any district.",)),
     # Coastal seas: sea_level only (contract: kind coastal_sea).
     _sea("bay_of_bengal", "Bay of Bengal (northern)", BAY_OF_BENGAL,
          "A mean over the open northern Bay, about 100 km from the coast; not the value at any town.",
@@ -318,6 +324,13 @@ _RECON = {
     "citation": "Synthetic data from pipeline/synthetic (Trend Detective). Shaped like the Frederikse et al. "
                 "(2020) sea-level budget reconstruction; contains no JPL_RECON_GMSL values.",
 }
+_IMERG = {
+    "name": "Synthetic, shaped like NASA GPM IMERG monthly precipitation",
+    "url": "https://disc.gsfc.nasa.gov/datasets/GPM_3IMERGM_07/summary",
+    "citation": "Synthetic data from pipeline/synthetic (Trend Detective). Shaped like GPM IMERG monthly "
+                "precipitation; contains no IMERG values.",
+}
+
 _GRACE = {
     "name": "Synthetic, shaped like GRACE/GRACE-FO JPL mascons RL06.3",
     "url": "https://podaac.jpl.nasa.gov/dataset/TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4",
@@ -482,6 +495,33 @@ VARIABLES: list[VariableSpec] = [
             "antarctica": SeriesSpec("1900", "2018", slope=-10.0, ar1=0.5, noise_sd=300.0, bounds=(1800.0, 300.0),
                                      decimals=0),
         },
+    ),
+    # ---- Bangladesh (M12). Synthetic placeholders; `ingest grace` / `ingest imerg` replace them with real data.
+    VariableSpec(
+        id="water_storage", group="bangladesh", name="Water storage", units="cm w.e.", kind="level",
+        frequency="monthly", map_mode="ice_mass_map", chart_types=["series", "anomaly", "annual_change"],
+        source=_GRACE, segment_source="Synthetic (GRACE-like)",
+        describe={"what": "All the water stored over Bangladesh, in soil, rivers, wetlands and underground, weighed "
+                          "from space by the GRACE satellites; mostly groundwater.",
+                  "whyItMatters": "Groundwater supplies most drinking water and dry-season irrigation; a falling "
+                                  "trend means more is pumped out than refills."},
+        notes=[SYNTH_NOTE, "Water-equivalent thickness in cm relative to the 2004-2009 average.",
+               "GRACE resolution is about 300 km, so Bangladesh is covered by only a few independent cells."],
+        series={"bangladesh": SeriesSpec("2002-04", "2026-09", slope=-0.6, ar1=0.6, noise_sd=2.0,
+                                         seasonal_amp=30.0, sigma=(3.0, 2.5), gaps=6, decimals=2)},
+    ),
+    VariableSpec(
+        id="monsoon_rainfall", group="bangladesh", name="Monsoon rainfall", units="mm", kind="level",
+        frequency="annual", map_mode=None, chart_types=["series", "anomaly"], baseline=("2001", "2020"),
+        source=_IMERG, segment_source="Synthetic (IMERG-like)",
+        describe={"what": "Total rain over Bangladesh in the monsoon months, June to September, from NASA's GPM "
+                          "satellites (IMERG).",
+                  "whyItMatters": "The monsoon brings most of the year's rain: too much floods rivers and fields, "
+                                  "too little harms the rice harvest."},
+        notes=[SYNTH_NOTE, "June-September total, averaged over the country.",
+               "Rain varies a lot from year to year, so a trend needs many years to detect."],
+        series={"bangladesh": SeriesSpec("2000", "2025", slope=0.0, ar1=0.1, noise_sd=220.0, start_value=1650.0,
+                                         decimals=0)},
     ),
 ]
 

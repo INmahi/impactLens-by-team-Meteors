@@ -60,6 +60,7 @@ const STYLE: Record<Role, LineStyle> = {
  *  read as sea areas, not land. Hover, compare and selected look the same for every kind. */
 const BASE_BY_KIND: Partial<Record<RegionKind, LineStyle>> = {
   coastal_sea: { ...STYLE.base, color: Color.fromCssColorString('#93c5fd').withAlpha(0.7), width: 1.5 },
+  country: { ...STYLE.base, color: Color.fromCssColorString('#86efac').withAlpha(0.8), width: 1.5 },
 }
 
 function styleFor(role: Role, kind: RegionKind | undefined): LineStyle {

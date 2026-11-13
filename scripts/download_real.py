@@ -28,30 +28,39 @@ DATASETS: dict[str, tuple[str, Path, str | None]] = {
     "itslive": ("NSIDC-0793", RAW / "itslive", r"\.nc$"),  # skip the MP4 animations
     # MERRA-2 monthly: only T2M is fetched through NASA's OPeNDAP service (~0.5 MB a month, not 50-75 MB).
     "merra2": ("M2TMNXSLV", RAW / "merra2", None),
+    # GPM IMERG monthly V07 (M12): only precipitation over a box around Bangladesh, via OPeNDAP (~30 KB a month).
+    "imerg": ("GPM_3IMERGM", RAW / "imerg", None),
 }
+# IMERG 0.1-degree grid: lon index (lon + 179.95) / 0.1, lat index (lat + 89.95) / 0.1; dims (time, lon, lat).
+# Box 87.95-92.95 E, 20.45-26.85 N covers Bangladesh (Natural Earth bounds 88.02-92.63 E, 20.79-26.57 N).
+IMERG_VARS = "dap4.ce=/Grid/precipitation[0:1:0][2679:1:2729][1104:1:1168];/Grid/lat[1104:1:1168];/Grid/lon[2679:1:2729];/Grid/time"
 MERRA2_VERSION = "5.12.4"
 MERRA2_VARS = "dap4.ce=/T2M;/lat;/lon;/time"
 
 
-def download_merra2(earthaccess, folder: Path, limit: int | None, threads: int) -> int:
-    """One T2M-only netCDF-4 per month via OPeNDAP (the granule's own OPENDAP link). Skips files on disk."""
+def download_merra2(earthaccess, folder: Path, limit: int | None, threads: int,
+                    short: str = "M2TMNXSLV", version: str = MERRA2_VERSION, ce: str = MERRA2_VARS,
+                    suffix: tuple[str, str] = (".nc4", ".T2M.nc4"), label: str = "merra2") -> int:
+    """One subset netCDF-4 per granule via OPeNDAP (the granule's own OPENDAP link). Skips files on disk.
+    Used for MERRA-2 (T2M only) and IMERG (Bangladesh box only)."""
     from concurrent.futures import ThreadPoolExecutor
 
-    results = earthaccess.search_data(short_name="M2TMNXSLV", version=MERRA2_VERSION)
-    print(f"merra2: M2TMNXSLV {MERRA2_VERSION}: {len(results)} granules", flush=True)
+    results = earthaccess.search_data(short_name=short, version=version)
+    print(f"{label}: {short} {version}: {len(results)} granules", flush=True)
     jobs = []
     for g in results[:limit] if limit else results:
         url = next((u["URL"] for u in g["umm"].get("RelatedUrls", []) if u.get("Subtype") == "OPENDAP DATA"), None)
-        name = g.data_links()[0].rsplit("/", 1)[-1].replace(".nc4", ".T2M.nc4")
+        name = g.data_links()[0].rsplit("/", 1)[-1]
+        name = name[: -len(suffix[0])] + suffix[1] if name.endswith(suffix[0]) else name + suffix[1]
         if url is None:
-            raise SystemExit(f"merra2: no OPeNDAP link for {name}")
-        jobs.append((url + ".dap.nc4?" + MERRA2_VARS, folder / name))
+            raise SystemExit(f"{label}: no OPeNDAP link for {name}")
+        jobs.append((url + ".dap.nc4?" + ce, folder / name))
     folder.mkdir(parents=True, exist_ok=True)
     session = earthaccess.get_requests_https_session()
 
     def fetch(job: tuple[str, Path]) -> str:
         url, out = job
-        if out.exists() and out.stat().st_size > 100_000:
+        if out.exists() and out.stat().st_size > 5_000:
             return "skip"
         for attempt in range(4):
             r = session.get(url, timeout=300)
@@ -64,7 +73,7 @@ def download_merra2(earthaccess, folder: Path, limit: int | None, threads: int) 
 
     with ThreadPoolExecutor(max_workers=threads) as pool:
         done = list(pool.map(fetch, jobs))
-    print(f"merra2: {done.count('ok')} downloaded, {done.count('skip')} already on disk", flush=True)
+    print(f"{label}: {done.count('ok')} downloaded, {done.count('skip')} already on disk", flush=True)
     return len(jobs)
 
 
@@ -105,6 +114,11 @@ def main() -> int:
         short, folder, filt = DATASETS[name]
         if name == "merra2" and not args.list:
             download_merra2(earthaccess, folder, args.limit, args.threads)
+            sha256sums(folder)
+            continue
+        if name == "imerg" and not args.list:
+            download_merra2(earthaccess, folder, args.limit, args.threads, short="GPM_3IMERGM", version="07",
+                            ce=IMERG_VARS, suffix=(".HDF5", ".BD.nc4"), label="imerg")
             sha256sums(folder)
             continue
         results = earthaccess.search_data(short_name=short)

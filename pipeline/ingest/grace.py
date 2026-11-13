@@ -42,6 +42,26 @@ SOURCE = {
 }
 
 
+WATER_SOURCE = {
+    **SOURCE,
+    "processing": [
+        "Downloaded the global monthly mascon grid unchanged.",
+        "Water storage = area-weighted mean of the 0.5-degree cells whose centre lies inside the Bangladesh border "
+        "(Natural Earth), in cm of water relative to the source's 2004.0-2009.999 mean.",
+        "1-sigma = area-weighted mean of the source's per-cell uncertainty (errors assumed fully correlated over "
+        "the country, the cautious choice).",
+        "Months with no solution (including the 2017-2018 mission gap) stay as gaps, never interpolated.",
+    ],
+}
+WATER_NOTES = [
+    "GRACE weighs all water: groundwater, soil moisture, rivers, wetlands and snow; in Bangladesh most of the long-term "
+    "change is groundwater.",
+    "GRACE resolution is about 300 km (mascons), so Bangladesh spans only a few independent cells and some signal "
+    "leaks in from neighbouring India.",
+    "The monsoon fills the country with water every year; the trend is the change in the yearly average level.",
+]
+
+
 def _month(days: float) -> str:
     d = date(2002, 1, 1) + timedelta(days=float(days))
     return f"{d.year:04d}-{d.month:02d}"
@@ -56,8 +76,12 @@ def _months(start: str, end: str) -> list[str]:
     return out
 
 
-def read_grace(raw: Path) -> tuple[list[str], np.ndarray, list[str], list[str]]:
-    """Returns (frame months, frames (n, 180, 360) float32 with NaN off-land, all months, warnings)."""
+def read_native(raw: Path) -> dict[str, Any]:
+    """The 0.5-degree grid as published, oriented row 0 = north, columns from -180, one entry per month kept.
+
+    Keys: months (YYYY-MM, ascending), lwe and unc ((n, 360, 720) cm, NaN where missing; unc None if absent),
+    land (360, 720), lat (360, north first), lon (720, from -179.75), warnings.
+    """
     import xarray as xr
 
     files = sorted(Path(raw).glob(PATTERN))
@@ -76,16 +100,22 @@ def read_grace(raw: Path) -> tuple[list[str], np.ndarray, list[str], list[str]]:
         if lat.shape != (360,) or lon.shape != (720,):
             raise IngestError(f"{files[0].name}: grid {lat.shape}x{lon.shape}, expected 360x720 (0.5 degree)")
         lwe = ds["lwe_thickness"].transpose("time", "lat", "lon").values.astype(np.float64)
+        unc = (ds["uncertainty"].transpose("time", "lat", "lon").values.astype(np.float64)
+               if "uncertainty" in ds.variables else None)
         land = ds["land_mask"].transpose("lat", "lon").values
         tb = ds["time_bounds"].values
     # Orientation: row 0 = north, columns from -180.
     if lat[0] < lat[-1]:
-        lwe = lwe[:, ::-1, :]
-        land = land[::-1, :]
+        lwe, land, lat = lwe[:, ::-1, :], land[::-1, :], lat[::-1]
+        unc = unc[:, ::-1, :] if unc is not None else None
     shift = int(np.argmin(np.abs(((lon + 180) % 360) - 180 - (-179.75))))
     lwe = np.roll(lwe, -shift, axis=2)
+    unc = np.roll(unc, -shift, axis=2) if unc is not None else None
     land = np.roll(land, -shift, axis=1)
-    lwe[~np.isfinite(lwe) | (np.abs(lwe) >= 1e30)] = np.nan
+    lon = ((np.roll(lon, -shift) + 180) % 360) - 180
+    for a in (lwe, unc):
+        if a is not None:
+            a[~np.isfinite(a) | (np.abs(a) >= 1e30)] = np.nan
 
     months = [_month((a + b) / 2) for a, b in tb]
     seen: dict[str, int] = {}
@@ -104,14 +134,52 @@ def read_grace(raw: Path) -> tuple[list[str], np.ndarray, list[str], list[str]]:
         seen[m] = i
         keep.append(i)
     keep.sort(key=lambda i: months[i])
-    n = len(keep)
-    coarse = lwe[keep].reshape(n, 180, 2, 360, 2)
+    return {"months": [months[i] for i in keep], "lwe": lwe[keep], "unc": unc[keep] if unc is not None else None,
+            "land": land, "lat": lat, "lon": lon, "warnings": warnings}
+
+
+def read_grace(raw: Path) -> tuple[list[str], np.ndarray, list[str], list[str]]:
+    """Returns (frame months, frames (n, 180, 360) float32 with NaN off-land, all months, warnings)."""
+    nat = read_native(raw)
+    lwe, land = nat["lwe"], nat["land"]
+    n = len(nat["months"])
     with np.errstate(invalid="ignore"):
-        frames = np.nanmean(coarse, axis=(2, 4))
+        frames = np.nanmean(lwe.reshape(n, 180, 2, 360, 2), axis=(2, 4))
     land_frac = land.reshape(180, 2, 360, 2).mean(axis=(1, 3))
     frames[:, land_frac < 0.5] = np.nan
-    frame_months = [months[i] for i in keep]
-    return frame_months, frames.astype(np.float32), _months(frame_months[0], frame_months[-1]), warnings
+    frame_months = nat["months"]
+    return frame_months, frames.astype(np.float32), _months(frame_months[0], frame_months[-1]), nat["warnings"]
+
+
+def region_series(raw: Path, parts: Any) -> tuple[list[str], list[float | None], list[float | None], int]:
+    """Area-weighted mean of lwe and of its stated 1-sigma over the 0.5-degree cells whose centre is inside the
+    outline, every month from the first to the last solution (missing months stay None). Returns
+    (months, values cm, sigma cm, number of cells)."""
+    from .grid import Grid, polygon_mask
+
+    nat = read_native(raw)
+    grid = Grid(nat["lat"], nat["lon"])
+    mask = polygon_mask(grid, parts)
+    if not mask.any():
+        raise IngestError("no GRACE cell centre falls inside the region outline")
+    w = grid.weights[mask]
+    by_month = {}
+    for i, m in enumerate(nat["months"]):
+        v = grid.apply(nat["lwe"][i])[mask]
+        ok = np.isfinite(v)
+        if not ok.any():
+            continue
+        val = float((v[ok] * w[ok]).sum() / w[ok].sum())
+        sig = None
+        if nat["unc"] is not None:
+            u = grid.apply(nat["unc"][i])[mask]
+            okc = np.isfinite(u)
+            # Mean of the cell sigmas: assumes errors fully correlated across the area (conservative).
+            sig = float((u[okc] * w[okc]).sum() / w[okc].sum()) if okc.any() else None
+        by_month[m] = (val, sig)
+    months = _months(min(by_month), max(by_month))
+    return (months, [by_month[m][0] if m in by_month else None for m in months],
+            [by_month[m][1] if m in by_month else None for m in months], int(mask.sum()))
 
 
 def write_grace_layer(raw: Path, root: Path, accessed: str, log: Any = print) -> dict[str, Any]:

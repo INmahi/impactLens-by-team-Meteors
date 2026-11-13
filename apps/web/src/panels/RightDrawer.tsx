@@ -88,24 +88,9 @@ function Body({ a, v, r, regions, variables, wide }: { a: AnalysisResult; v: Var
             {formatStep(a.start)} – {formatStep(a.end)}
           </Chip>
         </p>
-        {/* Source strip: always at the top of a result; jumps to the full Data source & honesty card. */}
-        <button
-          type="button"
-          onClick={() => document.getElementById('res-source')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-          className={cn(
-            'mt-1 flex w-full items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-[12px] leading-snug',
-            v.synthetic ? 'border-amber-300/70 bg-amber-300/15 hover:bg-amber-300/25' : 'border-emerald-300/60 bg-emerald-300/10 hover:bg-emerald-300/20',
-          )}
-        >
-          <span aria-hidden className={cn('size-2 shrink-0 rounded-full', v.synthetic ? 'bg-amber-300' : 'bg-emerald-300')} />
-          <span className="min-w-0 flex-1">
-            <span className="font-semibold">{v.synthetic ? 'Synthetic test data' : 'Real observations'}</span>
-            {' · Source: '}
-            {v.source.name}
-            {v.source.version ? `, v${v.source.version}` : ''}
-          </span>
-          <span className="shrink-0 text-white/80 underline underline-offset-2">Details</span>
-        </button>
+        {/* Dataset block: always at the top of a result (boss, 2026-11-13). One line per dataset this analysis
+            used (the main variable, plus each extra variable in compare mode); jumps to the honesty card. */}
+        <DatasetBlock datasets={[v, ...a.extras.map((x) => variables.find((y) => y.id === x.variable)).filter((x): x is Variable => !!x)]} />
       </section>
 
       {cmp && rB && <CompareCard v={v} A={r} B={rB} rep={a.compare!.report} cv={cmp} wide={wide} />}
@@ -268,6 +253,43 @@ function Body({ a, v, r, regions, variables, wide }: { a: AnalysisResult; v: Var
         </div>
       </div>
     </>
+  )
+}
+
+function DatasetBlock({ datasets }: { datasets: Variable[] }) {
+  const seen = new Map<string, Variable>()
+  for (const d of datasets) if (!seen.has(d.source.name)) seen.set(d.source.name, d)
+  const list = [...seen.values()]
+  const synthetic = list.some((d) => d.synthetic)
+  return (
+    <button
+      type="button"
+      onClick={() => document.getElementById('res-source')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+      aria-label="Dataset used: show the data source and honesty details"
+      className={cn(
+        'mt-1 flex w-full flex-col gap-1 rounded-lg border-2 px-2.5 py-2 text-left leading-snug',
+        synthetic ? 'border-amber-300/70 bg-amber-300/15 hover:bg-amber-300/25' : 'border-emerald-300/60 bg-emerald-300/10 hover:bg-emerald-300/20',
+      )}
+    >
+      <span className="flex items-center justify-between gap-2 text-[11px] font-semibold tracking-wide uppercase">
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden className={cn('size-2 rounded-full', synthetic ? 'bg-amber-300' : 'bg-emerald-300')} />
+          {list.length > 1 ? 'Datasets used' : 'Dataset used'}
+        </span>
+        <span className="font-normal tracking-normal normal-case text-white/80 underline underline-offset-2">Details</span>
+      </span>
+      {list.map((d) => (
+        <span key={d.source.name} className="block text-[13px]">
+          <span className="font-semibold text-white">{d.source.name}</span>
+          {d.source.version && <span className="text-white/85">, version {d.source.version}</span>}
+          <span className="block text-[11.5px] text-white/80">
+            {d.synthetic ? 'Synthetic test data, not observations' : 'Real observations'}
+            {d.source.doi ? ` · doi:${d.source.doi}` : ''}
+            {list.length > 1 ? ` · for ${d.name.toLowerCase()}` : ''}
+          </span>
+        </span>
+      ))}
+    </button>
   )
 }
 

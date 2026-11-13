@@ -21,6 +21,7 @@ SOURCES = {
     "grace": RAW / "grace",
     "itslive": RAW / "itslive",
     "merra2": RAW / "merra2",
+    "imerg": RAW / "imerg",
 }
 
 
