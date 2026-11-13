@@ -190,6 +190,30 @@ def ingest_sea_level(raw: Path, root: Path, log: Log = print) -> dict[str, Any]:
     return out
 
 
+def ingest_grace(raw: Path, root: Path, log: Log = print) -> dict[str, Any]:
+    """GRACE/GRACE-FO mascons -> the ice_mass_map layer (frames + manifest, synthetic: false)."""
+    from .grace import write_grace_layer
+
+    return write_grace_layer(Path(raw), Path(root), raw_date(Path(raw)), log)
+
+
+def ingest_itslive(raw: Path, root: Path, log: Log = print) -> dict[str, Any]:
+    """ITS_LIVE NSIDC-0793 masks -> ice_extent (greenland, monthly km2) and yearly outlines."""
+    from .itslive import outlines, scan
+
+    out = scan(Path(raw), log)
+    doc = series_doc(variable="ice_extent", region="greenland", units="km2", frequency="monthly", kind="level",
+                     dates=out["labels"], values=[float(a) for a in out["area"]],
+                     segment_source="ITS_LIVE NSIDC-0793 v1, 120 m ice masks (area, map-scale corrected)",
+                     synthetic=False, decimals=0)
+    overlay(Path(root), "ice_extent", [doc], synthetic=False, accessed=raw_date(Path(raw)))
+    W.dump(Path(root) / "ice_extent" / "outlines.topo.json", outlines(out))
+    a = [v for v in doc["values"] if v is not None]
+    log(f"ice_extent: greenland {doc['dates'][0]}..{doc['dates'][-1]}, {len(a)} months, "
+        f"{a[0]:.0f} -> {a[-1]:.0f} km2; months with no terminus observations: {out['no_obs']}")
+    return out
+
+
 def ingest_recon(raw: Path, root: Path, log: Log = print) -> dict[tuple[str, str], dict[str, Any]]:
     """JPL_RECON_GMSL -> sea_level_long (global) and ice_mass_long (greenland, antarctica)."""
     from .recon import read_recon

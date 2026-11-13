@@ -18,6 +18,7 @@ MARKER = "standin.json"
 
 # Real-data source metadata (docs/datasets/*.md). Used when no stand-in marker is present.
 REAL_SOURCES: dict[str, dict[str, Any]] = {
+    "ice_extent": {},  # filled from itslive.py below (one place for its source text)
     "sea_level_long": {
         "source": {
             "name": "JPL_RECON_GMSL v1.0 (PO.DAAC; Frederikse et al. 2020)",
@@ -134,6 +135,15 @@ REAL_SOURCES: dict[str, dict[str, Any]] = {
         ],
     },
 }
+
+
+def _itslive() -> dict[str, Any]:
+    from .itslive import NOTES, SOURCE
+
+    return {"source": SOURCE, "notes": NOTES}
+
+
+REAL_SOURCES["ice_extent"] = _itslive()
 
 
 def read_marker(raw: Path) -> dict[str, Any] | None:

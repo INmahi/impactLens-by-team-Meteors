@@ -36,7 +36,7 @@ def _cmd_build(args: argparse.Namespace) -> int:
 
 
 def _cmd_ingest(args: argparse.Namespace) -> int:
-    from .ingest import IngestError, ingest_imbie, ingest_recon, ingest_sea_level
+    from .ingest import IngestError, ingest_grace, ingest_imbie, ingest_itslive, ingest_recon, ingest_sea_level
     from .writers import BuildError
 
     try:
@@ -44,6 +44,10 @@ def _cmd_ingest(args: argparse.Namespace) -> int:
             ingest_sea_level(args.raw, args.root)
         elif args.dataset == "recon_gmsl":
             ingest_recon(args.raw, args.root)
+        elif args.dataset == "grace":
+            ingest_grace(args.raw, args.root)
+        elif args.dataset == "itslive":
+            ingest_itslive(args.raw, args.root)
         else:
             ingest_imbie(args.raw, args.root)
     except (IngestError, BuildError, FileNotFoundError) as exc:
@@ -102,10 +106,11 @@ def make_parser() -> argparse.ArgumentParser:
     p_build.set_defaults(func=_cmd_build)
 
     p_ing = sub.add_parser("ingest", help="raw downloads (or stand-ins) -> contract files, overlaid on --root")
-    p_ing.add_argument("dataset", choices=["sea_level", "imbie", "recon_gmsl"],
+    p_ing.add_argument("dataset", choices=["sea_level", "imbie", "recon_gmsl", "grace", "itslive"],
                        help="sea_level: NASA-SSH V1.1 weekly grids (+ GMSL indicator cross-check); "
                             "imbie: IMBIE 2026 Gt CSVs -> ice_mass and ice_mass_rate; "
-                            "recon_gmsl: JPL_RECON_GMSL -> sea_level_long and ice_mass_long")
+                            "recon_gmsl: JPL_RECON_GMSL -> sea_level_long and ice_mass_long; "
+                            "grace: JPL mascons -> ice_mass_map layer; itslive: NSIDC-0793 -> ice_extent + outlines")
     p_ing.add_argument("--raw", type=Path, required=True, help="folder with the downloaded files")
     p_ing.add_argument("--root", type=Path, default=DEFAULT_ROOT, help="data tree to update (default: data/public)")
     p_ing.set_defaults(func=_cmd_ingest)

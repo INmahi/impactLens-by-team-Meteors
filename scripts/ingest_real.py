@@ -18,6 +18,8 @@ SOURCES = {
     "imbie": RAW / "imbie",
     "sea_level": RAW / "sea_level",
     "recon_gmsl": RAW / "recon_gmsl",
+    "grace": RAW / "grace",
+    "itslive": RAW / "itslive",
 }
 
 
