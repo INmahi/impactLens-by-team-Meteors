@@ -355,6 +355,13 @@ _RECON = {
     "citation": "Synthetic data from pipeline/synthetic (Trend Detective). Shaped like the Frederikse et al. "
                 "(2020) sea-level budget reconstruction; contains no JPL_RECON_GMSL values.",
 }
+_JRC_GSW = {
+    "name": "Synthetic, shaped like JRC Global Surface Water yearly water history (Landsat)",
+    "url": "https://global-surface-water.appspot.com/",
+    "citation": "Synthetic data from pipeline/synthetic (Trend Detective). Shaped like the EC JRC Global Surface "
+                "Water yearly classification (Pekel et al., Nature 540, 418-422, 2016, doi:10.1038/nature20584; "
+                "Landsat, NASA/USGS); contains no JRC values.",
+}
 _IMERG = {
     "name": "Synthetic, shaped like NASA GPM IMERG monthly precipitation",
     "url": "https://disc.gsfc.nasa.gov/datasets/GPM_3IMERGM_07/summary",
@@ -559,6 +566,31 @@ VARIABLES: list[VariableSpec] = [
                "Rain varies a lot from year to year, so a trend needs many years to detect."],
         series={rid: SeriesSpec("2000", "2025", slope=0.0, ar1=0.1, noise_sd=220.0, start_value=1650.0, decimals=0)
                 for rid in ["bangladesh", *BD_DIVISIONS, *BD_DISTRICTS]},
+    ),
+    # ---- Coastal land turned to permanent water (boss, 2026-11-13). Synthetic in the JRC Global Surface Water
+    # format until the yearly Landsat water history is ingested (several GB of 10x10 deg tiles).
+    VariableSpec(
+        id="land_submerged", group="bangladesh", name="Submerged coastal land", units="km2", kind="cumulative",
+        frequency="annual", map_mode=None, chart_types=["series", "annual_change"],
+        source=_JRC_GSW, segment_source="Synthetic (JRC Global Surface Water-like)",
+        describe={"what": "How much land along the coast has turned into permanent water since 1985, mapped "
+                          "from Landsat satellite images (JRC Global Surface Water).",
+                  "whyItMatters": "Land lost to the sea and rivers means lost fields, homes and mangroves. Rising "
+                                  "seas, erosion and sinking land all push the coast inland."},
+        notes=[SYNTH_NOTE,
+               "Cumulative area (km2) of land that became permanent water since 1985, inside the region.",
+               "Counts every cause of land turning to water: sea level rise, coastal and river-bank erosion, "
+               "sinking land and new ponds. It cannot separate sea level rise from the others.",
+               "Landsat images are sparse before 2000, so some early years are missing."],
+        series={rid: SeriesSpec("1985", "2024", slope=slope, ar1=0.5, noise_sd=slope * 1.6, start_value=0.0,
+                                early_gaps=3, decimals=1)
+                for rid, slope in {
+                    "bangladesh": 9.5, "bd_khulna": 3.4, "bd_barishal": 3.1, "bd_chattogram": 2.6,
+                    "bd_satkhira_district": 1.2, "bd_khulna_district": 0.9, "bd_bagerhat_district": 1.3,
+                    "bd_pirojpur_district": 0.4, "bd_barguna_district": 0.7, "bd_patuakhali_district": 0.9,
+                    "bd_bhola_district": 1.1, "bd_lakshmipur_district": 0.5, "bd_noakhali_district": 0.6,
+                    "bd_feni_district": 0.2, "bd_chattogram_district": 0.8, "bd_cox_s_bazar_district": 0.5,
+                }.items()},
     ),
 ]
 
