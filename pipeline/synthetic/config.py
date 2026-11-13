@@ -23,7 +23,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Any
 
-from .bangladesh import BANGLADESH, BD_DIVISIONS
+from .bangladesh import BANGLADESH, BD_DISTRICTS, BD_DIVISIONS
 
 DEFAULT_SEED = 20261112
 
@@ -158,7 +158,7 @@ class RegionSpec:
     id: str
     name: str
     parent: str | None
-    kind: str  # ice_sheet | ice_sheet_basin | glacier_region | coastal_sea | country | division | global
+    kind: str  # ice_sheet | ice_sheet_basin | glacier_region | coastal_sea | country | division | district | global
     bbox: tuple[float, float, float, float]
     camera: dict[str, float]
     # None for kind "global"; one ring for a Polygon; a list of rings for a MultiPolygon.
@@ -215,13 +215,19 @@ REGIONS: list[RegionSpec] = [
     # Bangladesh (M12): country outline from Natural Earth (public domain), see bangladesh.py.
     RegionSpec("bangladesh", "Bangladesh", None, "country", (88.0, 20.7, 92.7, 26.7), _cam(90.3, 23.6, 1_600_000),
                BANGLADESH,
-               ("A mean over the whole country inside its border (Natural Earth outline); not the value at any district.",)),
+               ("A mean over the whole country inside its border (Bangladesh Bureau of Statistics via geoBoundaries); not the value at any district.",)),
     # The 8 divisions of Bangladesh (M12): geoBoundaries ADM1 (CC0), see bangladesh.py. Monsoon rainfall only
     # (GRACE's ~300 km resolution cannot separate divisions, so water storage stays national).
     *[RegionSpec(rid, name, "bangladesh", "division", bbox,
                  _cam((bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2, 700_000), rings,
-                 (f"A mean over the whole {name} division (geoBoundaries border); not the value at any district or town.",))
+                 (f"A mean over the whole {name} division; not the value at any district or town.",))
       for rid, (name, _iso, bbox, rings) in BD_DIVISIONS.items()],
+    # The 64 districts (parent = their division), same source; monsoon rainfall only.
+    *[RegionSpec(rid, name, div, "district", bbox,
+                 _cam((bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2, 350_000), rings,
+                 (f"A mean over the whole {name} district; not the value at any town. IMERG cells are about 11 km, so a "
+                  "small district averages only a handful of them.",))
+      for rid, (name, div, bbox, rings) in BD_DISTRICTS.items()],
     # Coastal seas: sea_level only (contract: kind coastal_sea).
     _sea("bay_of_bengal", "Bay of Bengal (northern)", BAY_OF_BENGAL,
          "A mean over the open northern Bay, about 100 km from the coast; not the value at any town.",
@@ -524,10 +530,10 @@ VARIABLES: list[VariableSpec] = [
                           "satellites (IMERG).",
                   "whyItMatters": "The monsoon brings most of the year's rain: too much floods rivers and fields, "
                                   "too little harms the rice harvest."},
-        notes=[SYNTH_NOTE, "June-September total, averaged over the country or division.",
+        notes=[SYNTH_NOTE, "June-September total, averaged over the country, division or district.",
                "Rain varies a lot from year to year, so a trend needs many years to detect."],
         series={rid: SeriesSpec("2000", "2025", slope=0.0, ar1=0.1, noise_sd=220.0, start_value=1650.0, decimals=0)
-                for rid in ["bangladesh", *BD_DIVISIONS]},
+                for rid in ["bangladesh", *BD_DIVISIONS, *BD_DISTRICTS]},
     ),
 ]
 

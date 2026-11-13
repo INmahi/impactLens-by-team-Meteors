@@ -209,12 +209,12 @@ export default function DataSourcesDialog({ compact = false }: { compact?: boole
 
         <h3 className="mt-1 text-xs font-semibold tracking-wide text-white/90 uppercase">Region borders</h3>
         <p className="text-[12.5px] text-white/90">
-          The Bangladesh border comes from{' '}
-          <a href="https://www.naturalearthdata.com/" target="_blank" rel="noreferrer" className="underline underline-offset-2">
-            Natural Earth
-          </a>{' '}
-          (1:50m admin 0 countries, public domain), simplified to about 2 km. Ice-sheet and coastal-sea outlines are drawn by this
-          project for averaging; they are shown on the globe and described in each region&apos;s notes.
+          Bangladesh, its 8 divisions and 64 districts come from the Bangladesh Bureau of Statistics (via OCHA and{' '}
+          <a href="https://www.geoboundaries.org/" target="_blank" rel="noreferrer" className="underline underline-offset-2">
+            geoBoundaries
+          </a>
+          , 2020, CC BY 3.0 IGO), simplified to about 1 km with shared borders kept identical; divisions and the country are
+          the union of their districts. Ice-sheet and coastal-sea outlines are drawn by this project for averaging.
         </p>
 
         <DialogFooter>

@@ -62,6 +62,7 @@ const BASE_BY_KIND: Partial<Record<RegionKind, LineStyle>> = {
   coastal_sea: { ...STYLE.base, color: Color.fromCssColorString('#93c5fd').withAlpha(0.7), width: 1.5 },
   country: { ...STYLE.base, color: Color.fromCssColorString('#86efac').withAlpha(0.8), width: 1.5 },
   division: { ...STYLE.base, color: Color.fromCssColorString('#fde68a').withAlpha(0.9), width: 1.8 },
+  district: { ...STYLE.base, color: Color.fromCssColorString('#fef3c7').withAlpha(0.45), width: 0.8 },
 }
 
 function styleFor(role: Role, kind: RegionKind | undefined): LineStyle {

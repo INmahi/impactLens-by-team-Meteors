@@ -23,9 +23,10 @@ const KIND_LABEL: Record<string, string> = {
   coastal_sea: 'Coastal seas',
   country: 'Countries',
   division: 'Divisions of Bangladesh',
+  district: 'Districts of Bangladesh',
   global: 'Global',
 }
-const KIND_ORDER = ['global', 'country', 'division', 'ice_sheet', 'ice_sheet_basin', 'glacier_region', 'coastal_sea']
+const KIND_ORDER = ['global', 'country', 'division', 'district', 'ice_sheet', 'ice_sheet_basin', 'glacier_region', 'coastal_sea']
 
 /** Group headings for variables that share `group` (contract `group` ids). */
 function groupLabel(group: string): string {
@@ -407,6 +408,8 @@ function RegionPicker({
 }) {
   const name = useId()
   const [q, setQ] = useState('')
+  const { data: allRegions } = useRegionsData()
+  const allNames = new Map((allRegions ?? []).map((r) => [r.id, r.name]))
   const query = q.trim().toLowerCase()
   const shown = query ? regions.filter((r) => r.name.toLowerCase().includes(query)) : regions
   const kinds = [...new Set(shown.map((r) => r.kind))].sort((a, b) => KIND_ORDER.indexOf(a) - KIND_ORDER.indexOf(b))
@@ -425,12 +428,21 @@ function RegionPicker({
           className="h-8 rounded-lg border border-white/20 bg-white/5 px-2.5 text-sm text-white placeholder:text-white/60 focus-visible:outline-2 focus-visible:outline-ring"
         />
       )}
-      {kinds.map((kind) => (
+      {kinds.map((kind) => {
+        // Districts (many) are grouped under their parent division; other kinds are one flat group.
+        const ofKind = shown.filter((r) => r.kind === kind)
+        const groups: [string | null, Region[]][] =
+          kind === 'district'
+            ? [...new Set(ofKind.map((r) => r.parent ?? ''))].map((p): [string | null, Region[]] => [allNames.get(p) ?? p, ofKind.filter((r) => (r.parent ?? '') === p)])
+            : [[null, ofKind]]
+        return (
         <div key={kind} className="flex flex-col gap-1">
           {kinds.length > 1 && <p className="text-xs text-white/80">{KIND_LABEL[kind] ?? kind}</p>}
+          {groups.map(([groupName, list]) => (
+          <div key={groupName ?? kind} className="flex flex-col gap-1">
+          {groupName && <p className="pl-1 text-[11px] text-white/65">{groupName} division</p>}
           <div className="flex flex-wrap gap-1">
-            {shown
-              .filter((r) => r.kind === kind)
+            {list
               .map((r) => (
                 <label
                   key={r.id}
@@ -453,8 +465,11 @@ function RegionPicker({
                 </label>
               ))}
           </div>
+          </div>
+          ))}
         </div>
-      ))}
+        )
+      })}
       {shown.length === 0 && <p className="text-xs text-white/80">No region matches “{q}”.</p>}
       <p className="text-xs text-white/75">Tip: you can also click a region on the globe.</p>
     </fieldset>
