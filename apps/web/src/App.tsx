@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react'
 import ChartDrawer from '@/charts/ChartDrawer'
 import TimeScroller from '@/components/TimeScroller'
-import { Globe, GlobeControls, SyntheticWatermark, useActiveMode } from '@/globe'
+import { Globe, GlobeControls, useActiveMode } from '@/globe'
 import { usePhone } from '@/lib/useMedia'
 import { useRegionsData } from '@/lib/useData'
 import LeftDrawer from '@/panels/LeftDrawer'
@@ -160,7 +160,6 @@ function DesktopOverlay() {
         <ImportDataDialog />
         <RegionChip />
       </header>
-      <SyntheticWatermark className="absolute left-1/2 top-3 -translate-x-1/2" />
       {/* Left drawer first in DOM order, so Tab goes inputs -> right column -> scroller -> charts. */}
       <div
         inert={!leftOpen}
@@ -253,7 +252,6 @@ function PhoneOverlay() {
       <div className="pointer-events-auto absolute right-2 top-[calc(max(0.5rem,env(safe-area-inset-top))+2.75rem)]">
         <GlobeControls />
       </div>
-      <SyntheticWatermark className="absolute left-2 top-[calc(max(0.5rem,env(safe-area-inset-top))+2.75rem)] origin-top-left scale-75" />
 
       <div className="absolute inset-x-2 bottom-[calc(3.75rem+env(safe-area-inset-bottom))] flex max-h-[60dvh] flex-col gap-2">
         {sheet === 'inputs' && <LeftDrawer className="max-h-[60dvh] w-full" />}
