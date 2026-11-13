@@ -114,7 +114,11 @@ table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;p
 <header><h1>${esc(title)}</h1>
 <p class="muted">Trend Detective report, generated ${esc(generated)} UTC. Mann-Kendall trend test with Sen's slope, computed in the browser by the app's statistics engine.</p>
 <p><span class="badge ${v.synthetic ? 'syn' : 'real'}">${v.synthetic ? 'SYNTHETIC test data' : 'Real observations'}</span>
-<span class="badge ${verdict.tone === 'significant' ? '' : 'ns'}">${verdict.tone === 'significant' ? 'Significant' : 'Cannot tell yet'}</span>${rep.lowPower ? '<span class="badge ns">Low power</span>' : ''}</p></header>
+${
+    cmp
+      ? `<span class="badge ${cmp.tone === 'significant' ? '' : 'ns'}">${cmp.tone === 'significant' ? 'Trends differ' : 'Cannot tell apart'}</span>${a.compare!.report.lowPower ? '<span class="badge ns">Low power</span>' : ''}`
+      : `<span class="badge ${verdict.tone === 'significant' ? '' : 'ns'}">${verdict.tone === 'significant' ? 'Significant' : 'Cannot tell yet'}</span>${rep.lowPower ? '<span class="badge ns">Low power</span>' : ''}`
+  }</p></header>
 
 ${cmpHtml}
 <section class="card ${verdict.tone}"><h2>${a.compare ? `${esc(r.name)}, full range` : 'Main conclusion'}</h2>
