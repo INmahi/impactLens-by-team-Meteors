@@ -74,6 +74,9 @@ function DesktopOverlay() {
     if (analysis) setRightOpen(true)
   }, [analysis])
   const rightShown = rightOpen && hasResults
+  // Results can be widened; the column width and the charts' right edge animate together.
+  const [wide, setWide] = useState(false)
+  const rightWidth = wide && hasResults ? '36rem' : '24rem'
   return (
     <>
       <header className="absolute left-3 top-3 flex items-center gap-3">
@@ -90,7 +93,10 @@ function DesktopOverlay() {
       </div>
       <ReopenTab side="left" label="Show analysis inputs" show={!leftOpen} onClick={() => setLeftOpen(true)} />
 
-      <div className="absolute bottom-3 right-3 top-3 flex w-96 max-w-[calc(100vw-1.5rem)] flex-col items-end gap-3">
+      <div
+        className="absolute bottom-3 right-3 top-3 flex max-w-[calc(100vw-1.5rem)] flex-col items-end gap-3 transition-[width] duration-300 ease-out motion-reduce:transition-none"
+        style={{ width: rightWidth }}
+      >
         <div className="pointer-events-auto shrink-0">
           <GlobeControls />
         </div>
@@ -98,7 +104,7 @@ function DesktopOverlay() {
           inert={!rightOpen}
           className={cn('flex min-h-0 w-full flex-1 flex-col items-end gap-3', SLIDE, !rightOpen && 'translate-x-[calc(100%+1rem)]')}
         >
-          <RightDrawer className="min-h-0" onCollapse={() => setRightOpen(false)} />
+          <RightDrawer className="min-h-0" onCollapse={() => setRightOpen(false)} wide={wide} onToggleWide={() => setWide((w) => !w)} />
         </div>
         {/* Map options stay on screen when the results drawer is closed. */}
         <div className="shrink-0">
@@ -109,7 +115,7 @@ function DesktopOverlay() {
 
       <div
         className="absolute bottom-3 flex flex-col items-center gap-2 transition-[left,right] duration-300 ease-out motion-reduce:transition-none"
-        style={{ left: leftOpen ? '22rem' : '4rem', right: rightShown ? '26rem' : '4rem' }}
+        style={{ left: leftOpen ? '22rem' : '4rem', right: rightShown ? `calc(${rightWidth} + 2rem)` : '4rem' }}
       >
         <div className="flex w-full max-w-[760px] justify-center [&>*]:w-full!">
           <TimeScroller />

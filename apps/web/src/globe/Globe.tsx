@@ -16,6 +16,7 @@ import { getRegionsData } from './regions'
 export default function Globe() {
   const containerRef = useRef<HTMLDivElement>(null)
   const engineRef = useRef<GlobeEngine | null>(null)
+  const tipRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const container = containerRef.current
@@ -23,7 +24,25 @@ export default function Globe() {
     const engine = new GlobeEngine(container)
     engineRef.current = engine
     registerEngine(engine)
-    engine.onPick = (id) => useAppStore.getState().setRegion(id)
+    // Clicks select a region only while a Region step is open in the left drawer (store decides).
+    engine.onPick = (id) => useAppStore.getState().pickFromGlobe(id)
+    // Hover: region name follows the cursor; DOM written directly (no React render per move).
+    const names = new Map<string, string>()
+    const hideTip = () => {
+      if (tipRef.current) tipRef.current.style.opacity = '0'
+      container.style.cursor = ''
+    }
+    engine.onHover = (id, x, y) => {
+      const tip = tipRef.current
+      if (!tip) return
+      if (!id) return hideTip()
+      tip.textContent = names.get(id) ?? id
+      tip.style.transform = `translate(${Math.round(x + 14)}px, ${Math.round(y + 16)}px)`
+      tip.style.opacity = '1'
+      const s = useAppStore.getState()
+      container.style.cursor = s.pickTarget && s.pickable.includes(id) ? 'pointer' : ''
+    }
+    container.addEventListener('mouseleave', hideTip)
 
     let unsubscribe: (() => void) | null = null
     let cancelled = false
@@ -60,6 +79,7 @@ export default function Globe() {
       .then((data) => {
         if (cancelled || engine.isDestroyed()) return
         engine.setData(data)
+        for (const [id, r] of data.byId) names.set(id, r.name)
 
         const s = useAppStore.getState()
         engine.setHighlight(s.region, s.compareRegion)
@@ -81,6 +101,7 @@ export default function Globe() {
 
     return () => {
       cancelled = true
+      container.removeEventListener('mouseleave', hideTip)
       unsubscribe?.()
       unsubscribeLayer?.()
       registerEngine(null)
@@ -90,12 +111,19 @@ export default function Globe() {
   }, [])
 
   return (
-    <div
-      ref={containerRef}
-      className="globe-root"
-      style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: '#000' }}
-      aria-label="Interactive globe. Click an outlined region to select it."
-      role="application"
-    />
+    <>
+      <div
+        ref={containerRef}
+        className="globe-root"
+        style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: '#000' }}
+        aria-label="Interactive globe. Hover a region to see its name; while choosing a region, click one to select it."
+        role="application"
+      />
+      <div
+        ref={tipRef}
+        aria-hidden
+        className="glass-strong pointer-events-none absolute left-0 top-0 z-[5] whitespace-nowrap px-2 py-1 text-xs font-medium text-white opacity-0 transition-opacity duration-150"
+      />
+    </>
   )
 }

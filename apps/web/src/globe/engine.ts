@@ -83,6 +83,8 @@ export class GlobeEngine {
   private outlineLayer: OutlineLayer
   private removePreUpdate: () => void
   onPick: ((regionId: string) => void) | null = null
+  /** Region under the cursor (or null) with canvas pixel position, on every mouse move. */
+  onHover: ((regionId: string | null, x: number, y: number) => void) | null = null
 
   constructor(container: HTMLElement) {
     const viewer = new Viewer(container, {
@@ -141,7 +143,9 @@ export class GlobeEngine {
       if (id) this.onPick?.(id) // empty globe or space: do nothing (keeps the selection)
     }, ScreenSpaceEventType.LEFT_CLICK)
     this.handler.setInputAction((e: ScreenSpaceEventHandler.MotionEvent) => {
-      this.setHovered(this.regionAtScreen(e.endPosition))
+      const id = this.regionAtScreen(e.endPosition)
+      this.setHovered(id)
+      this.onHover?.(id, e.endPosition.x, e.endPosition.y)
     }, ScreenSpaceEventType.MOUSE_MOVE)
 
     scene.requestRender()
@@ -153,6 +157,7 @@ export class GlobeEngine {
 
   destroy(): void {
     this.onPick = null
+    this.onHover = null
     this.removePreUpdate()
     if (!this.handler.isDestroyed()) this.handler.destroy()
     this.dataLayer.destroy() // before the viewer, while the GL context is alive

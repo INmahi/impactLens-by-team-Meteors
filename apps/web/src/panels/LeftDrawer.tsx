@@ -1,6 +1,7 @@
-// Left drawer: the analysis inputs (plan section 4). Variable, region, time range, Run analysis.
+// Left drawer: the analysis inputs (plan section 4). Compare switch, then steps Variable, Region,
+// (Compare with), Time range; Run analysis pinned at the bottom.
 // Everything is read from variables.json / regions.json: no variable or region id is hard-coded.
-import { useEffect, useId, useMemo } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { Region, Variable } from '@trend/contract'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
@@ -29,6 +30,11 @@ function groupLabel(group: string): string {
   return group.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase())
 }
 
+// Guided steps (boss, 2026-11-13): a Compare mode switch on top, then collapsible steps
+// Variable -> Region -> (Compare with) -> Time range. Choosing in a step folds it and opens the next;
+// any step can be reopened. While a Region step is open, clicking a region on the globe selects it.
+type StepId = 'variable' | 'region' | 'compare' | 'time'
+
 export default function LeftDrawer({ className, onCollapse }: { className?: string; onCollapse?: () => void }) {
   const { data: variables } = useVariablesData()
   const { data: regions } = useRegionsData()
@@ -49,9 +55,11 @@ export default function LeftDrawer({ className, onCollapse }: { className?: stri
           </button>
         )}
       </header>
-      <div className="flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain px-4 pb-4">
-        {!variables || !regions ? <p className="text-sm text-white/90">Loading…</p> : <Inputs variables={variables} regions={regions} />}
-      </div>
+      {!variables || !regions ? (
+        <p className="px-4 pb-4 text-sm text-white/90">Loading…</p>
+      ) : (
+        <Inputs variables={variables} regions={regions} />
+      )}
     </section>
   )
 }
@@ -59,12 +67,43 @@ export default function LeftDrawer({ className, onCollapse }: { className?: stri
 function Inputs({ variables, regions }: { variables: Variable[]; regions: Region[] }) {
   const variableId = useAppStore((s) => s.variable)
   const regionId = useAppStore((s) => s.region)
+  const compareMode = useAppStore((s) => s.compareMode)
+  const compareRegion = useAppStore((s) => s.compareRegion)
+  const compareVariables = useAppStore((s) => s.compareVariables)
+  const rangeStart = useAppStore((s) => s.rangeStart)
+  const rangeEnd = useAppStore((s) => s.rangeEnd)
+  const globePickSeq = useAppStore((s) => s.globePickSeq)
   const setVariable = useAppStore((s) => s.setVariable)
   const setRegion = useAppStore((s) => s.setRegion)
   const setMapLayer = useAppStore((s) => s.setMapLayer)
+  const setCompareMode = useAppStore((s) => s.setCompareMode)
+  const setCompareRegion = useAppStore((s) => s.setCompareRegion)
+  const setPickTarget = useAppStore((s) => s.setPickTarget)
+
+  const [open, setOpen] = useState<Set<StepId>>(() => new Set<StepId>(['variable', 'time']))
+  const toggle = (id: StepId) =>
+    setOpen((o) => {
+      const n = new Set(o)
+      if (n.has(id)) n.delete(id)
+      else n.add(id)
+      return n
+    })
+  const advance = (close: StepId, next?: StepId) =>
+    setOpen((o) => {
+      const n = new Set(o)
+      n.delete(close)
+      if (next) n.add(next)
+      return n
+    })
 
   const variable = variables.find((v) => v.id === variableId) ?? null
+  const region = regions.find((r) => r.id === regionId) ?? null
   const modes = useMemo(() => mapModes(variables), [variables])
+  const comparing = compareMode !== 'none'
+  const validRegions = variable ? regions.filter((r) => variable.regions.includes(r.id)) : []
+  const otherRegions = validRegions.filter((r) => r.id !== regionId)
+  const otherVariables = variable && regionId ? variables.filter((v) => v.id !== variable.id && v.regions.includes(regionId)) : []
+  const hasRecord = !!(variable && regionId && variable.periods[regionId])
 
   function chooseVariable(v: Variable) {
     setVariable(v.id)
@@ -72,20 +111,204 @@ function Inputs({ variables, regions }: { variables: Variable[]; regions: Region
     setMapLayer(mapModeForVariable(modes, v))
     // Keep the region if it is valid for the new variable; otherwise pick its first region.
     if (!regionId || !v.regions.includes(regionId)) setRegion(v.regions[0] ?? null)
+    advance('variable', 'region')
+  }
+  function chooseRegion(id: string) {
+    setRegion(id)
+    if (compareRegion === id) setCompareRegion(null)
+    advance('region', comparing ? 'compare' : undefined)
+  }
+  function setComparing(on: boolean) {
+    if (!on) {
+      setCompareMode('none')
+      advance('compare')
+      return
+    }
+    setCompareMode(otherRegions.length ? 'regions' : 'variables')
+    if (hasRecord) setOpen((o) => new Set(o).add('compare'))
   }
 
+  // Globe clicks fill whichever Region step is open (the store checks the region is valid there).
+  const regionOpen = open.has('region') && !!variable
+  const compareRegionOpen = !regionOpen && open.has('compare') && compareMode === 'regions' && hasRecord
+  const pickKey = regionOpen ? `r:${variable!.regions.join()}` : compareRegionOpen ? `c:${otherRegions.map((r) => r.id).join()}` : ''
+  useEffect(() => {
+    if (regionOpen) setPickTarget('region', variable!.regions)
+    else if (compareRegionOpen) setPickTarget('compareRegion', otherRegions.map((r) => r.id))
+    else setPickTarget(null, [])
+  }, [pickKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => setPickTarget(null, []), [setPickTarget])
+  // An accepted globe pick moves on, like a click in the list.
+  const firstSeq = useRef(globePickSeq)
+  useEffect(() => {
+    if (globePickSeq === firstSeq.current) return
+    if (regionOpen) advance('region', comparing ? 'compare' : undefined)
+    else if (compareRegionOpen) advance('compare')
+  }, [globePickSeq]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Step summaries shown when a step is folded.
+  let timeSummary: string | null = null
+  if (hasRecord) {
+    const [a, b] = variable!.periods[regionId!]
+    const s = rangeStart ?? a
+    const e = rangeEnd ?? b
+    const y = spanYears(s, e)
+    timeSummary = `${formatStep(s)} – ${formatStep(e)} (${y.toFixed(y < 10 ? 1 : 0)} yr)`
+  }
+  const compareSummary =
+    compareMode === 'regions'
+      ? compareRegion
+        ? `vs ${regions.find((r) => r.id === compareRegion)?.name ?? compareRegion}`
+        : 'Choose a second region'
+      : compareVariables.length
+        ? `+ ${compareVariables.map((id) => variables.find((v) => v.id === id)?.name ?? id).join(', ')}`
+        : 'Choose variables to add'
+  const blocked = !hasRecord
+    ? 'Choose a variable and a region first.'
+    : compareMode === 'regions' && !compareRegion
+      ? 'Choose a second region to compare with.'
+      : compareMode === 'variables' && compareVariables.length === 0
+        ? 'Add at least one variable to compare.'
+        : null
+
+  let n = 0
   return (
     <>
-      <VariablePicker variables={variables} selected={variableId} onSelect={chooseVariable} />
-      {variable && <RegionPicker variable={variable} regions={regions} selected={regionId} onSelect={setRegion} />}
-      {variable && regionId && variable.periods[regionId] && (
-        <>
-          <TimeRange variable={variable} regionId={regionId} />
-          <ComparePicker variable={variable} variables={variables} regions={regions} regionId={regionId} />
-          <RunAnalysis variable={variable} regionId={regionId} />
-        </>
-      )}
+      <div className="px-4 pb-2">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={comparing}
+          disabled={!variable}
+          title={variable ? undefined : 'Choose a variable first'}
+          onClick={() => setComparing(!comparing)}
+          className={cn(
+            'flex w-full items-center justify-between rounded-xl border px-3 py-2 text-sm font-medium text-white disabled:opacity-50',
+            comparing ? 'border-amber-300/70 bg-amber-300/15' : 'border-white/15 bg-white/[0.04] hover:bg-white/10',
+          )}
+        >
+          <span>Compare mode</span>
+          <span className="flex items-center gap-2 text-xs">
+            {comparing ? 'On' : 'Off'}
+            <span aria-hidden className={cn('relative h-5 w-9 rounded-full transition-colors', comparing ? 'bg-amber-300' : 'bg-white/25')}>
+              <span
+                className={cn(
+                  'absolute top-0.5 left-0 size-4 rounded-full bg-white shadow transition-transform duration-200 motion-reduce:transition-none',
+                  comparing ? 'translate-x-[18px]' : 'translate-x-0.5',
+                )}
+              />
+            </span>
+          </span>
+        </button>
+      </div>
+
+      <div className="flex min-h-0 flex-col gap-2 overflow-y-auto overscroll-contain px-4 pb-3">
+        <Step n={++n} title="Variable" summary={variable?.name} done={!!variable} open={open.has('variable')} onToggle={() => toggle('variable')}>
+          <VariablePicker variables={variables} selected={variableId} onSelect={chooseVariable} />
+        </Step>
+
+        <Step
+          n={++n}
+          title={compareMode === 'regions' ? 'First region' : 'Region'}
+          summary={region?.name}
+          done={!!region}
+          disabled={!variable}
+          open={regionOpen}
+          onToggle={() => toggle('region')}
+        >
+          {variable && <RegionPicker regions={validRegions} selected={regionId} onSelect={chooseRegion} label="Region" />}
+        </Step>
+
+        {comparing && (
+          <Step
+            n={++n}
+            title="Compare with"
+            summary={compareSummary}
+            done={!blocked}
+            disabled={!hasRecord}
+            open={open.has('compare') && hasRecord}
+            onToggle={() => toggle('compare')}
+            accent="amber"
+          >
+            {hasRecord && <ComparePicker otherRegions={otherRegions} otherVariables={otherVariables} onPickedRegion={() => advance('compare')} />}
+          </Step>
+        )}
+
+        <Step n={++n} title="Time range" summary={timeSummary} done={hasRecord} disabled={!hasRecord} open={open.has('time') && hasRecord} onToggle={() => toggle('time')}>
+          {hasRecord && <TimeRange variable={variable!} regionId={regionId!} />}
+        </Step>
+      </div>
+
+      <div className="border-t border-white/10 px-4 pt-3 pb-4">
+        {hasRecord ? <RunAnalysis variable={variable!} regionId={regionId!} blocked={blocked} /> : <p className="text-xs text-white/80">{blocked}</p>}
+      </div>
     </>
+  )
+}
+
+/** One collapsible step. The body folds with a grid-rows transition and is inert while closed. */
+function Step({
+  n,
+  title,
+  summary,
+  done,
+  disabled,
+  open,
+  onToggle,
+  accent = 'sky',
+  children,
+}: {
+  n: number
+  title: string
+  summary?: string | null
+  done?: boolean
+  disabled?: boolean
+  open: boolean
+  onToggle: () => void
+  accent?: 'sky' | 'amber'
+  children: React.ReactNode
+}) {
+  const bodyId = useId()
+  return (
+    <div className={cn('shrink-0 rounded-xl border bg-white/[0.03]', open ? (accent === 'amber' ? 'border-amber-300/40' : 'border-sky-300/35') : 'border-white/10')}>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={bodyId}
+        disabled={disabled}
+        onClick={onToggle}
+        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <span
+          aria-hidden
+          className={cn(
+            'grid size-6 shrink-0 place-items-center rounded-full text-xs font-semibold',
+            done ? (accent === 'amber' ? 'bg-amber-300 text-slate-950' : 'bg-sky-300 text-slate-950') : 'border border-white/40 text-white',
+          )}
+        >
+          {done ? '✓' : n}
+        </span>
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="text-xs font-medium tracking-wide text-white/85 uppercase">
+            <span className="sr-only">Step {n}: </span>
+            {title}
+          </span>
+          {!open && summary && <span className="truncate text-sm text-white">{summary}</span>}
+        </span>
+        <span aria-hidden className={cn('text-white/80 transition-transform duration-300 motion-reduce:transition-none', open && 'rotate-180')}>
+          ▾
+        </span>
+      </button>
+      <div
+        id={bodyId}
+        inert={!open}
+        className={cn('grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none', open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]')}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="px-3 pt-1 pb-3">{children}</div>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -165,31 +388,46 @@ function VariablePicker({
   )
 }
 
-// ---------- region picker ----------
+// ---------- region picker (with search; globe clicks also select while open) ----------
 
 function RegionPicker({
-  variable,
   regions,
   selected,
   onSelect,
+  label,
+  accent = 'sky',
 }: {
-  variable: Variable
   regions: Region[]
   selected: string | null
   onSelect: (id: string) => void
+  label: string
+  accent?: 'sky' | 'amber'
 }) {
   const name = useId()
-  const valid = regions.filter((r) => variable.regions.includes(r.id))
-  const kinds = [...new Set(valid.map((r) => r.kind))].sort((a, b) => KIND_ORDER.indexOf(a) - KIND_ORDER.indexOf(b))
+  const [q, setQ] = useState('')
+  const query = q.trim().toLowerCase()
+  const shown = query ? regions.filter((r) => r.name.toLowerCase().includes(query)) : regions
+  const kinds = [...new Set(shown.map((r) => r.kind))].sort((a, b) => KIND_ORDER.indexOf(a) - KIND_ORDER.indexOf(b))
+  const on = accent === 'amber' ? 'border-amber-300/80 bg-amber-300/20 text-white' : 'border-sky-300/80 bg-sky-300/20 text-white'
 
   return (
-    <fieldset className="flex flex-col gap-1">
-      <legend className="mb-1 text-xs font-medium tracking-wide text-white/85 uppercase">Region</legend>
+    <fieldset className="flex flex-col gap-2">
+      <legend className="sr-only">{label}</legend>
+      {regions.length > 4 && (
+        <input
+          type="search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search regions"
+          aria-label={`Search ${label.toLowerCase()}`}
+          className="h-8 rounded-lg border border-white/20 bg-white/5 px-2.5 text-sm text-white placeholder:text-white/60 focus-visible:outline-2 focus-visible:outline-ring"
+        />
+      )}
       {kinds.map((kind) => (
-        <div key={kind} className="flex flex-col gap-0.5">
-          {kinds.length > 1 && <p className="px-2 text-xs text-white/80">{KIND_LABEL[kind] ?? kind}</p>}
+        <div key={kind} className="flex flex-col gap-1">
+          {kinds.length > 1 && <p className="text-xs text-white/80">{KIND_LABEL[kind] ?? kind}</p>}
           <div className="flex flex-wrap gap-1">
-            {valid
+            {shown
               .filter((r) => r.kind === kind)
               .map((r) => (
                 <label
@@ -197,16 +435,26 @@ function RegionPicker({
                   className={cn(
                     'cursor-pointer rounded-full border px-2.5 py-1 text-[13px]',
                     'has-focus-visible:outline-2 has-focus-visible:outline-offset-1 has-focus-visible:outline-ring',
-                    selected === r.id ? 'border-sky-300/80 bg-sky-300/20 text-white' : 'border-white/20 text-white/90 hover:bg-white/10',
+                    selected === r.id ? on : 'border-white/20 text-white/90 hover:bg-white/10',
                   )}
                 >
-                  <input type="radio" name={name} className="sr-only" checked={selected === r.id} onChange={() => onSelect(r.id)} />
+                  {/* onClick too: re-clicking the current region still confirms the step. */}
+                  <input
+                    type="radio"
+                    name={name}
+                    className="sr-only"
+                    checked={selected === r.id}
+                    onChange={() => onSelect(r.id)}
+                    onClick={() => selected === r.id && onSelect(r.id)}
+                  />
                   {r.name}
                 </label>
               ))}
           </div>
         </div>
       ))}
+      {shown.length === 0 && <p className="text-xs text-white/80">No region matches “{q}”.</p>}
+      <p className="text-xs text-white/75">Tip: you can also click a region on the globe.</p>
     </fieldset>
   )
 }
@@ -231,7 +479,7 @@ function TimeRange({ variable, regionId }: { variable: Variable; regionId: strin
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between">
-        <span id="range-label" className="text-xs font-medium tracking-wide text-white/85 uppercase">
+        <span id="range-label" className="sr-only">
           Time range
         </span>
         <span className="text-xs tabular-nums text-white/90">
@@ -267,7 +515,7 @@ function TimeRange({ variable, regionId }: { variable: Variable; regionId: strin
 
 // ---------- run ----------
 
-function RunAnalysis({ variable, regionId }: { variable: Variable; regionId: string }) {
+function RunAnalysis({ variable, regionId, blocked }: { variable: Variable; regionId: string; blocked: string | null }) {
   const status = useAppStore((s) => s.analysisStatus)
   const error = useAppStore((s) => s.analysisError)
   const rangeStart = useAppStore((s) => s.rangeStart)
@@ -325,8 +573,9 @@ function RunAnalysis({ variable, regionId }: { variable: Variable; regionId: str
   }
 
   return (
-    <div className="flex flex-col gap-2 border-t border-white/10 pt-3">
-      <Button onClick={run} disabled={status === 'running'} className="h-10 bg-sky-300 text-slate-950 hover:bg-sky-200">
+    <div className="flex flex-col gap-2">
+      {blocked && <p className="text-xs text-white/80">{blocked}</p>}
+      <Button onClick={run} disabled={status === 'running' || !!blocked} className="h-10 bg-sky-300 text-slate-950 hover:bg-sky-200">
         {status === 'running' ? 'Running…' : 'Run analysis'}
       </Button>
       {status === 'error' && (
@@ -341,15 +590,13 @@ function RunAnalysis({ variable, regionId }: { variable: Variable; regionId: str
 // ---------- compare ----------
 
 function ComparePicker({
-  variable,
-  variables,
-  regions,
-  regionId,
+  otherRegions,
+  otherVariables,
+  onPickedRegion,
 }: {
-  variable: Variable
-  variables: Variable[]
-  regions: Region[]
-  regionId: string
+  otherRegions: Region[]
+  otherVariables: Variable[]
+  onPickedRegion: () => void
 }) {
   const mode = useAppStore((s) => s.compareMode)
   const setMode = useAppStore((s) => s.setCompareMode)
@@ -358,13 +605,8 @@ function ComparePicker({
   const extra = useAppStore((s) => s.compareVariables)
   const setExtra = useAppStore((s) => s.setCompareVariables)
   const modeName = useId()
-  const regionName = useId()
 
-  // Other regions with data for this variable; other variables with data for this region.
-  const otherRegions = regions.filter((r) => r.id !== regionId && variable.regions.includes(r.id))
-  const otherVariables = variables.filter((v) => v.id !== variable.id && v.regions.includes(regionId))
-  const modes: { id: 'none' | 'regions' | 'variables'; label: string; disabled: boolean }[] = [
-    { id: 'none', label: 'Off', disabled: false },
+  const modes: { id: 'regions' | 'variables'; label: string; disabled: boolean }[] = [
     { id: 'regions', label: 'Another region', disabled: otherRegions.length === 0 },
     { id: 'variables', label: 'More variables', disabled: otherVariables.length === 0 },
   ]
@@ -377,11 +619,17 @@ function ComparePicker({
     )
 
   return (
-    <fieldset className="flex flex-col gap-2">
-      <legend className="mb-1 text-xs font-medium tracking-wide text-white/85 uppercase">Compare</legend>
-      <div className="flex flex-wrap gap-1">
+    <div className="flex flex-col gap-2">
+      <div role="radiogroup" aria-label="What to compare" className="grid grid-cols-2 gap-1 rounded-full border border-white/15 p-0.5">
         {modes.map((m) => (
-          <label key={m.id} className={chip(mode === m.id)}>
+          <label
+            key={m.id}
+            className={cn(
+              'cursor-pointer rounded-full px-2 py-1 text-center text-[13px]',
+              'has-focus-visible:outline-2 has-focus-visible:outline-ring has-disabled:cursor-not-allowed has-disabled:opacity-40',
+              mode === m.id ? 'bg-amber-300 font-medium text-slate-950' : 'text-white/90 hover:bg-white/10',
+            )}
+          >
             <input type="radio" name={modeName} className="sr-only" disabled={m.disabled} checked={mode === m.id} onChange={() => setMode(m.id)} />
             {m.label}
           </label>
@@ -389,18 +637,19 @@ function ComparePicker({
       </div>
 
       {mode === 'regions' && (
-        <div role="radiogroup" aria-label="Second region" className="flex flex-col gap-1">
-          <p className="text-xs text-white/80">Compare the trend with:</p>
-          <div className="flex flex-wrap gap-1">
-            {otherRegions.map((r) => (
-              <label key={r.id} className={chip(compareRegion === r.id)}>
-                <input type="radio" name={regionName} className="sr-only" checked={compareRegion === r.id} onChange={() => setCompareRegion(r.id)} />
-                {r.name}
-              </label>
-            ))}
-          </div>
+        <>
+          <RegionPicker
+            regions={otherRegions}
+            selected={compareRegion}
+            onSelect={(id) => {
+              setCompareRegion(id)
+              onPickedRegion()
+            }}
+            label="Second region"
+            accent="amber"
+          />
           <p className="text-xs text-white/80">Trends are compared on the years both records cover. Levels are not compared.</p>
-        </div>
+        </>
       )}
 
       {mode === 'variables' && (
@@ -426,6 +675,6 @@ function ComparePicker({
           <p className="text-xs text-white/80">Moving together is not cause and effect.</p>
         </div>
       )}
-    </fieldset>
+    </div>
   )
 }

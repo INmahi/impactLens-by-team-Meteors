@@ -1,14 +1,26 @@
-// Right drawer: results in the plan's fixed order (section 4):
-// 1 selected parameters, 2 verdict card, 3 statistical report (cross-checks expandable),
-// 4 interpretation, 5 notes. Text rules: docs/stats/wording.md (via lib/verdict.ts).
+// Right drawer: results, organised to stay compact (boss, 2026-11-13). Plan section 4 order kept:
+// 1 parameters (one context line), 2 conclusion card with key numbers (+ compare / other variables),
+// then tabs: What it means (verdict detail, interpretation), Statistics (report, uncertainty,
+// cross-checks), Notes. The panel can be widened. Text rules: docs/stats/wording.md (lib/verdict.ts).
+import { useId, useState } from 'react'
 import type { Region, Variable } from '@trend/contract'
 import { formatP, type CompareReport, type MannKendallResult } from '@trend/stats'
-import { formatStep, formatUnitsText, useRegionsData, useVariablesData } from '@/lib/useData'
+import { formatStep, formatUnitsText, spanYears, useRegionsData, useVariablesData } from '@/lib/useData'
 import { compareVerdict, correlationText, detectText, fmt, interpretation, rateUnits, trendVerdict, uncertaintyText } from '@/lib/verdict'
 import { useAppStore, type AnalysisResult } from '@/state/store'
 import { cn } from 'cn'
 
-export default function RightDrawer({ className, onCollapse }: { className?: string; onCollapse?: () => void }) {
+export default function RightDrawer({
+  className,
+  onCollapse,
+  wide,
+  onToggleWide,
+}: {
+  className?: string
+  onCollapse?: () => void
+  wide?: boolean
+  onToggleWide?: () => void
+}) {
   const analysis = useAppStore((s) => s.analysis)
   const status = useAppStore((s) => s.analysisStatus)
   const { data: variables } = useVariablesData()
@@ -18,168 +30,211 @@ export default function RightDrawer({ className, onCollapse }: { className?: str
   const v = analysis ? variables?.find((x) => x.id === analysis.variable) : undefined
   const r = analysis ? regions?.find((x) => x.id === analysis.region) : undefined
 
+  const iconBtn = 'rounded-md px-2 py-0.5 text-base font-semibold text-white/90 hover:bg-white/10'
   return (
-    <section aria-label="Results" aria-busy={status === 'running'} className={cn('glass-strong flex w-96 max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden text-white', className)}>
+    <section aria-label="Results" aria-busy={status === 'running'} className={cn('glass-strong flex w-full flex-col overflow-hidden text-white', className)}>
       <header className="flex items-center justify-between gap-2 px-4 pt-3 pb-2">
         <h2 className="text-sm font-semibold tracking-wide">Results</h2>
-        {onCollapse && (
-          <button
-            type="button"
-            onClick={onCollapse}
-            aria-label="Hide results"
-            title="Hide results"
-            className="rounded-md px-2 py-0.5 text-base font-semibold text-white/90 hover:bg-white/10"
-          >
-            »
-          </button>
-        )}
+        <span className="flex items-center gap-1">
+          {onToggleWide && (
+            <button type="button" onClick={onToggleWide} aria-pressed={!!wide} aria-label={wide ? 'Make results narrower' : 'Make results wider'} title={wide ? 'Narrower' : 'Wider'} className={iconBtn}>
+              {wide ? '⇥' : '⇤'}
+            </button>
+          )}
+          {onCollapse && (
+            <button type="button" onClick={onCollapse} aria-label="Hide results" title="Hide results" className={iconBtn}>
+              »
+            </button>
+          )}
+        </span>
       </header>
-      <div className="flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain px-4 pb-4 text-sm">
+      <div className="flex min-h-0 flex-col gap-3 overflow-y-auto overscroll-contain px-4 pb-4 text-sm">
         {status === 'running' && <p role="status">Running the analysis…</p>}
-        {analysis && v && r && regions && variables && <Body a={analysis} v={v} r={r} regions={regions} variables={variables} />}
+        {analysis && v && r && regions && variables && <Body a={analysis} v={v} r={r} regions={regions} variables={variables} wide={!!wide} />}
       </div>
     </section>
   )
 }
 
-function Body({ a, v, r, regions, variables }: { a: AnalysisResult; v: Variable; r: Region; regions: Region[]; variables: Variable[] }) {
+type Tab = 'meaning' | 'stats' | 'notes'
+
+function Body({ a, v, r, regions, variables, wide }: { a: AnalysisResult; v: Variable; r: Region; regions: Region[]; variables: Variable[]; wide: boolean }) {
   const rep = a.report
   const verdict = trendVerdict(v, r, rep)
   const rB = a.compare ? regions.find((x) => x.id === a.compare!.region) : undefined
   // Region caveats and this run's notes first; the variable's general notes go in an expandable list.
   const notes = [...new Set([...(r.notes ?? []), ...rep.notes])]
   const general = v.notes.filter((n) => !notes.includes(n))
+  const [tab, setTab] = useState<Tab>('meaning')
+  const tabsId = useId()
+  const years = spanYears(a.start, a.end)
+
+  const tabs: { id: Tab; label: string }[] = [
+    { id: 'meaning', label: 'What it means' },
+    { id: 'stats', label: 'Statistics' },
+    { id: 'notes', label: `Notes (${notes.length + general.length})` },
+  ]
+
   return (
     <>
-      {/* 1. Parameters */}
-      <section aria-labelledby="res-params">
-        <h3 id="res-params" className="sr-only">Selected parameters</h3>
-        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[13px]">
-          <dt className="text-white/80">Variable</dt>
-          <dd>{v.name}</dd>
-          <dt className="text-white/80">Region</dt>
-          <dd>{r.name}</dd>
-          <dt className="text-white/80">Period</dt>
-          <dd className="tabular-nums">
+      {/* 1. Parameters, as one context line */}
+      <section aria-label="Selected parameters" className="flex flex-col gap-1">
+        <p className="flex flex-wrap items-center gap-1 text-[12px]">
+          <Chip>{v.name}</Chip>
+          <Chip>{r.name}</Chip>
+          <Chip>
             {formatStep(a.start)} – {formatStep(a.end)}
-          </dd>
-          <dt className="text-white/80">Source</dt>
-          <dd>{v.source.name}</dd>
-        </dl>
+          </Chip>
+        </p>
+        <p className="text-[11px] text-white/80">Source: {v.source.name}</p>
       </section>
 
       {a.compare && rB && <CompareBlock v={v} A={r} B={rB} rep={a.compare.report} />}
 
-      {/* 2. Verdict */}
+      {/* 2. Conclusion card with the key numbers */}
       <section
         aria-labelledby="res-verdict"
-        className={cn(
-          'rounded-xl border p-3',
-          verdict.tone === 'significant' ? 'border-sky-300/50 bg-sky-300/10' : 'border-amber-300/50 bg-amber-300/10',
-        )}
+        className={cn('rounded-xl border p-3', verdict.tone === 'significant' ? 'border-sky-300/50 bg-sky-300/10' : 'border-amber-300/50 bg-amber-300/10')}
       >
-        <h3 id="res-verdict" className="mb-1 flex items-center gap-2 text-xs font-medium tracking-wide uppercase">
+        <h3 id="res-verdict" className="mb-1.5 flex flex-wrap items-center gap-1.5 text-xs font-medium tracking-wide uppercase">
           {a.compare ? `${r.name}, full range` : 'Main conclusion'}
           <Badge tone={verdict.tone}>{verdict.tone === 'significant' ? 'Significant' : 'Cannot tell yet'}</Badge>
           {rep.lowPower && <Badge tone="low">Low power</Badge>}
           {v.synthetic && <Badge tone="low">Synthetic data</Badge>}
         </h3>
         <p className="text-[15px] leading-snug font-medium">{verdict.headline}</p>
-        <p className="mt-1 text-[13px] leading-snug text-white/90">{verdict.detail}</p>
-        {a.detect && !rep.test.significant && <p className="mt-2 text-[13px] text-white/90">{detectText(v, a.detect)}</p>}
+        <div className={cn('mt-2.5 grid gap-1.5', wide ? 'grid-cols-4' : 'grid-cols-3')}>
+          <Tile label={rep.kind === 'rate' ? 'Speed-up / slow-down' : 'Trend'} value={`${fmt(rep.slope.perYear)}`} sub={rateUnits(v)} />
+          <Tile label="95% interval" value={`${fmt(rep.slope.lower)} to ${fmt(rep.slope.upper)}`} sub={rateUnits(v)} />
+          <Tile label="Significance" value={formatP(rep.test.p)} sub={`${rep.n} points, ${Math.round(years)} yr`} />
+          {wide && <Tile label="Per decade" value={fmt(rep.slope.perDecade)} sub={formatUnitsText(v.units)} />}
+        </div>
       </section>
 
       {a.extras.length > 0 && <ExtrasBlock a={a} v={v} r={r} variables={variables} />}
 
-      {/* 3. Statistical report */}
-      <section aria-labelledby="res-stats">
-        <h3 id="res-stats" className="mb-1 text-xs font-medium tracking-wide text-white/85 uppercase">
-          Statistical report
-        </h3>
-        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[13px] tabular-nums">
-          <dt className="text-white/80">Test</dt>
-          <dd>{rep.test.method}</dd>
-          <dt className="text-white/80">Result</dt>
-          <dd>
-            {trendWord(rep.test.trend)}, {formatP(rep.test.p)}
-          </dd>
-          <dt className="text-white/80">Kendall's tau</dt>
-          <dd>{rep.test.tau.toFixed(3)}</dd>
-          <dt className="text-white/80">z</dt>
-          <dd>{rep.test.z.toFixed(2)}</dd>
-          <dt className="text-white/80">Sen's slope</dt>
-          <dd>
-            {fmt(rep.slope.perYear)} {rateUnits(v)} ({fmt(rep.slope.perDecade)} {formatUnitsText(v.units)} per decade)
-          </dd>
-          <dt className="text-white/80">95% interval</dt>
-          <dd>
-            {fmt(rep.slope.lower)} to {fmt(rep.slope.upper)} {rateUnits(v)}
-          </dd>
-          <dt className="text-white/80">Points (n)</dt>
-          <dd>{rep.n}</dd>
-          <dt className="text-white/80">Coverage</dt>
-          <dd>{Math.round(rep.coverage * 100)}%</dd>
-          <dt className="text-white/80">Autocorrelation factor</dt>
-          <dd>{rep.test.correction.toFixed(2)}</dd>
-        </dl>
-        {a.uncertainty && <p className="mt-2 text-[13px] text-white/90">{uncertaintyText(v, a.uncertainty)}</p>}
-        <details className="mt-2 rounded-lg border border-white/10 px-2 py-1">
-          <summary className="cursor-pointer text-[13px] text-white/90">Cross-check tests ({rep.crossChecks.length})</summary>
-          <table className="mt-1 w-full text-[12px] tabular-nums">
-            <thead>
-              <tr className="text-left text-white/80">
-                <th className="font-normal">Method</th>
-                <th className="font-normal">Result</th>
-                <th className="font-normal">p</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rep.crossChecks.map((c: MannKendallResult) => (
-                <tr key={c.method}>
-                  <td className="pr-2">{c.method}</td>
-                  <td className="pr-2">{trendWord(c.trend)}</td>
-                  <td>{formatP(c.p).replace(/^p\s*=?\s*/, '')}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </details>
-      </section>
-
-      {/* 4. Interpretation */}
-      <section aria-labelledby="res-interp">
-        <h3 id="res-interp" className="mb-1 text-xs font-medium tracking-wide text-white/85 uppercase">
-          Interpretation
-        </h3>
-        <ul className="flex list-disc flex-col gap-1 pl-4 text-[13px] text-white/90">
-          {interpretation(v, r, rep, variables).map((t) => (
-            <li key={t}>{t}</li>
+      {/* 3-5. Details in tabs */}
+      <div>
+        <div role="tablist" aria-label="Result details" className="grid grid-cols-3 gap-0.5 rounded-lg border border-white/15 p-0.5">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              id={`${tabsId}-${t.id}`}
+              role="tab"
+              type="button"
+              aria-selected={tab === t.id}
+              aria-controls={`${tabsId}-${t.id}-panel`}
+              onClick={() => setTab(t.id)}
+              className={cn('rounded-md px-1.5 py-1 text-[12px]', tab === t.id ? 'bg-white/90 font-medium text-slate-950' : 'text-white/90 hover:bg-white/10')}
+            >
+              {t.label}
+            </button>
           ))}
-        </ul>
-      </section>
+        </div>
+        <div id={`${tabsId}-${tab}-panel`} role="tabpanel" aria-labelledby={`${tabsId}-${tab}`} className="pt-2.5">
+          {tab === 'meaning' && (
+            <div className="flex flex-col gap-2 text-[13px] text-white/90">
+              <p className="leading-snug">{verdict.detail}</p>
+              {a.detect && !rep.test.significant && <p className="leading-snug">{detectText(v, a.detect)}</p>}
+              <ul className="flex list-disc flex-col gap-1 pl-4">
+                {interpretation(v, r, rep, variables).map((t) => (
+                  <li key={t}>{t}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-      {/* 5. Notes */}
-      <section aria-labelledby="res-notes">
-        <h3 id="res-notes" className="mb-1 text-xs font-medium tracking-wide text-white/85 uppercase">
-          Notes
-        </h3>
-        <ul className="flex list-disc flex-col gap-1 pl-4 text-[13px] text-white/90">
-          {notes.map((t) => (
-            <li key={t}>{t}</li>
-          ))}
-        </ul>
-        {general.length > 0 && (
-          <details className="mt-2 rounded-lg border border-white/10 px-2 py-1">
-            <summary className="cursor-pointer text-[13px] text-white/90">About {v.name.toLowerCase()} data ({general.length})</summary>
-            <ul className="mt-1 flex list-disc flex-col gap-1 pl-4 text-[13px] text-white/90">
-              {general.map((t) => (
-                <li key={t}>{t}</li>
-              ))}
-            </ul>
-          </details>
-        )}
-      </section>
+          {tab === 'stats' && (
+            <div className="flex flex-col gap-2">
+              <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[13px] tabular-nums">
+                <dt className="text-white/80">Test</dt>
+                <dd>{rep.test.method}</dd>
+                <dt className="text-white/80">Result</dt>
+                <dd>
+                  {trendWord(rep.test.trend)}, {formatP(rep.test.p)}
+                </dd>
+                <dt className="text-white/80">Kendall's tau</dt>
+                <dd>{rep.test.tau.toFixed(3)}</dd>
+                <dt className="text-white/80">z</dt>
+                <dd>{rep.test.z.toFixed(2)}</dd>
+                <dt className="text-white/80">Sen's slope</dt>
+                <dd>
+                  {fmt(rep.slope.perYear)} {rateUnits(v)} ({fmt(rep.slope.perDecade)} {formatUnitsText(v.units)} per decade)
+                </dd>
+                <dt className="text-white/80">95% interval</dt>
+                <dd>
+                  {fmt(rep.slope.lower)} to {fmt(rep.slope.upper)} {rateUnits(v)}
+                </dd>
+                <dt className="text-white/80">Points (n)</dt>
+                <dd>{rep.n}</dd>
+                <dt className="text-white/80">Coverage</dt>
+                <dd>{Math.round(rep.coverage * 100)}%</dd>
+                <dt className="text-white/80">Autocorrelation factor</dt>
+                <dd>{rep.test.correction.toFixed(2)}</dd>
+              </dl>
+              {a.uncertainty && <p className="text-[13px] text-white/90">{uncertaintyText(v, a.uncertainty)}</p>}
+              <details className="rounded-lg border border-white/10 px-2 py-1">
+                <summary className="cursor-pointer text-[13px] text-white/90">Cross-check tests ({rep.crossChecks.length})</summary>
+                <table className="mt-1 w-full text-[12px] tabular-nums">
+                  <thead>
+                    <tr className="text-left text-white/80">
+                      <th className="font-normal">Method</th>
+                      <th className="font-normal">Result</th>
+                      <th className="font-normal">p</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rep.crossChecks.map((c: MannKendallResult) => (
+                      <tr key={c.method}>
+                        <td className="pr-2">{c.method}</td>
+                        <td className="pr-2">{trendWord(c.trend)}</td>
+                        <td>{formatP(c.p).replace(/^p\s*=?\s*/, '')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </details>
+            </div>
+          )}
+
+          {tab === 'notes' && (
+            <div className="flex flex-col gap-2">
+              <ul className="flex list-disc flex-col gap-1 pl-4 text-[13px] text-white/90">
+                {notes.map((t) => (
+                  <li key={t}>{t}</li>
+                ))}
+              </ul>
+              {general.length > 0 && (
+                <details className="rounded-lg border border-white/10 px-2 py-1" open={notes.length === 0}>
+                  <summary className="cursor-pointer text-[13px] text-white/90">About {v.name.toLowerCase()} data ({general.length})</summary>
+                  <ul className="mt-1 flex list-disc flex-col gap-1 pl-4 text-[13px] text-white/90">
+                    {general.map((t) => (
+                      <li key={t}>{t}</li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </>
+  )
+}
+
+function Chip({ children }: { children: React.ReactNode }) {
+  return <span className="rounded-full border border-white/20 bg-white/5 px-2 py-0.5 tabular-nums">{children}</span>
+}
+
+function Tile({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div className="flex min-w-0 flex-col rounded-lg bg-black/25 px-2 py-1.5">
+      <span className="truncate text-[10.5px] tracking-wide text-white/80 uppercase" title={label}>
+        {label}
+      </span>
+      <span className="text-[14px] leading-tight font-semibold tabular-nums">{value}</span>
+      {sub && <span className="truncate text-[11px] text-white/80">{sub}</span>}
+    </div>
   )
 }
 

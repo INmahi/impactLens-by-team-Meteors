@@ -26,6 +26,9 @@ export type CompareMode = 'none' | 'regions' | 'variables'
 
 export type AnalysisStatus = 'idle' | 'running' | 'done' | 'error'
 
+/** Which picker a globe click fills: the open Region step (main or compare), or none. */
+export type PickTarget = 'region' | 'compareRegion' | null
+
 export interface AppState {
   /** Selected variable id from variables.json, or null before the user picks. */
   variable: string | null
@@ -46,6 +49,13 @@ export interface AppState {
   /** Up to three more variables for the multi-variable view (same region). */
   compareVariables: string[]
 
+  /** Set by the left drawer while a Region step is open; globe clicks only select then. */
+  pickTarget: PickTarget
+  /** Region ids a globe click may select for the current pickTarget. */
+  pickable: string[]
+  /** Increments on every accepted globe pick, so the drawer can move to the next step. */
+  globePickSeq: number
+
   analysisStatus: AnalysisStatus
   analysis: AnalysisResult | null
   analysisError: string | null
@@ -60,12 +70,15 @@ export interface AppState {
   setRange: (start: string | null, end: string | null) => void
   setCompareMode: (m: CompareMode) => void
   setCompareVariables: (ids: string[]) => void
+  setPickTarget: (target: PickTarget, pickable: string[]) => void
+  /** Globe click on a region: selects it only if a Region step is open and the region is valid there. */
+  pickFromGlobe: (id: string) => void
   setAnalysisRunning: () => void
   setAnalysisDone: (result: AnalysisResult) => void
   setAnalysisError: (message: string) => void
 }
 
-export const useAppStore = create<AppState>()((set) => ({
+export const useAppStore = create<AppState>()((set, get) => ({
   variable: null,
   region: null,
   compareRegion: null,
@@ -77,6 +90,9 @@ export const useAppStore = create<AppState>()((set) => ({
   rangeEnd: null,
   compareMode: 'none',
   compareVariables: [],
+  pickTarget: null,
+  pickable: [],
+  globePickSeq: 0,
   analysisStatus: 'idle',
   analysis: null,
   analysisError: null,
@@ -93,6 +109,13 @@ export const useAppStore = create<AppState>()((set) => ({
   setRange: (rangeStart, rangeEnd) => set({ rangeStart, rangeEnd }),
   setCompareMode: (compareMode) => set({ compareMode }),
   setCompareVariables: (compareVariables) => set({ compareVariables: compareVariables.slice(0, 3) }),
+  setPickTarget: (pickTarget, pickable) => set({ pickTarget, pickable }),
+  pickFromGlobe: (id) => {
+    const { pickTarget, pickable, globePickSeq } = get()
+    if (!pickTarget || !pickable.includes(id)) return
+    if (pickTarget === 'region') set({ region: id, rangeStart: null, rangeEnd: null, globePickSeq: globePickSeq + 1 })
+    else set({ compareRegion: id, globePickSeq: globePickSeq + 1 })
+  },
   setAnalysisRunning: () => set({ analysisStatus: 'running', analysisError: null }),
   setAnalysisDone: (analysis) => set({ analysisStatus: 'done', analysis, analysisError: null }),
   setAnalysisError: (analysisError) => set({ analysisStatus: 'error', analysisError }),
