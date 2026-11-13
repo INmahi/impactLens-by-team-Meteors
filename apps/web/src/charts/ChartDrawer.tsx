@@ -102,6 +102,8 @@ function ChartBody({ a, v, r, regions, variables }: { a: AnalysisResult; v: Vari
   const [extraSeries, setExtraSeries] = useState<{ variable: Variable; series: Series }[]>([])
   const el = useRef<HTMLDivElement | null>(null)
   const phone = usePhone()
+  // A narrow chart (phone, or desktop with both side panels open) gets wrapped text AND a taller box.
+  const [narrow, setNarrow] = useState(false)
   const [zoomed, setZoomed] = useState(false)
   const chart = useRef<echarts.ECharts | null>(null)
 
@@ -153,12 +155,17 @@ function ChartBody({ a, v, r, regions, variables }: { a: AnalysisResult; v: Vari
         setZoomed(!!dz)
       })
     }
-    chart.current.setOption(fitNarrow(withZoom(out.option), el.current.clientWidth), true)
+    const node = el.current
+    chart.current.setOption(fitNarrow(withZoom(out.option), node.clientWidth), true)
     setZoomed(false)
-    const ro = new ResizeObserver(() => chart.current?.resize())
-    ro.observe(el.current)
+    setNarrow(node.clientWidth < 640)
+    const ro = new ResizeObserver(() => {
+      chart.current?.resize()
+      setNarrow(node.clientWidth < 640)
+    })
+    ro.observe(node)
     return () => ro.disconnect()
-  }, [out])
+  }, [out, narrow])
   useEffect(
     () => () => {
       chart.current?.dispose()
@@ -250,7 +257,7 @@ ${svg}`, 'image/svg+xml')
       {out?.message ? (
         <p className="rounded-lg border border-white/10 p-3 text-sm text-white/90">{out.message}</p>
       ) : (
-        <div ref={el} role="img" aria-label={`${out?.title ?? 'Chart'}: ${CHART_LABELS[type] ?? type}`} className={cn('w-full', phone ? 'h-[26rem]' : 'h-80')} />
+        <div ref={el} role="img" aria-label={`${out?.title ?? 'Chart'}: ${CHART_LABELS[type] ?? type}`} className={cn('w-full', phone || narrow ? 'h-[26rem]' : 'h-80')} />
       )}
     </div>
   )
