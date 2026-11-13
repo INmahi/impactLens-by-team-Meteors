@@ -9,6 +9,7 @@ import { Globe, GlobeControls, SyntheticWatermark, useActiveMode } from '@/globe
 import { usePhone } from '@/lib/useMedia'
 import { useRegionsData } from '@/lib/useData'
 import LeftDrawer from '@/panels/LeftDrawer'
+import DataSourcesDialog from '@/panels/DataSourcesDialog'
 import MapPanel from '@/panels/MapPanel'
 import RightDrawer from '@/panels/RightDrawer'
 import { useAppStore } from '@/state/store'
@@ -81,6 +82,7 @@ function DesktopOverlay() {
     <>
       <header className="absolute left-3 top-3 flex items-center gap-3">
         <h1 className="glass pointer-events-auto px-3 py-1.5 text-base font-semibold">Trend Detective</h1>
+        <DataSourcesDialog />
         <RegionChip />
       </header>
       <SyntheticWatermark className="absolute left-1/2 top-3 -translate-x-1/2" />
@@ -148,6 +150,7 @@ function PhoneOverlay() {
     <>
       <header className="absolute inset-x-2 top-[max(0.5rem,env(safe-area-inset-top))] flex items-center gap-2">
         <h1 className="glass pointer-events-auto shrink-0 px-3 py-1.5 text-sm font-semibold">Trend Detective</h1>
+        <DataSourcesDialog compact />
         <RegionChip />
       </header>
       <div className="pointer-events-auto absolute right-2 top-[calc(max(0.5rem,env(safe-area-inset-top))+2.75rem)]">

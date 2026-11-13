@@ -119,6 +119,16 @@ function removeSeasonal(p: Pts): Pts {
   return { ...p, values: p.values.map((v, i) => (v == null ? null : v - (mean.get(p.dates[i].slice(5)) ?? 0))), lower: null, upper: null }
 }
 
+/** Chart source line, also in every exported PNG/SVG: dataset, version, DOI, real or synthetic. */
+function sourceLine(vars: Variable[]): string {
+  const seen = new Map<string, Variable['source']>()
+  for (const x of vars) seen.set(x.source.name, x.source)
+  const parts = [...seen.values()].map((s) => `${s.name}${s.version ? ` v${s.version}` : ''}${s.doi ? `, doi:${s.doi}` : ''}`)
+  const synthetic = vars.some((x) => x.synthetic)
+  return `${parts.length > 1 ? 'Sources' : 'Source'}: ${parts.join('; ')}
+${synthetic ? 'SYNTHETIC DATA: not observations' : 'Real observations (see the Data sources page for citation and processing)'}`
+}
+
 /** Sen's slope line through the median residual, over the analysed range (drawing only). */
 function trendLine(p: Pts, slopePerYear: number): [number, number][] {
   const res: number[] = []
@@ -144,7 +154,7 @@ export function buildChart(input: ChartInput): ChartOutput {
   const span = `${formatStep(start)} to ${formatStep(end)}`
   const title = `${v.name}, ${r.name}`
   const trendText = `Trend (Sen's slope): ${fmt(report.slope.perYear)} ${rateUnits(v)} (95% interval ${fmt(report.slope.lower)} to ${fmt(report.slope.upper)}), ${formatP(report.test.p)}`
-  const source = `Source: ${v.source.name}${v.synthetic ? '   ·   SYNTHETIC DATA: not observations' : ''}`
+  const source = sourceLine([v])
   const raw = slice(series, start, end)
 
   let yName = units
@@ -260,8 +270,8 @@ export function buildChart(input: ChartInput): ChartOutput {
       textStyle: { color: '#f8fafc', fontSize: 14 },
       subtextStyle: { color: '#cbd5e1', fontSize: 11 },
     },
-    legend: { bottom: 26, textStyle: { color: '#e2e8f0' }, data: seriesList.map((s) => s.name as string).filter((n) => !n.startsWith('band-')) },
-    grid: { left: 64, right: 44, top: 88, bottom: 64 },
+    legend: { bottom: 40, textStyle: { color: '#e2e8f0' }, data: seriesList.map((s) => s.name as string).filter((n) => !n.startsWith('band-')) },
+    grid: { left: 64, right: 44, top: 88, bottom: 78 },
     tooltip: { trigger: 'axis', valueFormatter: (x: unknown) => (typeof x === 'number' ? fmt(x) : String(x)) },
     xAxis: { type: 'time', name: 'Year', nameLocation: 'end', nameGap: 8, nameTextStyle: { color: '#cbd5e1' }, ...AXIS },
     yAxis: { type: 'value', name: yName, nameGap: 14, nameTextStyle: { color: '#cbd5e1', align: 'left' }, scale: true, ...AXIS },
@@ -300,8 +310,8 @@ function baseOption(titleText: string, subtitle: string, yName: string, source: 
     animation: false,
     textStyle: { fontFamily: 'Geist, system-ui, sans-serif' },
     title: { text: titleText, subtext: subtitle, left: 12, top: 8, textStyle: { color: '#f8fafc', fontSize: 14 }, subtextStyle: { color: '#cbd5e1', fontSize: 11 } },
-    legend: { bottom: 26, textStyle: { color: '#e2e8f0' } },
-    grid: { left: 64, right: 44, top: 88, bottom: 64 },
+    legend: { bottom: 40, textStyle: { color: '#e2e8f0' } },
+    grid: { left: 64, right: 44, top: 88, bottom: 78 },
     tooltip: { trigger: 'axis', valueFormatter: (x: unknown) => (typeof x === 'number' ? fmt(x) : String(x)) },
     xAxis: { type: 'time', name: 'Year', nameLocation: 'end', nameGap: 8, nameTextStyle: { color: '#cbd5e1' }, ...AXIS },
     yAxis: { type: 'value', name: yName, nameGap: 14, nameTextStyle: { color: '#cbd5e1', align: 'left' }, scale: true, ...AXIS },
@@ -337,7 +347,7 @@ export function buildCompareChart(input: {
   const d = rep.difference
   const span = `${formatStep(rep.start)} to ${formatStep(rep.end)}`
   const subtitle = `${span}   ·   Each series relative to its own mean (levels are not compared)   ·   Difference ${fmt(d.perYear)} ${rateUnits(v)} (95% interval ${fmt(d.lower)} to ${fmt(d.upper)}), ${formatP(rep.p)}`
-  const source = `Source: ${v.source.name}${v.synthetic ? '   ·   SYNTHETIC DATA: not observations' : ''}`
+  const source = sourceLine([v])
   const option = baseOption(`${v.name}: ${A.name} vs ${B.name}`, subtitle, `${units} (relative to own mean)`, source, v.synthetic, list)
   const dates = [...new Set([...pa.dates, ...pb.dates])].sort()
   const get = (p: Pts, dt: string) => p.values[p.dates.indexOf(dt)] ?? null
@@ -381,7 +391,7 @@ export function buildTogetherChart(input: { region: Region; start: string; end: 
     `${span}   ·   ${prep}   ·   Standardized: (value − mean) ÷ standard deviation over the common period. Moving together is not cause and effect.` +
     (antarcticTemp ? '\nAntarctic ice loss is driven mainly by warm ocean water reaching West Antarctic glaciers, not by air temperature.' : '')
   const synthetic = items.some((x) => x.variable.synthetic)
-  const source = `Sources: ${[...new Set(items.map((x) => x.variable.source.name))].join('; ')}${synthetic ? '   ·   SYNTHETIC DATA: not observations' : ''}`
+  const source = sourceLine(items.map((x) => x.variable))
   return {
     option: common.length ? baseOption(`${r.name}: variables together`, subtitle, 'Standardized units', source, synthetic, list) : null,
     message: common.length ? undefined : 'These variables have no years in common in the selected range.',

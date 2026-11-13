@@ -274,7 +274,7 @@ function withZoom(option: echarts.EChartsCoreOption | undefined): echarts.EChart
         xAxisIndex: 0,
         filterMode: 'filter',
         height: 16,
-        bottom: 30,
+        bottom: 44,
         left: 64,
         right: 44,
         borderColor: 'rgba(255,255,255,0.25)',
