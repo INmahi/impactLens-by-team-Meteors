@@ -38,25 +38,49 @@ function groupLabel(group: string): string {
 // any step can be reopened. While a Region step is open, clicking a region on the globe selects it.
 type StepId = 'variable' | 'region' | 'compare' | 'time'
 
-export default function LeftDrawer({ className, onCollapse }: { className?: string; onCollapse?: () => void }) {
+export default function LeftDrawer({
+  className,
+  onCollapse,
+  wide,
+  onToggleWide,
+}: {
+  className?: string
+  onCollapse?: () => void
+  wide?: boolean
+  onToggleWide?: () => void
+}) {
   const { data: variables } = useVariablesData()
   const { data: regions } = useRegionsData()
 
   return (
-    <section aria-label="Analysis inputs" className={cn('glass-sidebar flex w-80 flex-col overflow-hidden', className)}>
+    <section aria-label="Analysis inputs" className={cn('glass-sidebar flex w-[22rem] max-w-full flex-col overflow-hidden', className)}>
       <header className="flex items-center justify-between gap-2 px-4 pt-3 pb-2">
         <h2 className="text-sm font-semibold tracking-wide text-white">Analyse a trend</h2>
-        {onCollapse && (
-          <button
-            type="button"
-            onClick={onCollapse}
-            aria-label="Hide analysis inputs"
-            title="Hide analysis inputs"
-            className="rounded-md px-2 py-0.5 text-base font-semibold text-white/90 hover:bg-white/10"
-          >
-            «
-          </button>
-        )}
+        <span className="flex items-center gap-1">
+          {onToggleWide && (
+            <button
+              type="button"
+              onClick={onToggleWide}
+              aria-pressed={!!wide}
+              aria-label={wide ? 'Make analysis inputs narrower' : 'Make analysis inputs wider'}
+              title={wide ? 'Narrower' : 'Wider'}
+              className="rounded-md px-2 py-0.5 text-base font-semibold text-white/90 hover:bg-white/10"
+            >
+              {wide ? '⇤' : '⇥'}
+            </button>
+          )}
+          {onCollapse && (
+            <button
+              type="button"
+              onClick={onCollapse}
+              aria-label="Hide analysis inputs"
+              title="Hide analysis inputs"
+              className="rounded-md px-2 py-0.5 text-base font-semibold text-white/90 hover:bg-white/10"
+            >
+              «
+            </button>
+          )}
+        </span>
       </header>
       {!variables || !regions ? (
         <p className="px-4 pb-4 text-sm text-white/90">Loading…</p>

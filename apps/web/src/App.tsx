@@ -117,7 +117,7 @@ function AiSummaryOffer({ aiOpen, onAccept, className }: { aiOpen: boolean; onAc
           setShow(false)
           onAccept()
         }}
-        className="rounded-lg bg-sky-300 px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-sky-200"
+        className="shrink-0 rounded-lg bg-sky-300 px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-slate-950 hover:bg-sky-200"
       >
         AI summary
       </button>
@@ -135,6 +135,9 @@ function DesktopOverlay() {
   // Side drawers run full height and slide out sideways; the scroller and chart drawer sit between
   // them and widen (animated) when a drawer is closed.
   const [leftOpen, setLeftOpen] = useState(true)
+  // The inputs drawer can be widened too (boss, 2026-11-13); the charts' left edge follows it.
+  const [leftWide, setLeftWide] = useState(false)
+  const leftWidth = leftWide ? '32rem' : '22rem'
   const [aiOpen, setAiOpen] = useState(false)
   const [rightOpen, setRightOpen] = useState(true)
   const analysis = useAppStore((s) => s.analysis)
@@ -161,19 +164,29 @@ function DesktopOverlay() {
       {/* Left drawer first in DOM order, so Tab goes inputs -> right column -> scroller -> charts. */}
       <div
         inert={!leftOpen}
-        className={cn('absolute bottom-3 left-3 top-16 flex flex-col', SLIDE, !leftOpen && '-translate-x-[calc(100%+1rem)]')}
+        className={cn(
+          'absolute bottom-3 left-3 top-16 flex max-w-[calc(100vw-1.5rem)] flex-col transition-[transform,width] duration-300 ease-out motion-reduce:transition-none',
+          !leftOpen && '-translate-x-[calc(100%+1rem)]',
+        )}
+        style={{ width: leftWidth }}
       >
-        <LeftDrawer className="max-h-full" onCollapse={() => setLeftOpen(false)} />
+        <LeftDrawer className="max-h-full w-full" onCollapse={() => setLeftOpen(false)} wide={leftWide} onToggleWide={() => setLeftWide((w) => !w)} />
       </div>
       <ReopenTab side="left" label="Show analysis inputs" show={!leftOpen} onClick={() => setLeftOpen(true)} />
-      <AiSummaryOffer
-        aiOpen={aiOpen}
-        onAccept={() => {
-          useAppStore.getState().setAiRequest(SUMMARY_REQUEST)
-          setAiOpen(true)
-        }}
-        className="absolute left-1/2 top-24 z-30 -translate-x-1/2"
-      />
+      {/* Centred in the free space between the drawers, so it never covers them when one is widened. */}
+      <div
+        className="pointer-events-none absolute top-24 z-30 flex justify-center transition-[left,right] duration-300 ease-out motion-reduce:transition-none"
+        style={{ left: leftOpen ? `calc(${leftWidth} + 1.5rem)` : '1rem', right: rightShown ? `calc(${rightWidth} + 1.5rem)` : '1rem' }}
+      >
+        <AiSummaryOffer
+          aiOpen={aiOpen}
+          onAccept={() => {
+            useAppStore.getState().setAiRequest(SUMMARY_REQUEST)
+            setAiOpen(true)
+          }}
+          className="max-w-full"
+        />
+      </div>
       {/* AI assistant: a floating pop-up under the Ask AI button; the results stay visible on the right. */}
       <AssistantPanel open={aiOpen} onClose={() => setAiOpen(false)} className="absolute left-3 top-16 z-30 h-[min(42rem,calc(100dvh-5.5rem))] w-[27rem] max-w-[calc(100vw-1.5rem)] origin-top-left" />
 
@@ -199,7 +212,7 @@ function DesktopOverlay() {
 
       <div
         className="absolute bottom-3 flex flex-col items-center gap-2 transition-[left,right] duration-300 ease-out motion-reduce:transition-none"
-        style={{ left: leftOpen ? '22rem' : '4rem', right: rightShown ? `calc(${rightWidth} + 2rem)` : '10rem' }}
+        style={{ left: leftOpen ? `calc(${leftWidth} + 2rem)` : '4rem', right: rightShown ? `calc(${rightWidth} + 2rem)` : '10rem' }}
       >
         <div className="flex w-full max-w-[760px] justify-center [&>*]:w-full!">
           <TimeScroller />
