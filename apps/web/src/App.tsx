@@ -36,10 +36,44 @@ export default function App() {
   )
 }
 
+// Drawer slide: transform only (cheap), off under prefers-reduced-motion.
+const SLIDE = 'transition-transform duration-300 ease-out motion-reduce:transition-none'
+
+/** Small glass tab that reopens a closed side drawer. */
+function ReopenTab({ side, label, show, onClick }: { side: 'left' | 'right'; label: string; show: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      tabIndex={show ? 0 : -1}
+      aria-hidden={!show}
+      className={cn(
+        'glass-strong pointer-events-auto absolute z-10 h-10 px-2.5 text-base font-semibold text-white transition-opacity duration-300 hover:bg-white/10 motion-reduce:transition-none',
+        // Right tab sits below the globe zoom controls.
+        side === 'left' ? 'left-3 top-16' : 'right-3 top-36',
+        show ? 'opacity-100' : 'pointer-events-none opacity-0',
+      )}
+    >
+      {side === 'left' ? '»' : '«'}
+    </button>
+  )
+}
+
 function DesktopOverlay() {
-  // When the chart drawer is open, side panels end above the bottom stack (scroller + charts).
-  const [chartsOpen, setChartsOpen] = useState(false)
-  const sideBottom = chartsOpen ? '31rem' : '2.5rem'
+  // Side drawers run full height and slide out sideways; the scroller and chart drawer sit between
+  // them and widen (animated) when a drawer is closed.
+  const [leftOpen, setLeftOpen] = useState(true)
+  const [rightOpen, setRightOpen] = useState(true)
+  const analysis = useAppStore((s) => s.analysis)
+  const status = useAppStore((s) => s.analysisStatus)
+  const hasResults = !!analysis || status === 'running'
+  // A new result reopens the results drawer.
+  useEffect(() => {
+    if (analysis) setRightOpen(true)
+  }, [analysis])
+  const rightShown = rightOpen && hasResults
   return (
     <>
       <header className="absolute left-3 top-3 flex items-center gap-3">
@@ -48,22 +82,39 @@ function DesktopOverlay() {
       </header>
       <SyntheticWatermark className="absolute left-1/2 top-3 -translate-x-1/2" />
       {/* Left drawer first in DOM order, so Tab goes inputs -> right column -> scroller -> charts. */}
-      <div className="absolute left-3 top-16 flex flex-col" style={{ bottom: sideBottom }}>
-        <LeftDrawer className="max-h-full" />
-      </div>
       <div
-        className="absolute right-3 top-3 flex w-96 max-w-[calc(100vw-1.5rem)] flex-col items-end gap-3 overflow-y-auto overscroll-contain [&>*]:shrink-0"
-        style={{ bottom: chartsOpen ? sideBottom : '8rem' }}
+        inert={!leftOpen}
+        className={cn('absolute bottom-3 left-3 top-16 flex flex-col', SLIDE, !leftOpen && '-translate-x-[calc(100%+1rem)]')}
       >
-        <div className="pointer-events-auto">
+        <LeftDrawer className="max-h-full" onCollapse={() => setLeftOpen(false)} />
+      </div>
+      <ReopenTab side="left" label="Show analysis inputs" show={!leftOpen} onClick={() => setLeftOpen(true)} />
+
+      <div className="absolute bottom-3 right-3 top-3 flex w-96 max-w-[calc(100vw-1.5rem)] flex-col items-end gap-3">
+        <div className="pointer-events-auto shrink-0">
           <GlobeControls />
         </div>
-        <RightDrawer />
-        <MapPanel />
+        <div
+          inert={!rightOpen}
+          className={cn('flex min-h-0 w-full flex-1 flex-col items-end gap-3', SLIDE, !rightOpen && 'translate-x-[calc(100%+1rem)]')}
+        >
+          <RightDrawer className="min-h-0" onCollapse={() => setRightOpen(false)} />
+        </div>
+        {/* Map options stay on screen when the results drawer is closed. */}
+        <div className="shrink-0">
+          <MapPanel />
+        </div>
       </div>
-      <div className="absolute inset-x-3 bottom-10 flex flex-col items-center gap-2">
-        <TimeScroller />
-        <ChartDrawer className="max-w-[1100px]" onOpenChange={setChartsOpen} />
+      <ReopenTab side="right" label="Show results" show={!rightOpen} onClick={() => setRightOpen(true)} />
+
+      <div
+        className="absolute bottom-3 flex flex-col items-center gap-2 transition-[left,right] duration-300 ease-out motion-reduce:transition-none"
+        style={{ left: leftOpen ? '22rem' : '4rem', right: rightShown ? '26rem' : '4rem' }}
+      >
+        <div className="flex w-full max-w-[760px] justify-center [&>*]:w-full!">
+          <TimeScroller />
+        </div>
+        <ChartDrawer className="max-w-[1100px]" />
       </div>
     </>
   )

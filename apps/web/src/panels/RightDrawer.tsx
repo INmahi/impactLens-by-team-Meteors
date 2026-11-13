@@ -1,7 +1,6 @@
 // Right drawer: results in the plan's fixed order (section 4):
 // 1 selected parameters, 2 verdict card, 3 statistical report (cross-checks expandable),
 // 4 interpretation, 5 notes. Text rules: docs/stats/wording.md (via lib/verdict.ts).
-import { useId, useState } from 'react'
 import type { Region, Variable } from '@trend/contract'
 import { formatP, type CompareReport, type MannKendallResult } from '@trend/stats'
 import { formatStep, formatUnitsText, useRegionsData, useVariablesData } from '@/lib/useData'
@@ -9,38 +8,36 @@ import { compareVerdict, correlationText, detectText, fmt, interpretation, rateU
 import { useAppStore, type AnalysisResult } from '@/state/store'
 import { cn } from 'cn'
 
-export default function RightDrawer({ className }: { className?: string }) {
+export default function RightDrawer({ className, onCollapse }: { className?: string; onCollapse?: () => void }) {
   const analysis = useAppStore((s) => s.analysis)
   const status = useAppStore((s) => s.analysisStatus)
   const { data: variables } = useVariablesData()
   const { data: regions } = useRegionsData()
-  const [open, setOpen] = useState(true)
-  const bodyId = useId()
 
   if (!analysis && status !== 'running') return null
   const v = analysis ? variables?.find((x) => x.id === analysis.variable) : undefined
   const r = analysis ? regions?.find((x) => x.id === analysis.region) : undefined
 
   return (
-    <section aria-label="Results" aria-busy={status === 'running'} className={cn("glass-strong flex w-96 max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden text-white", className)}>
+    <section aria-label="Results" aria-busy={status === 'running'} className={cn('glass-strong flex w-96 max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden text-white', className)}>
       <header className="flex items-center justify-between gap-2 px-4 pt-3 pb-2">
         <h2 className="text-sm font-semibold tracking-wide">Results</h2>
-        <button
-          type="button"
-          aria-expanded={open}
-          aria-controls={bodyId}
-          onClick={() => setOpen((o) => !o)}
-          className="rounded-md px-2 py-1 text-xs text-white/90 hover:bg-white/10"
-        >
-          {open ? 'Hide' : 'Show'}
-        </button>
+        {onCollapse && (
+          <button
+            type="button"
+            onClick={onCollapse}
+            aria-label="Hide results"
+            title="Hide results"
+            className="rounded-md px-2 py-0.5 text-base font-semibold text-white/90 hover:bg-white/10"
+          >
+            »
+          </button>
+        )}
       </header>
-      {open && (
-        <div id={bodyId} className="flex max-h-[calc(100dvh-14rem)] flex-col gap-4 overflow-y-auto overscroll-contain px-4 pb-4 text-sm">
-          {status === 'running' && <p role="status">Running the analysis…</p>}
-          {analysis && v && r && regions && variables && <Body a={analysis} v={v} r={r} regions={regions} variables={variables} />}
-        </div>
-      )}
+      <div className="flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain px-4 pb-4 text-sm">
+        {status === 'running' && <p role="status">Running the analysis…</p>}
+        {analysis && v && r && regions && variables && <Body a={analysis} v={v} r={r} regions={regions} variables={variables} />}
+      </div>
     </section>
   )
 }

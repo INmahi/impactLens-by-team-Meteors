@@ -1,6 +1,6 @@
 // Bottom drawer: charts for the current analysis (plan section 4). Opens when an analysis is ready.
-// Chart types come from the variable's `chartTypes`. Downloads: PNG, SVG (re-rendered with the SVG
-// renderer) and CSV of the plotted data. Exports carry the source line and the SYNTHETIC label.
+// Chart types come from the variable's `chartTypes`. Downloads: PNG and SVG (re-rendered with the SVG
+// renderer). Exports carry the source line and the SYNTHETIC label drawn in the chart.
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { BarChart, LineChart } from 'echarts/charts'
 import { GraphicComponent, GridComponent, LegendComponent, MarkLineComponent, TitleComponent, TooltipComponent } from 'echarts/components'
@@ -10,20 +10,36 @@ import type { Region, Series, Variable } from '@trend/contract'
 import { getSeriesCached, useRegionsData, useVariablesData } from '@/lib/useData'
 import { useAppStore, type AnalysisResult } from '@/state/store'
 import { cn } from 'cn'
-import { buildChart, buildCompareChart, buildTogetherChart, CHART_LABELS, toCsv } from './buildChart'
+import { buildChart, buildCompareChart, buildTogetherChart, CHART_LABELS } from './buildChart'
 
 echarts.use([LineChart, BarChart, GridComponent, TooltipComponent, LegendComponent, TitleComponent, MarkLineComponent, GraphicComponent, CanvasRenderer, SVGRenderer])
 
+// The link must be in the document and the blob URL must outlive a "Save as" prompt; revoking it
+// early makes some browsers save the file under the blob's UUID with no extension.
 function download(name: string, data: Blob | string, type = 'text/plain') {
   const blob = typeof data === 'string' ? new Blob([data], { type }) : data
+  const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
-  a.href = URL.createObjectURL(blob)
+  a.href = url
   a.download = name
+  a.rel = 'noopener'
+  a.style.display = 'none'
+  document.body.appendChild(a)
   a.click()
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 60_000)
 }
 
-export default function ChartDrawer({ className, onOpenChange }: { className?: string; onOpenChange?: (open: boolean) => void }) {
+function dataUrlToBlob(url: string): Blob {
+  const [head, b64] = url.split(',')
+  const mime = /data:([^;]+)/.exec(head)?.[1] ?? 'image/png'
+  const bin = atob(b64)
+  const bytes = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+  return new Blob([bytes], { type: mime })
+}
+
+export default function ChartDrawer({ className }: { className?: string }) {
   const analysis = useAppStore((s) => s.analysis)
   const { data: variables } = useVariablesData()
   const { data: regions } = useRegionsData()
@@ -33,7 +49,6 @@ export default function ChartDrawer({ className, onOpenChange }: { className?: s
   useEffect(() => {
     if (analysis) setOpen(true)
   }, [analysis])
-  useEffect(() => onOpenChange?.(!!analysis && open), [analysis, open, onOpenChange])
 
   if (!analysis || !variables || !regions) return null
   const v = variables.find((x) => x.id === analysis.variable)
@@ -48,17 +63,25 @@ export default function ChartDrawer({ className, onOpenChange }: { className?: s
           type="button"
           aria-expanded={open}
           aria-controls={bodyId}
+          aria-label={open ? 'Hide charts' : 'Show charts'}
           onClick={() => setOpen((o) => !o)}
-          className="rounded-md px-2 py-1 text-xs text-white/90 hover:bg-white/10"
+          className="rounded-md px-2 py-0.5 text-base font-semibold text-white/90 hover:bg-white/10"
         >
-          {open ? 'Hide' : 'Show'}
+          <span aria-hidden className={cn('inline-block transition-transform duration-300 motion-reduce:transition-none', open ? 'rotate-90' : '-rotate-90')}>
+            »
+          </span>
         </button>
       </header>
-      {open && (
-        <div id={bodyId}>
+      {/* Fold with a grid-rows transition so the chart stays mounted (no re-init) while hidden. */}
+      <div
+        id={bodyId}
+        inert={!open}
+        className={cn('grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none', open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]')}
+      >
+        <div className="min-h-0 overflow-hidden">
           <ChartBody a={analysis} v={v} r={r} regions={regions} variables={variables} />
         </div>
-      )}
+      </div>
     </section>
   )
 }
@@ -135,17 +158,11 @@ function ChartBody({ a, v, r, regions, variables }: { a: AnalysisResult; v: Vari
   )
 
   const fileBase = `trend-detective_${v.id}_${r.id}_${a.start}_${a.end}_${type}`
-  const meta = [
-    `${v.name}, ${r.name}, ${a.start} to ${a.end}`,
-    `Source: ${v.source.name}${v.source.doi ? ` (doi ${v.source.doi})` : ''}`,
-    `Units: ${v.units}`,
-    ...(v.synthetic ? ['SYNTHETIC DATA: generated test values, not observations'] : []),
-  ]
 
   function savePng() {
     if (!chart.current) return
     const url = chart.current.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#0b1220' })
-    fetch(url).then((r) => r.blob()).then((b) => download(`${fileBase}.png`, b))
+    download(`${fileBase}.png`, dataUrlToBlob(url))
   }
   function saveSvg() {
     if (!out?.option || !el.current) return
@@ -153,12 +170,10 @@ function ChartBody({ a, v, r, regions, variables }: { a: AnalysisResult; v: Vari
     const h = el.current.clientHeight || 320
     const svgChart = echarts.init(null, null, { renderer: 'svg', ssr: true, width: w, height: h })
     svgChart.setOption(out.option)
-    download(`${fileBase}.svg`, svgChart.renderToSVGString(), 'image/svg+xml')
+    const svg = svgChart.renderToSVGString()
+    download(`${fileBase}.svg`, svg.startsWith('<?xml') ? svg : `<?xml version="1.0" encoding="UTF-8"?>
+${svg}`, 'image/svg+xml')
     svgChart.dispose()
-  }
-  function saveCsv() {
-    if (!out) return
-    download(`${fileBase}.csv`, toCsv(out, meta), 'text/csv')
   }
 
   return (
@@ -182,14 +197,14 @@ function ChartBody({ a, v, r, regions, variables }: { a: AnalysisResult; v: Vari
           ))}
         </div>
         <div className="flex gap-1" aria-label="Downloads">
-          {(['PNG', 'SVG', 'CSV'] as const).map((k) => (
+          {(['PNG', 'SVG'] as const).map((k) => (
             <button
               key={k}
               type="button"
               disabled={!out?.option}
-              onClick={k === 'PNG' ? savePng : k === 'SVG' ? saveSvg : saveCsv}
+              onClick={k === 'PNG' ? savePng : saveSvg}
               className="rounded-md border border-white/20 px-2 py-1 text-xs text-white hover:bg-white/10 disabled:opacity-40"
-              aria-label={`Download ${k === 'CSV' ? 'data as CSV' : `chart as ${k}`}`}
+              aria-label={`Download chart as ${k}`}
             >
               {k}
             </button>

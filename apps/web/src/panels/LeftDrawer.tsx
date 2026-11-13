@@ -1,6 +1,6 @@
 // Left drawer: the analysis inputs (plan section 4). Variable, region, time range, Run analysis.
 // Everything is read from variables.json / regions.json: no variable or region id is hard-coded.
-import { useEffect, useId, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo } from 'react'
 import type { Region, Variable } from '@trend/contract'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
@@ -29,35 +29,29 @@ function groupLabel(group: string): string {
   return group.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase())
 }
 
-export default function LeftDrawer({ className }: { className?: string }) {
-  const [open, setOpen] = useState(true)
-  const bodyId = useId()
+export default function LeftDrawer({ className, onCollapse }: { className?: string; onCollapse?: () => void }) {
   const { data: variables } = useVariablesData()
   const { data: regions } = useRegionsData()
 
   return (
-    <section aria-label="Analysis inputs" className={cn("glass-strong flex max-h-[calc(100dvh-7.5rem)] w-80 flex-col overflow-hidden", className)}>
+    <section aria-label="Analysis inputs" className={cn('glass-strong flex w-80 flex-col overflow-hidden', className)}>
       <header className="flex items-center justify-between gap-2 px-4 pt-3 pb-2">
         <h2 className="text-sm font-semibold tracking-wide text-white">Analyse a trend</h2>
-        <button
-          type="button"
-          aria-expanded={open}
-          aria-controls={bodyId}
-          onClick={() => setOpen((o) => !o)}
-          className="rounded-md px-2 py-1 text-xs text-white/90 hover:bg-white/10"
-        >
-          {open ? 'Hide' : 'Show'}
-        </button>
+        {onCollapse && (
+          <button
+            type="button"
+            onClick={onCollapse}
+            aria-label="Hide analysis inputs"
+            title="Hide analysis inputs"
+            className="rounded-md px-2 py-0.5 text-base font-semibold text-white/90 hover:bg-white/10"
+          >
+            «
+          </button>
+        )}
       </header>
-      {open && (
-        <div id={bodyId} className="flex flex-col gap-4 overflow-y-auto overscroll-contain px-4 pb-4">
-          {!variables || !regions ? (
-            <p className="text-sm text-white/90">Loading…</p>
-          ) : (
-            <Inputs variables={variables} regions={regions} />
-          )}
-        </div>
-      )}
+      <div className="flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain px-4 pb-4">
+        {!variables || !regions ? <p className="text-sm text-white/90">Loading…</p> : <Inputs variables={variables} regions={regions} />}
+      </div>
     </section>
   )
 }
