@@ -40,3 +40,4 @@ data/public/
 media/*.webm
 media/*.mp4
 data/raw/
+basemap/

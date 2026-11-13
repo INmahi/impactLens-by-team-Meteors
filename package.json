@@ -8,12 +8,14 @@
   },
   "scripts": {
     "dev": "pnpm --filter web dev",
+    "start": "pnpm build && pnpm --filter web preview --port 4173 --strictPort",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "golden": "uv run python pipeline/stats/make_golden.py 1000",
     "data": "uv run python -m pipeline build --synthetic",
     "data:real": "uv run python -m pipeline build --synthetic && uv run python scripts/ingest_real.py",
     "validate": "uv run python -m pipeline validate",
-    "media": "uv run --group media python -m pipeline media"
+    "media": "uv run --group media python -m pipeline media",
+    "basemap": "uv run python scripts/fetch_basemap.py"
   }
 }

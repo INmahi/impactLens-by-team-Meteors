@@ -115,7 +115,7 @@ function DesktopOverlay() {
 
       <div
         className="absolute bottom-3 flex flex-col items-center gap-2 transition-[left,right] duration-300 ease-out motion-reduce:transition-none"
-        style={{ left: leftOpen ? '22rem' : '4rem', right: rightShown ? `calc(${rightWidth} + 2rem)` : '4rem' }}
+        style={{ left: leftOpen ? '22rem' : '4rem', right: rightShown ? `calc(${rightWidth} + 2rem)` : '10rem' }}
       >
         <div className="flex w-full max-w-[760px] justify-center [&>*]:w-full!">
           <TimeScroller />

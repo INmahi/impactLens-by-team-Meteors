@@ -17,6 +17,7 @@ import {
   Math as CesiumMath,
   PerspectiveFrustum,
   PolylineDashMaterialProperty,
+  type Request as CesiumRequest,
   ScreenSpaceEventHandler,
   ScreenSpaceEventType,
   Viewer,
@@ -34,6 +35,14 @@ import { polarView, regionAt, type CameraView, type RegionsData } from './region
 const GIBS_URL =
   'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/BlueMarble_ShadedRelief_Bathymetry/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpeg'
 export const GIBS_CREDIT = 'Imagery: NASA GIBS, Blue Marble Shaded Relief and Bathymetry'
+/** The same NASA tiles stored with the app (`pnpm basemap`), so the globe works offline. */
+const BASEMAP_URL = '/basemap/bluemarble/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpeg'
+/** Stored locally: levels 0-5 everywhere, plus level 6 for the polar caps (4.5-degree rows 0-6 and 33-39,
+ *  poleward of 58.5 degrees; keep in step with scripts/fetch_basemap.py). Everything finer comes from GIBS
+ *  only when online. */
+const LOCAL_MAX_LEVEL = 5
+const POLAR_LEVEL = 6
+const isStoredLocally = (y: number, level: number) => level <= LOCAL_MAX_LEVEL || (level === POLAR_LEVEL && (y <= 6 || y >= 33))
 
 type Role = 'base' | 'hover' | 'compare' | 'selected'
 type LineStyle = { color: Color; width: number; dashed: boolean; height: number }
@@ -303,9 +312,9 @@ export class GlobeEngine {
 }
 
 /** Static GIBS base map. See gibsTilingScheme.ts for why the default scheme does not fit. */
-function createGibsProvider(): WebMapTileServiceImageryProvider {
-  return new WebMapTileServiceImageryProvider({
-    url: GIBS_URL,
+function gibsOptions(url: string, maximumLevel: number): WebMapTileServiceImageryProvider.ConstructorOptions {
+  return {
+    url,
     layer: 'BlueMarble_ShadedRelief_Bathymetry',
     style: 'default',
     tileMatrixSetID: '500m',
@@ -313,9 +322,35 @@ function createGibsProvider(): WebMapTileServiceImageryProvider {
     tileWidth: 512,
     tileHeight: 512,
     tilingScheme: new GibsGeographicTilingScheme(),
-    maximumLevel: 7, // the 500m TileMatrixSet has levels 0-7; level 8 returns HTTP 400
+    maximumLevel, // the 500m TileMatrixSet has levels 0-7; level 8 returns HTTP 400
     credit: new Credit(GIBS_CREDIT, true),
-  })
+  }
+}
+
+/**
+ * Offline first: the stored copy (levels 0-5, polar caps to level 6) is always used; finer tiles come from
+ * NASA GIBS only while the browser is online. A detail tile that cannot load is simply not shown: Cesium keeps the
+ * stored parent tile, so the globe never goes blank and nothing retries in a loop.
+ */
+class OfflineFirstGibsProvider extends WebMapTileServiceImageryProvider {
+  private readonly local = new WebMapTileServiceImageryProvider(gibsOptions(BASEMAP_URL, POLAR_LEVEL))
+
+  constructor() {
+    super(gibsOptions(GIBS_URL, 7))
+    this.errorEvent.addEventListener((err: { retry: boolean }) => {
+      err.retry = false
+    })
+  }
+
+  override requestImage(x: number, y: number, level: number, request?: CesiumRequest): ReturnType<WebMapTileServiceImageryProvider['requestImage']> {
+    if (isStoredLocally(y, level)) return this.local.requestImage(x, y, level, request)
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return Promise.reject(new Error('offline'))
+    return super.requestImage(x, y, level, request)
+  }
+}
+
+function createGibsProvider(): WebMapTileServiceImageryProvider {
+  return new OfflineFirstGibsProvider()
 }
 
 function toPositions(path: [number, number][], height: number): Cartesian3[] {
