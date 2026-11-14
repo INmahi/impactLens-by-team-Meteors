@@ -172,7 +172,7 @@ export async function resultSummary(a: AnalysisResult | null = useAppStore.getSt
     what_is_measured: `${v.describe.what} (${v.frequency} values, ${formatUnitsText(v.units)})`,
     region: r.name,
     period: `${formatStep(a.start)} to ${formatStep(a.end)}`,
-    dataset: `${v.source.name}${v.source.version ? `, version ${v.source.version}` : ''}${v.synthetic ? ' (SYNTHETIC test data)' : ' (real observations)'}`,
+    dataset: `${v.source.name}${v.source.version ? `, version ${v.source.version}` : ''} (real observations)`,
     verdict: verdict.headline,
     detail: verdict.detail,
     numbers: {

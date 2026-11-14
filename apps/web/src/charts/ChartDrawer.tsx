@@ -1,6 +1,6 @@
 // Bottom drawer: charts for the current analysis (plan section 4). Opens when an analysis is ready.
 // Chart types come from the variable's `chartTypes`. Downloads: PNG and SVG (re-rendered with the SVG
-// renderer). Exports carry the source line and the SYNTHETIC label drawn in the chart.
+// renderer). Exports carry the source line drawn in the chart.
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { BarChart, LineChart } from 'echarts/charts'
 import { DataZoomInsideComponent, DataZoomSliderComponent, GraphicComponent, GridComponent, LegendComponent, MarkLineComponent, TitleComponent, TooltipComponent } from 'echarts/components'

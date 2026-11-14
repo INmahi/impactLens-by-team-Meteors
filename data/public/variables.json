@@ -885,6 +885,7 @@
       "Satellite estimate (GPM and TRMM radiometers, gauge-adjusted each month), averaged over the whole country; not the rain at any one station.",
       "1998-2014 comes from the TRMM-era satellites and 2014 onward from GPM, processed together in version 07.",
       "Monsoon rain swings a lot from year to year, so a trend needs many years to detect.",
+      "IMERG cells are about 11 km, so a small district averages only a handful of them.",
       "Testing many divisions at once: about 1 test in 20 can look significant by chance alone, so check whether neighbouring divisions agree before trusting a single one.",
       "Cross-check: NASA POWER (a weather-model product) shows a rising 1998-2025 monsoon trend that this satellite record does not; model rainfall trends can drift, so the satellite record is used here."
     ],
@@ -898,73 +899,73 @@
     "kind": "cumulative",
     "frequency": "annual",
     "period": [
-      "1985",
-      "2024"
+      "1988",
+      "2021"
     ],
     "periods": {
       "bangladesh": [
-        "1985",
-        "2024"
+        "1988",
+        "2021"
       ],
       "bd_khulna": [
-        "1985",
-        "2024"
+        "1988",
+        "2021"
       ],
       "bd_barishal": [
-        "1985",
-        "2024"
+        "1988",
+        "2021"
       ],
       "bd_chattogram": [
-        "1985",
-        "2024"
+        "1988",
+        "2021"
       ],
       "bd_satkhira_district": [
-        "1985",
-        "2024"
+        "1988",
+        "2021"
       ],
       "bd_khulna_district": [
-        "1985",
-        "2024"
+        "1988",
+        "2021"
       ],
       "bd_bagerhat_district": [
-        "1985",
-        "2024"
+        "1988",
+        "2021"
       ],
       "bd_pirojpur_district": [
-        "1985",
-        "2024"
+        "1988",
+        "2021"
       ],
       "bd_barguna_district": [
-        "1985",
-        "2024"
+        "1988",
+        "2021"
       ],
       "bd_patuakhali_district": [
-        "1985",
-        "2024"
+        "1992",
+        "2021"
       ],
       "bd_bhola_district": [
-        "1985",
-        "2024"
+        "1988",
+        "2021"
       ],
       "bd_lakshmipur_district": [
-        "1985",
-        "2024"
+        "1988",
+        "2021"
       ],
       "bd_noakhali_district": [
-        "1985",
-        "2024"
+        "1988",
+        "2021"
       ],
       "bd_feni_district": [
-        "1985",
-        "2024"
+        "1988",
+        "2021"
       ],
       "bd_chattogram_district": [
-        "1985",
-        "2024"
+        "1988",
+        "2021"
       ],
       "bd_cox_s_bazar_district": [
-        "1985",
-        "2024"
+        "1988",
+        "2021"
       ]
     },
     "regions": [
@@ -991,22 +992,34 @@
       "annual_change"
     ],
     "source": {
-      "name": "JRC Global Surface Water yearly water history (Landsat), test values in its format",
+      "name": "JRC Global Surface Water, Yearly Water Classification History (Landsat)",
       "url": "https://global-surface-water.appspot.com/",
-      "citation": "Synthetic data from pipeline/synthetic (Trend Detective). Shaped like the EC JRC Global Surface Water yearly classification (Pekel et al., Nature 540, 418-422, 2016, doi:10.1038/nature20584; Landsat, NASA/USGS); contains no JRC values."
+      "citation": "Pekel, J.-F., Cottam, A., Gorelick, N., Belward, A.S. (2016), High-resolution mapping of global surface water and its long-term changes, Nature 540, 418-422, doi:10.1038/nature20584. Source: EC JRC/Google.",
+      "doi": "10.1038/nature20584",
+      "version": "1.4 (JRC open data VER5-0, 1984-2021)",
+      "licence": "Free to use with attribution (Copernicus programme, EC JRC)",
+      "processing": [
+        "Downloaded the two 10x10-degree yearly classification tiles that cover Bangladesh (80-100E, 20-30N) for every year 1988-2021 from the JRC open data server (values unchanged).",
+        "Baseline land: 30 m pixels seen in at least 2 of the years 1988-1992 (Landsat saw almost nothing of Bangladesh before 1988) and classed 'not water' in most of them.",
+        "Each year: total area (km2, true pixel area) of baseline-land pixels classed permanent water, inside the region's border (pixel centre inside).",
+        "A year is left empty when more than 10% of the region's baseline land had no clear Landsat view that year; nothing is filled in."
+      ],
+      "accessed": "2026-11-14"
     },
     "describe": {
       "video": "/media/land_submerged_loop.webm",
-      "what": "How much land along the coast has turned into permanent water since 1985, mapped from Landsat satellite images (JRC Global Surface Water).",
+      "what": "How much land has turned into permanent water since the late 1980s, mapped from Landsat satellite images (JRC Global Surface Water).",
       "whyItMatters": "Land lost to the sea and rivers means lost fields, homes and mangroves. Rising seas, erosion and sinking land all push the coast inland."
     },
     "notes": [
-      "SYNTHETIC DATA: generated with a known injected trend for testing; not a measurement.",
-      "Cumulative area (km2) of land that became permanent water since 1985, inside the region.",
-      "Counts every cause of land turning to water: sea level rise, coastal and river-bank erosion, sinking land and new ponds. It cannot separate sea level rise from the others.",
-      "Landsat images are sparse before 2000, so some early years are missing."
+      "Area (km2) that was land in 1988-1992 and is permanent water in that year, from Landsat images (30 m pixels).",
+      "Counts every cause of land turning to water: sea level rise, coastal and river-bank erosion, sinking land and new ponds or fish farms. It cannot separate sea level rise from the others.",
+      "Loss only: new land that forms (for example new islands in the Meghna estuary) is not subtracted.",
+      "Seasonal water (wet-season flooding) is not counted; only water present all year.",
+      "Years with too few clear Landsat images over the region are left empty (for example 1998).",
+      "Landsat 7 (1999) and Landsat 8 (2013) added more clear images; a year with more images can show slightly more permanent water, so small steps at those years are possible."
     ],
-    "synthetic": true
+    "synthetic": false
   },
   {
     "id": "ice_mass_grace",

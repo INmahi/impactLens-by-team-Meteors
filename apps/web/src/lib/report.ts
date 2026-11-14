@@ -113,7 +113,7 @@ table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;p
 <main>
 <header><h1>${esc(title)}</h1>
 <p class="muted">ImpactLens report, generated ${esc(generated)} UTC. Mann-Kendall trend test with Sen's slope, computed in the browser by the app's statistics engine.</p>
-<p><span class="badge ${v.synthetic ? 'syn' : 'real'}">${v.synthetic ? 'SYNTHETIC test data' : 'Real observations'}</span>
+<p><span class="badge real">Real observations</span>
 ${
     cmp
       ? `<span class="badge ${cmp.tone === 'significant' ? '' : 'ns'}">${cmp.tone === 'significant' ? 'Trends differ' : 'Cannot tell apart'}</span>${a.compare!.report.lowPower ? '<span class="badge ns">Low power</span>' : ''}`

@@ -119,14 +119,13 @@ function removeSeasonal(p: Pts): Pts {
   return { ...p, values: p.values.map((v, i) => (v == null ? null : v - (mean.get(p.dates[i].slice(5)) ?? 0))), lower: null, upper: null }
 }
 
-/** Chart source line, also in every exported PNG/SVG: dataset, version, DOI, real or synthetic. */
+/** Chart source line, also in every exported PNG/SVG: dataset, version, DOI. */
 function sourceLine(vars: Variable[]): string {
   const seen = new Map<string, Variable['source']>()
   for (const x of vars) seen.set(x.source.name, x.source)
   const parts = [...seen.values()].map((s) => `${s.name}${s.version ? ` v${s.version}` : ''}${s.doi ? `, doi:${s.doi}` : ''}`)
-  const synthetic = vars.some((x) => x.synthetic)
   return `${parts.length > 1 ? 'Sources' : 'Source'}: ${parts.join('; ')}
-${synthetic ? 'SYNTHETIC DATA: not observations' : 'Real observations (see the Data sources page for citation and processing)'}`
+Real observations (see the Data sources page for citation and processing)`
 }
 
 /** Sen's slope line through the median residual, over the analysed range (drawing only). */
@@ -275,7 +274,7 @@ export function buildChart(input: ChartInput): ChartOutput {
     tooltip: { trigger: 'axis', valueFormatter: (x: unknown) => (typeof x === 'number' ? fmt(x) : String(x)) },
     xAxis: { type: 'time', name: 'Year', nameLocation: 'end', nameGap: 8, nameTextStyle: { color: '#cbd5e1' }, ...AXIS },
     yAxis: { type: 'value', name: yName, nameGap: 14, nameTextStyle: { color: '#cbd5e1', align: 'left' }, scale: true, ...AXIS },
-    graphic: [{ type: 'text', left: 12, bottom: 6, style: { text: source, fill: v.synthetic ? '#fcd34d' : '#cbd5e1', fontSize: 11 } }],
+    graphic: [{ type: 'text', left: 12, bottom: 6, style: { text: source, fill: '#cbd5e1', fontSize: 11 } }],
     series: seriesList,
   }
 
@@ -304,7 +303,7 @@ function centred(p: Pts): Pts {
   return { ...p, values: p.values.map((v) => (v == null ? null : v - m)), lower: null, upper: null }
 }
 
-function baseOption(titleText: string, subtitle: string, yName: string, source: string, synthetic: boolean, seriesList: Record<string, unknown>[]) {
+function baseOption(titleText: string, subtitle: string, yName: string, source: string, seriesList: Record<string, unknown>[]) {
   return {
     backgroundColor: '#0b1220',
     animation: false,
@@ -315,7 +314,7 @@ function baseOption(titleText: string, subtitle: string, yName: string, source: 
     tooltip: { trigger: 'axis', valueFormatter: (x: unknown) => (typeof x === 'number' ? fmt(x) : String(x)) },
     xAxis: { type: 'time', name: 'Year', nameLocation: 'end', nameGap: 8, nameTextStyle: { color: '#cbd5e1' }, ...AXIS },
     yAxis: { type: 'value', name: yName, nameGap: 14, nameTextStyle: { color: '#cbd5e1', align: 'left' }, scale: true, ...AXIS },
-    graphic: [{ type: 'text', left: 12, bottom: 6, style: { text: source, fill: synthetic ? '#fcd34d' : '#cbd5e1', fontSize: 11 } }],
+    graphic: [{ type: 'text', left: 12, bottom: 6, style: { text: source, fill: '#cbd5e1', fontSize: 11 } }],
     series: seriesList,
   }
 }
@@ -348,7 +347,7 @@ export function buildCompareChart(input: {
   const span = `${formatStep(rep.start)} to ${formatStep(rep.end)}`
   const subtitle = `${span}   ·   Each series relative to its own mean (levels are not compared)   ·   Difference ${fmt(d.perYear)} ${rateUnits(v)} (95% interval ${fmt(d.lower)} to ${fmt(d.upper)}), ${formatP(rep.p)}`
   const source = sourceLine([v])
-  const option = baseOption(`${v.name}: ${A.name} vs ${B.name}`, subtitle, `${units} (relative to own mean)`, source, v.synthetic, list)
+  const option = baseOption(`${v.name}: ${A.name} vs ${B.name}`, subtitle, `${units} (relative to own mean)`, source, list)
   const dates = [...new Set([...pa.dates, ...pb.dates])].sort()
   const get = (p: Pts, dt: string) => p.values[p.dates.indexOf(dt)] ?? null
   return {
@@ -390,10 +389,9 @@ export function buildTogetherChart(input: { region: Region; start: string; end: 
   const subtitle =
     `${span}   ·   ${prep}   ·   Standardized: (value − mean) ÷ standard deviation over the common period. Moving together is not cause and effect.` +
     (antarcticTemp ? '\nAntarctic ice loss is driven mainly by warm ocean water reaching West Antarctic glaciers, not by air temperature.' : '')
-  const synthetic = items.some((x) => x.variable.synthetic)
   const source = sourceLine(items.map((x) => x.variable))
   return {
-    option: common.length ? baseOption(`${r.name}: variables together`, subtitle, 'Standardized units', source, synthetic, list) : null,
+    option: common.length ? baseOption(`${r.name}: variables together`, subtitle, 'Standardized units', source, list) : null,
     message: common.length ? undefined : 'These variables have no years in common in the selected range.',
     title: `${r.name}: variables together`,
     csv: { header: ['date', ...items.map((x) => `${x.variable.id} (standardized)`)], rows: common.map((d, k) => [d, ...z.map((col) => col[k])]) },

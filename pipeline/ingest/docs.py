@@ -174,6 +174,15 @@ def _grace_mass() -> dict[str, Any]:
 REAL_SOURCES["ice_mass_grace"] = _grace_mass()
 
 
+def _jrc_gsw() -> dict[str, Any]:
+    from .jrc_gsw import NOTES, SOURCE
+
+    return {"source": SOURCE, "notes": NOTES}
+
+
+REAL_SOURCES["land_submerged"] = _jrc_gsw()
+
+
 def read_marker(raw: Path) -> dict[str, Any] | None:
     p = Path(raw) / MARKER
     if not p.is_file():

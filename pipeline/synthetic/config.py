@@ -234,18 +234,17 @@ REGIONS: list[RegionSpec] = [
     # Bangladesh (M12): country outline from Natural Earth (public domain), see bangladesh.py.
     RegionSpec("bangladesh", "Bangladesh", None, "country", (88.0, 20.7, 92.7, 26.7), _cam(90.3, 23.6, 1_600_000),
                BANGLADESH,
-               ("A mean over the whole country inside its border (Bangladesh Bureau of Statistics via geoBoundaries); not the value at any district.",)),
+               ("The whole country inside its border (Bangladesh Bureau of Statistics via geoBoundaries): an average for rainfall, a total for land area; not the value at any district.",)),
     # The 8 divisions of Bangladesh (M12), see bangladesh.py. Monsoon rainfall.
     # Names: "X Division" and, where a district shares its division's name, "X District" (unambiguous everywhere).
     *[RegionSpec(rid, f"{name} Division", "bangladesh", "division", bbox,
                  _cam((bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2, 700_000), rings,
-                 (f"A mean over the whole {name} division; not the value at any district or town.",))
+                 (f"The whole {name} division: an average for rainfall, a total for land area; not the value at any district or town.",))
       for rid, (name, _iso, bbox, rings) in BD_DIVISIONS.items()],
     # The 64 districts (parent = their division), same source; monsoon rainfall only.
     *[RegionSpec(rid, f"{name} District" if name in _BD_DIV_NAMES else name, div, "district", bbox,
                  _cam((bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2, 350_000), rings,
-                 (f"A mean over the whole {name} district; not the value at any town. IMERG cells are about 11 km, so a "
-                  "small district averages only a handful of them.",))
+                 (f"The whole {name} district: an average for rainfall, a total for land area; not the value at any town.",))
       for rid, (name, div, bbox, rings) in BD_DISTRICTS.items()],
     # Coastal seas: sea_level only (contract: kind coastal_sea).
     _sea("bay_of_bengal", "Bay of Bengal (northern)", BAY_OF_BENGAL,
@@ -356,7 +355,7 @@ _RECON = {
                 "(2020) sea-level budget reconstruction; contains no JPL_RECON_GMSL values.",
 }
 _JRC_GSW = {
-    "name": "JRC Global Surface Water yearly water history (Landsat), test values in its format",
+    "name": "Synthetic, shaped like JRC Global Surface Water yearly water history (Landsat)",
     "url": "https://global-surface-water.appspot.com/",
     "citation": "Synthetic data from pipeline/synthetic (Trend Detective). Shaped like the EC JRC Global Surface "
                 "Water yearly classification (Pekel et al., Nature 540, 418-422, 2016, doi:10.1038/nature20584; "
@@ -567,21 +566,18 @@ VARIABLES: list[VariableSpec] = [
         series={rid: SeriesSpec("2000", "2025", slope=0.0, ar1=0.1, noise_sd=220.0, start_value=1650.0, decimals=0)
                 for rid in ["bangladesh", *BD_DIVISIONS, *BD_DISTRICTS]},
     ),
-    # ---- Coastal land turned to permanent water (boss, 2026-11-13). Synthetic in the JRC Global Surface Water
-    # format until the yearly Landsat water history is ingested (several GB of 10x10 deg tiles).
+    # ---- Coastal land turned to permanent water (boss, 2026-11-13). Synthetic placeholder; `ingest jrc_gsw` replaces
+    # it with the real JRC Global Surface Water yearly classification (Landsat, 1988-2021).
     VariableSpec(
         id="land_submerged", group="bangladesh", name="Submerged coastal land", units="km2", kind="cumulative",
         frequency="annual", map_mode=None, chart_types=["series", "annual_change"],
         source=_JRC_GSW, segment_source="Synthetic (JRC Global Surface Water-like)",
-        describe={"what": "How much land along the coast has turned into permanent water since 1985, mapped "
-                          "from Landsat satellite images (JRC Global Surface Water).",
+        describe={"what": "How much land has turned into permanent water since the late 1980s, mapped from "
+                          "Landsat satellite images (JRC Global Surface Water).",
                   "whyItMatters": "Land lost to the sea and rivers means lost fields, homes and mangroves. Rising "
                                   "seas, erosion and sinking land all push the coast inland."},
-        notes=[SYNTH_NOTE,
-               "Cumulative area (km2) of land that became permanent water since 1985, inside the region.",
-               "Counts every cause of land turning to water: sea level rise, coastal and river-bank erosion, "
-               "sinking land and new ponds. It cannot separate sea level rise from the others.",
-               "Landsat images are sparse before 2000, so some early years are missing."],
+        # Real-data caveats come from pipeline/ingest/jrc_gsw.py NOTES.
+        notes=[SYNTH_NOTE],
         series={rid: SeriesSpec("1985", "2024", slope=slope, ar1=0.5, noise_sd=slope * 1.6, start_value=0.0,
                                 early_gaps=3, decimals=1)
                 for rid, slope in {

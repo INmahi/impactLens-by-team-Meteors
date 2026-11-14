@@ -273,20 +273,16 @@ function DatasetBlock({ datasets }: { datasets: Variable[] }) {
   const seen = new Map<string, Variable>()
   for (const d of datasets) if (!seen.has(d.source.name)) seen.set(d.source.name, d)
   const list = [...seen.values()]
-  const synthetic = list.some((d) => d.synthetic)
   return (
     <button
       type="button"
       onClick={() => document.getElementById('res-source')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
       aria-label="Dataset used: show the data source and honesty details"
-      className={cn(
-        'mt-1 flex w-full flex-col gap-1 rounded-lg border-2 px-2.5 py-2 text-left leading-snug',
-        synthetic ? 'border-white/20 bg-white/[0.06] hover:bg-white/10' : 'border-emerald-300/60 bg-emerald-300/10 hover:bg-emerald-300/20',
-      )}
+      className="mt-1 flex w-full flex-col gap-1 rounded-lg border-2 border-emerald-300/60 bg-emerald-300/10 px-2.5 py-2 text-left leading-snug hover:bg-emerald-300/20"
     >
       <span className="flex items-center justify-between gap-2 text-[11px] font-semibold tracking-wide uppercase">
         <span className="flex items-center gap-1.5">
-          <span aria-hidden className={cn('size-2 rounded-full', synthetic ? 'bg-white/50' : 'bg-emerald-300')} />
+          <span aria-hidden className="size-2 rounded-full bg-emerald-300" />
           {list.length > 1 ? 'Datasets used' : 'Dataset used'}
         </span>
         <span className="font-normal tracking-normal normal-case text-white/80 underline underline-offset-2">Details</span>
@@ -296,8 +292,8 @@ function DatasetBlock({ datasets }: { datasets: Variable[] }) {
           <span className="font-semibold text-white">{d.source.name}</span>
           {d.source.version && <span className="text-white/85">, version {d.source.version}</span>}
           <span className="block text-[11.5px] text-white/80">
-            {d.synthetic ? '' : 'Real observations'}
-            {d.source.doi ? `${d.synthetic ? '' : ' · '}doi:${d.source.doi}` : ''}
+            Real observations
+            {d.source.doi ? ` · doi:${d.source.doi}` : ''}
             {list.length > 1 ? ` · for ${d.name.toLowerCase()}` : ''}
           </span>
         </span>

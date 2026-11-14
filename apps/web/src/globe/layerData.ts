@@ -83,13 +83,6 @@ export function layerVariable(variables: Variable[], layer: string): Variable | 
   return variables.find((v) => v.id === layer && v.mapMode === layer) ?? variables.find((v) => v.mapMode === layer) ?? null
 }
 
-/** True when anything describing the layer says it is synthetic: the manifest or a variable using it. */
-export function layerIsSynthetic(manifest: Manifest | null, variables: Variable[] | null, layer: string | null): boolean {
-  if (manifest?.synthetic) return true
-  if (!variables || !layer) return false
-  return variables.some((v) => v.mapMode === layer && v.synthetic)
-}
-
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const MONTHS_LONG = [
   'January', 'February', 'March', 'April', 'May', 'June',

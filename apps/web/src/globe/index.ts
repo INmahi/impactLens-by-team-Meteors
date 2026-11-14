@@ -5,7 +5,6 @@ export { default as MapLegend, NoMapNote } from './MapLegend'
 export { default as MapModePicker } from './MapModePicker'
 export { default as MapModeTray } from './MapModeTray'
 export { default as MapModeMenu } from './MapModeMenu'
-export { default as SyntheticWatermark } from './SyntheticWatermark'
 export { flyToPole, flyToRegion, zoomIn, zoomOut } from './controller'
 export { GIBS_CREDIT } from './engine'
 export { dataLayerStats } from './dataLayer'
@@ -33,7 +32,6 @@ export {
   useActiveMode,
   useManifest,
   useMapModes,
-  useShowsSyntheticData,
   useVariables,
   useVariableWithoutMap,
   type ActiveMode,

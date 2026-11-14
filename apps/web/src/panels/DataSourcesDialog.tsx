@@ -1,9 +1,10 @@
 // "Data sources" page (boss, 2026-11-13: data honesty must be easy to see). Opened from the header on every
-// screen. Lists our honesty promises, then every dataset the app uses: each variable (from variables.json),
-// each map layer (from its manifest) and the NASA base map. Real/synthetic status, source, version, DOI,
-// licence, download date, years per region, full citation and the processing steps. Nothing is hard-coded
-// about a dataset here: it is all read from the data files.
-import { useEffect, useState } from 'react'
+// screen. Layout (boss, 2026-11-14): a stack of collapsible rows like the left panel's steps, all closed at first.
+// A closed row shows only where the data is used and which dataset it is; opening it shows the source, version,
+// DOI, licence, download date, records per region, citation and processing, with links. Nothing is hard-coded
+// about a dataset here: it is all read from the data files (variables.json, map manifests).
+import { useEffect, useId, useState } from 'react'
+import { ChevronDown } from 'lucide-react'
 import type { Manifest, Region, Source, Variable } from '@trend/contract'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -13,7 +14,7 @@ import { formatStep, useRegionsData, useVariablesData } from '@/lib/useData'
 import { cn } from 'cn'
 
 const PROMISES = [
-  'Real data from NASA archives (PO.DAAC, NSIDC, GES DISC) and the NASA- and ESA-supported IMBIE assessment; the version, DOI and download date of every dataset are listed below.',
+  'Real data from NASA archives (PO.DAAC, NSIDC, GES DISC), the NASA- and ESA-supported IMBIE assessment and the EC JRC Global Surface Water record (Landsat); the version, DOI and download date of every dataset are listed below.',
   'Nothing is padded, gap-filled or extrapolated by us. Missing months stay as gaps and are counted in every result.',
   'Every trend comes with its 95% interval and a p-value. A result that is not significant reads "cannot tell yet", never "no change".',
   'A trend says what changed, not why. Two series moving together are never presented as cause and effect.',
@@ -25,43 +26,75 @@ function link(s: Source): string {
   return s.doi ? `https://doi.org/${s.doi}` : s.url
 }
 
-function Status({ synthetic }: { synthetic: boolean }) {
+const A = 'underline underline-offset-2 hover:text-white'
+
+/** One collapsible row: "where used" over "which dataset", details hidden until opened. */
+function Row({ where, dataset, real = true, children }: { where: string; dataset: string; real?: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  const bodyId = useId()
   return (
-    <span
-      className={cn(
-        'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold',
-        synthetic ? 'bg-amber-300 text-slate-950' : 'bg-emerald-300 text-slate-950',
+    <div className={cn('shrink-0 rounded-xl border bg-white/[0.03]', open ? 'border-sky-300/35' : 'border-white/10')}>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={bodyId}
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left hover:bg-white/5"
+      >
+        {real && <span aria-hidden className="size-2 shrink-0 rounded-full bg-emerald-300" />}
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="text-[11px] font-medium tracking-wide text-white/70 uppercase">{where}</span>
+          <span className="text-[13.5px] leading-snug font-medium text-white">{dataset}</span>
+        </span>
+        <ChevronDown aria-hidden className={cn('size-4 shrink-0 text-white/70 transition-transform motion-reduce:transition-none', open && 'rotate-180')} />
+      </button>
+      {open && (
+        <div id={bodyId} className="px-3 pt-0.5 pb-3 text-[12.5px] leading-snug text-white/90">
+          {children}
+        </div>
       )}
-    >
-      {synthetic ? 'Synthetic test data' : 'Real observations'}
-    </span>
+    </div>
   )
 }
 
-function SourceBlock({ title, source, synthetic, extra }: { title: string; source: Source; synthetic: boolean; extra?: React.ReactNode }) {
+function SourceDetails({ source, extra }: { source: Source; extra?: React.ReactNode }) {
   return (
-    <article className={cn('rounded-xl border p-3', synthetic ? 'border-amber-300/50 bg-amber-300/10' : 'border-emerald-300/40 bg-emerald-300/[0.07]')}>
-      <header className="mb-1.5 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-white">{title}</h3>
-        <Status synthetic={synthetic} />
-      </header>
-      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[12.5px] leading-snug text-white/90">
-        <dt className="text-white/75">Source</dt>
+    <>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+        <dt className="text-white/70">Status</dt>
         <dd>
-          <a href={link(source)} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+          <span className="rounded-full bg-emerald-300 px-2 py-0.5 text-[11px] font-semibold text-slate-950">Real observations</span>
+        </dd>
+        <dt className="text-white/70">Source</dt>
+        <dd>
+          <a href={link(source)} target="_blank" rel="noreferrer" className={A}>
             {source.name}
           </a>
           {source.version && `, version ${source.version}`}
         </dd>
         {source.doi && (
           <>
-            <dt className="text-white/75">DOI</dt>
-            <dd>{source.doi}</dd>
+            <dt className="text-white/70">DOI</dt>
+            <dd>
+              <a href={`https://doi.org/${source.doi}`} target="_blank" rel="noreferrer" className={A}>
+                {source.doi}
+              </a>
+            </dd>
+          </>
+        )}
+        {source.url && source.doi && !source.url.includes(source.doi) && (
+          <>
+            <dt className="text-white/70">Website</dt>
+            <dd className="break-all">
+              <a href={source.url} target="_blank" rel="noreferrer" className={A}>
+                {source.url}
+              </a>
+            </dd>
           </>
         )}
         {(source.licence || source.accessed) && (
           <>
-            <dt className="text-white/75">Access</dt>
+            <dt className="text-white/70">Access</dt>
             <dd>
               {source.accessed && `Downloaded ${source.accessed}`}
               {source.accessed && source.licence && '; '}
@@ -70,26 +103,27 @@ function SourceBlock({ title, source, synthetic, extra }: { title: string; sourc
           </>
         )}
         {extra}
+        <dt className="text-white/70">Cite</dt>
+        <dd>{source.citation}</dd>
       </dl>
-      <details className="mt-1.5">
-        <summary className="cursor-pointer text-[12px] text-white/85">Citation and processing</summary>
-        <p className="mt-1 text-[12px] text-white/90">{source.citation}</p>
-        {source.processing?.length ? (
-          <ol className="mt-1 flex list-decimal flex-col gap-0.5 pl-4 text-[12px] text-white/90">
+      {source.processing?.length ? (
+        <>
+          <p className="mt-2 text-[11px] font-medium tracking-wide text-white/70 uppercase">What we did to the data</p>
+          <ol className="mt-1 flex list-decimal flex-col gap-0.5 pl-4">
             {source.processing.map((p) => (
               <li key={p}>{p}</li>
             ))}
           </ol>
-        ) : null}
-      </details>
-    </article>
+        </>
+      ) : null}
+    </>
   )
 }
 
 function Coverage({ v, regions }: { v: Variable; regions: Region[] }) {
   return (
     <>
-      <dt className="text-white/75">Records</dt>
+      <dt className="text-white/70">Records</dt>
       <dd>
         {v.regions.map((id) => {
           const [a, b] = v.periods[id]
@@ -101,6 +135,15 @@ function Coverage({ v, regions }: { v: Variable; regions: Region[] }) {
         })}
       </dd>
     </>
+  )
+}
+
+function Group({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="flex flex-col gap-2">
+      <h3 className="mt-1 text-xs font-semibold tracking-wide text-white/85 uppercase">{title}</h3>
+      {children}
+    </section>
   )
 }
 
@@ -116,8 +159,6 @@ export default function DataSourcesDialog({ compact = false }: { compact?: boole
     Promise.all(ids.map((id) => getManifest(id).catch(() => null))).then((ms) => setLayers(ms.filter((m): m is Manifest => !!m)))
   }, [open, variables])
 
-  const anySynthetic = !!variables?.some((v) => v.synthetic) || layers.some((m) => m.synthetic)
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
@@ -131,53 +172,45 @@ export default function DataSourcesDialog({ compact = false }: { compact?: boole
           />
         }
       >
-        <span aria-hidden className={cn('size-2 rounded-full', anySynthetic ? 'bg-amber-300' : 'bg-emerald-300')} />
+        <span aria-hidden className="size-2 rounded-full bg-emerald-300" />
         Data sources
       </DialogTrigger>
       <DialogContent className="glass-strong no-scrollbar max-h-[90dvh] overflow-y-auto border-0 text-white sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-base text-white">Data sources and honesty</DialogTitle>
           <DialogDescription className="text-[13px] text-white/85">
-            {anySynthetic
-              ? 'Some data below is synthetic test data (marked in amber). Results from it are not findings.'
-              : 'Every dataset below is real data: NASA archives plus the NASA- and ESA-supported IMBIE assessment.'}
+            Every dataset below is real data. Open a row to see its version, DOI, citation, links and what we did to it.
           </DialogDescription>
         </DialogHeader>
 
-        <section aria-labelledby="ds-promises" className="rounded-xl border-2 border-emerald-300/60 bg-emerald-300/10 p-3">
-          <h3 id="ds-promises" className="mb-1 text-xs font-semibold tracking-wide uppercase">
-            Our data honesty promises
-          </h3>
-          <ul className="flex list-disc flex-col gap-1 pl-4 text-[13px] leading-snug text-white/90">
+        <Row where="How we handle the data" dataset="Our data honesty promises" real={false}>
+          <ul className="flex list-disc flex-col gap-1 pl-4">
             {PROMISES.map((p) => (
               <li key={p}>{p}</li>
             ))}
           </ul>
-        </section>
+        </Row>
 
-        <h3 className="mt-1 text-xs font-semibold tracking-wide text-white/90 uppercase">Variables (what the trend tests use)</h3>
-        <div className="flex flex-col gap-2">
+        <Group title="Analysis variables">
           {variables && regions
             ? variables.map((v) => (
-                <SourceBlock key={v.id} title={v.name} source={v.source} synthetic={v.synthetic} extra={<Coverage v={v} regions={regions} />} />
+                <Row key={v.id} where={v.name} dataset={v.source.name}>
+                  <SourceDetails source={v.source} extra={<Coverage v={v} regions={regions} />} />
+                </Row>
               ))
             : 'Loading…'}
-        </div>
+        </Group>
 
         {layers.length > 0 && (
-          <>
-            <h3 className="mt-1 text-xs font-semibold tracking-wide text-white/90 uppercase">Globe map layers</h3>
-            <div className="flex flex-col gap-2">
-              {layers.map((m) =>
-                m.source ? (
-                  <SourceBlock
-                    key={m.variable}
-                    title={m.name ?? m.variable}
+          <Group title="Globe map layers">
+            {layers.map((m) =>
+              m.source ? (
+                <Row key={m.variable} where={`Map: ${m.name ?? m.variable}`} dataset={m.source.name}>
+                  <SourceDetails
                     source={m.source}
-                    synthetic={m.synthetic}
                     extra={
                       <>
-                        <dt className="text-white/75">Frames</dt>
+                        <dt className="text-white/70">Frames</dt>
                         <dd className="tabular-nums">
                           {m.frames.length} months, {formatStep(m.frames[0]?.date ?? '')} – {formatStep(m.frames[m.frames.length - 1]?.date ?? '')}
                           {m.missing.length ? `; ${m.missing.length} months without data shown as gaps` : ''}
@@ -185,37 +218,47 @@ export default function DataSourcesDialog({ compact = false }: { compact?: boole
                       </>
                     }
                   />
-                ) : null,
-              )}
-            </div>
-          </>
+                </Row>
+              ) : null,
+            )}
+          </Group>
         )}
 
-        <h3 className="mt-1 text-xs font-semibold tracking-wide text-white/90 uppercase">Base map</h3>
-        <p className="text-[12.5px] text-white/90">
-          {GIBS_CREDIT}. Served by NASA&apos;s Global Imagery Browse Services; a copy of the coarser zoom levels is stored with the app
-          so the globe works offline. Background imagery only: no analysis uses it.
-        </p>
-
-        <h3 className="mt-1 text-xs font-semibold tracking-wide text-white/90 uppercase">AI assistant (the only online feature)</h3>
-        <p className="text-[12.5px] text-white/90">
-          The &quot;Ask AI&quot; chat uses a large language model ({loadConfig().model}, by default the open-weights gpt-oss-120b served by
-          Groq; OpenRouter or another endpoint can be chosen in its settings). It can only list the app&apos;s variables and regions, set
-          the analysis inputs, press Run analysis, and read the result summary the app produced. It never computes statistics: every
-          number it quotes comes from the app&apos;s own engine, which runs in your browser. What it sends to the AI service: your chat
-          messages, the list of variables and regions, and the result summary. No other data, and no personal data, is sent. AI answers
-          can be wrong; the results panel is the reference.
-        </p>
-
-        <h3 className="mt-1 text-xs font-semibold tracking-wide text-white/90 uppercase">Region borders</h3>
-        <p className="text-[12.5px] text-white/90">
-          Bangladesh, its 8 divisions and 64 districts come from the Bangladesh Bureau of Statistics (via OCHA and{' '}
-          <a href="https://www.geoboundaries.org/" target="_blank" rel="noreferrer" className="underline underline-offset-2">
-            geoBoundaries
-          </a>
-          , 2020, CC BY 3.0 IGO), simplified to about 1 km with shared borders kept identical; divisions and the country are
-          the union of their districts. Ice-sheet and coastal-sea outlines are drawn by this project for averaging.
-        </p>
+        <Group title="Other">
+          <Row where="Globe base map" dataset="NASA GIBS Blue Marble (Shaded Relief and Bathymetry)">
+            <p>
+              {GIBS_CREDIT}. Served by NASA&apos;s{' '}
+              <a href="https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api" target="_blank" rel="noreferrer" className={A}>
+                Global Imagery Browse Services (GIBS)
+              </a>
+              ; a copy of the coarser zoom levels is stored with the app so the globe works offline. Background imagery only: no analysis
+              uses it.
+            </p>
+          </Row>
+          <Row where="Region borders (Bangladesh)" dataset="Bangladesh Bureau of Statistics via OCHA and geoBoundaries (2020)">
+            <p>
+              Bangladesh, its 8 divisions and 64 districts come from the Bangladesh Bureau of Statistics (via OCHA and{' '}
+              <a href="https://www.geoboundaries.org/" target="_blank" rel="noreferrer" className={A}>
+                geoBoundaries
+              </a>
+              , 2020, CC BY 3.0 IGO), simplified to about 1 km with shared borders kept identical; divisions and the country are the union
+              of their districts. Ice-sheet and coastal-sea outlines are drawn by this project for averaging.
+            </p>
+          </Row>
+          <Row where="Ask AI (the only online feature)" dataset={`Language model: ${loadConfig().model}`} real={false}>
+            <p>
+              The &quot;Ask AI&quot; chat uses a large language model (by default the open-weights gpt-oss-120b served by{' '}
+              <a href="https://groq.com/" target="_blank" rel="noreferrer" className={A}>
+                Groq
+              </a>
+              ; OpenRouter or another endpoint can be chosen in its settings). It can only list the app&apos;s variables and regions, set
+              the analysis inputs, press Run analysis, and read the result summary the app produced. It never computes statistics: every
+              number it quotes comes from the app&apos;s own engine, which runs in your browser. What it sends to the AI service: your chat
+              messages, the list of variables and regions, and the result summary. No other data, and no personal data, is sent. AI
+              answers can be wrong; the results panel is the reference.
+            </p>
+          </Row>
+        </Group>
 
         <DialogFooter>
           <Button onClick={() => setOpen(false)} className="bg-sky-300 text-slate-950 hover:bg-sky-200">

@@ -194,7 +194,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole country inside its border (Bangladesh Bureau of Statistics via geoBoundaries); not the value at any district."
+      "The whole country inside its border (Bangladesh Bureau of Statistics via geoBoundaries): an average for rainfall, a total for land area; not the value at any district."
     ]
   },
   {
@@ -220,7 +220,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Barishal division; not the value at any district or town."
+      "The whole Barishal division: an average for rainfall, a total for land area; not the value at any district or town."
     ]
   },
   {
@@ -246,7 +246,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Chattogram division; not the value at any district or town."
+      "The whole Chattogram division: an average for rainfall, a total for land area; not the value at any district or town."
     ]
   },
   {
@@ -271,7 +271,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Dhaka division; not the value at any district or town."
+      "The whole Dhaka division: an average for rainfall, a total for land area; not the value at any district or town."
     ]
   },
   {
@@ -297,7 +297,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Khulna division; not the value at any district or town."
+      "The whole Khulna division: an average for rainfall, a total for land area; not the value at any district or town."
     ]
   },
   {
@@ -322,7 +322,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Mymensingh division; not the value at any district or town."
+      "The whole Mymensingh division: an average for rainfall, a total for land area; not the value at any district or town."
     ]
   },
   {
@@ -347,7 +347,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Rajshahi division; not the value at any district or town."
+      "The whole Rajshahi division: an average for rainfall, a total for land area; not the value at any district or town."
     ]
   },
   {
@@ -372,7 +372,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Rangpur division; not the value at any district or town."
+      "The whole Rangpur division: an average for rainfall, a total for land area; not the value at any district or town."
     ]
   },
   {
@@ -397,7 +397,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Sylhet division; not the value at any district or town."
+      "The whole Sylhet division: an average for rainfall, a total for land area; not the value at any district or town."
     ]
   },
   {
@@ -423,7 +423,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Bagerhat district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Bagerhat district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -448,7 +448,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Bandarban district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Bandarban district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -474,7 +474,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Barguna district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Barguna district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -499,7 +499,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Barishal district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Barishal district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -525,7 +525,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Bhola district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Bhola district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -550,7 +550,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Bogura district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Bogura district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -575,7 +575,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Brahmanbaria district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Brahmanbaria district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -600,7 +600,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Chandpur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Chandpur district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -625,7 +625,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Chapai Nawabganj district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Chapai Nawabganj district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -651,7 +651,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Chattogram district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Chattogram district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -676,7 +676,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Chuadanga district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Chuadanga district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -702,7 +702,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Cox's Bazar district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Cox's Bazar district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -727,7 +727,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Cumilla district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Cumilla district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -752,7 +752,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Dhaka district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Dhaka district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -777,7 +777,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Dinajpur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Dinajpur district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -802,7 +802,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Faridpur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Faridpur district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -828,7 +828,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Feni district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Feni district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -853,7 +853,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Gaibandha district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Gaibandha district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -878,7 +878,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Gazipur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Gazipur district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -903,7 +903,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Gopalganj district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Gopalganj district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -928,7 +928,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Habiganj district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Habiganj district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -953,7 +953,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Jamalpur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Jamalpur district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -978,7 +978,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Jashore district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Jashore district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1003,7 +1003,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Jhalokati district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Jhalokati district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1028,7 +1028,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Jhenaidah district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Jhenaidah district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1053,7 +1053,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Joypurhat district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Joypurhat district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1078,7 +1078,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Khagrachhari district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Khagrachhari district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1104,7 +1104,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Khulna district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Khulna district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1129,7 +1129,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Kishoreganj district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Kishoreganj district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1154,7 +1154,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Kurigram district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Kurigram district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1179,7 +1179,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Kushtia district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Kushtia district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1205,7 +1205,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Lakshmipur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Lakshmipur district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1230,7 +1230,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Lalmonirhat district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Lalmonirhat district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1255,7 +1255,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Madaripur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Madaripur district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1280,7 +1280,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Magura district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Magura district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1305,7 +1305,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Manikganj district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Manikganj district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1330,7 +1330,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Meherpur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Meherpur district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1355,7 +1355,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Moulvibazar district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Moulvibazar district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1380,7 +1380,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Munshiganj district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Munshiganj district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1405,7 +1405,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Mymensingh district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Mymensingh district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1430,7 +1430,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Naogaon district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Naogaon district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1455,7 +1455,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Narail district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Narail district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1480,7 +1480,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Narayanganj district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Narayanganj district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1505,7 +1505,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Narsingdi district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Narsingdi district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1530,7 +1530,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Natore district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Natore district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1555,7 +1555,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Netrokona district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Netrokona district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1580,7 +1580,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Nilphamari district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Nilphamari district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1606,7 +1606,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Noakhali district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Noakhali district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1631,7 +1631,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Pabna district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Pabna district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1656,7 +1656,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Panchagarh district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Panchagarh district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1682,7 +1682,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Patuakhali district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Patuakhali district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1708,7 +1708,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Pirojpur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Pirojpur district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1733,7 +1733,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Rajbari district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Rajbari district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1758,7 +1758,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Rajshahi district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Rajshahi district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1783,7 +1783,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Rangamati district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Rangamati district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1808,7 +1808,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Rangpur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Rangpur district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1834,7 +1834,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Satkhira district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Satkhira district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1859,7 +1859,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Shariatpur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Shariatpur district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1884,7 +1884,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Sherpur district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Sherpur district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1909,7 +1909,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Sirajganj district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Sirajganj district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1934,7 +1934,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Sunamganj district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Sunamganj district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1959,7 +1959,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Sylhet district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Sylhet district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -1984,7 +1984,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Tangail district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Tangail district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {
@@ -2009,7 +2009,7 @@
       "pitch": -90
     },
     "notes": [
-      "A mean over the whole Thakurgaon district; not the value at any town. IMERG cells are about 11 km, so a small district averages only a handful of them."
+      "The whole Thakurgaon district: an average for rainfall, a total for land area; not the value at any town."
     ]
   },
   {

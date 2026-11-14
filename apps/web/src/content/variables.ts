@@ -1,7 +1,7 @@
 // Describe-popup text per variable id (data/public/variables.json).
 // Owner: science-writer. Pure data: no React, no app imports.
 // Facts not computed by the app carry a source link. Region-specific caveats
-// live in regions.json notes; synthetic-data warnings are shown by the app.
+// live in regions.json notes.
 
 export interface VariableText {
   title: string;

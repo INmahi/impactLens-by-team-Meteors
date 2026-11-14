@@ -40,7 +40,7 @@ ImpactLens closes that gap. You pick a place and a time on a globe. The app runs
 | Sea level | Global; Bay of Bengal, Gulf of Mexico, US Atlantic coast, Western tropical Pacific, North Sea, Mediterranean | 1992–2026, monthly |
 | Long sea level and ice records | Global; Greenland, Antarctica | 1900–2018 |
 | Monsoon rainfall (June–September) | Bangladesh, 8 divisions, 64 districts | 1998–2025 |
-| Coastal land turned to water | Bangladesh, 3 coastal divisions, 12 sea-facing districts | 1985–2024 |
+| Coastal land turned to water | Bangladesh, 3 coastal divisions, 12 sea-facing districts | 1988–2021 |
 
 ## NASA and partner data
 
@@ -52,7 +52,7 @@ ImpactLens closes that gap. You pick a place and a time on a globe. The app runs
 | MERRA-2 M2TMNXSLV v5.12.4 (GES DISC) | Summer air temperature; temperature map layer | https://doi.org/10.5067/AP1B0BA5PD2K |
 | GPM IMERG Final Monthly V07 (GES DISC) | Bangladesh monsoon rainfall | https://doi.org/10.5067/GPM/IMERG/3B-MONTH/07 |
 | ITS_LIVE Greenland ice extent masks, NSIDC-0793 v1 | Greenland ice extent | https://doi.org/10.5067/579TO87M7IZB |
-| Landsat (NASA/USGS) via JRC Global Surface Water | Coastal land turned to water (integration in progress) | https://global-surface-water.appspot.com/ |
+| Landsat (NASA/USGS) via JRC Global Surface Water | Land turned to permanent water since 1988 (Bangladesh coast) | https://global-surface-water.appspot.com/ |
 | NASA GIBS, Blue Marble | Globe base map (stored for offline use) | https://nasa-gibs.github.io/gibs-api-docs/ |
 | IMBIE 2026 (ESA–NASA Ice Sheet Mass Balance Inter-comparison Exercise) | Reconciled ice sheet mass, Greenland and Antarctica | https://doi.org/10.5285/128c5e33-5224-4197-82f0-19dcc95b80a0 |
 | geoBoundaries, Bangladesh ADM2 (BBS/OCHA 2020) | Bangladesh division and district outlines | https://www.geoboundaries.org/ |

@@ -273,6 +273,36 @@ def ingest_imerg(raw: Path, root: Path, log: Log = print) -> dict[str, Any]:
     return out
 
 
+def ingest_jrc_gsw(raw: Path, root: Path, log: Log = print) -> dict[str, Any]:
+    """JRC GSW yearly classification tiles -> land_submerged (km2 of 1985-1989 land that is permanent water)."""
+    from datetime import date
+
+    from .grid import polygons_from_topo
+    from .jrc_gsw import land_lost
+
+    root = Path(root)
+    topo_path = root / "regions.topo.json"
+    if not topo_path.is_file():
+        raise IngestError(f"{topo_path} not found; region outlines come from it (build the tree first)")
+    polys = polygons_from_topo(json.loads(topo_path.read_text(encoding="utf-8")))
+    kinds = {r["id"]: r["kind"] for r in json.loads((root / "regions.json").read_text(encoding="utf-8"))}
+    ids = list(_var("land_submerged").series)
+    years, values, diag = land_lost(Path(raw), polys, kinds, ids, log)
+    docs = []
+    for rid in ids:
+        docs.append(series_doc(variable="land_submerged", region=rid, units="km2", frequency="annual", kind="cumulative",
+                               dates=years, values=values[rid],
+                               segment_source="JRC Global Surface Water yearly classification v1.4 (Landsat 5/7/8)",
+                               synthetic=False, decimals=1))
+        d = diag[rid]
+        log(f"land_submerged: {rid} baseline land {d['baseline_land_km2']} km2 (unseen {d['baseline_unseen_km2']}), "
+            f"gap years {','.join(d['gap_years']) or 'none'}")
+    times = [p.stat().st_mtime for p in Path(raw).glob("*.tif")]
+    overlay(root, "land_submerged", docs, synthetic=False,
+            accessed=date.fromtimestamp(max(times)).isoformat() if times else None)
+    return diag
+
+
 def ingest_recon(raw: Path, root: Path, log: Log = print) -> dict[tuple[str, str], dict[str, Any]]:
     """JPL_RECON_GMSL -> sea_level_long (global) and ice_mass_long (greenland, antarctica)."""
     from .recon import read_recon
