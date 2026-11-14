@@ -66,7 +66,7 @@ export default function ChartDrawer({ className }: { className?: string }) {
           aria-controls={bodyId}
           aria-label={open ? 'Hide charts' : 'Show charts'}
           onClick={() => setOpen((o) => !o)}
-          className="rounded-md px-2 py-0.5 text-base font-semibold text-white/90 hover:bg-white/10"
+          className="rounded-md px-2 py-0.5 text-base font-semibold text-white/90 hover:bg-white/10 max-md:px-3 max-md:py-2"
         >
           <span aria-hidden className={cn('inline-block transition-transform duration-300 motion-reduce:transition-none', open ? 'rotate-90' : '-rotate-90')}>
             »
@@ -222,7 +222,7 @@ ${svg}`, 'image/svg+xml')
               aria-selected={type === t}
               onClick={() => setType(t)}
               className={cn(
-                'rounded-full border px-2.5 py-1 text-xs',
+                'rounded-full border px-2.5 py-1 text-xs max-md:px-3 max-md:py-2',
                 type === t ? 'border-sky-300/80 bg-sky-300/20 text-white' : 'border-white/20 text-white/90 hover:bg-white/10',
               )}
             >
@@ -236,7 +236,7 @@ ${svg}`, 'image/svg+xml')
             type="button"
             disabled={!zoomed}
             onClick={() => chart.current?.dispatchAction({ type: 'dataZoom', start: 0, end: 100 })}
-            className="rounded-md border border-white/20 px-2 py-1 text-xs text-white hover:bg-white/10 disabled:opacity-40"
+            className="rounded-md border border-white/20 px-2 py-1 text-xs text-white hover:bg-white/10 disabled:opacity-40 max-md:px-3 max-md:py-2"
           >
             Reset zoom
           </button>
@@ -246,7 +246,7 @@ ${svg}`, 'image/svg+xml')
               type="button"
               disabled={!out?.option}
               onClick={k === 'PNG' ? savePng : saveSvg}
-              className="rounded-md border border-white/20 px-2 py-1 text-xs text-white hover:bg-white/10 disabled:opacity-40"
+              className="rounded-md border border-white/20 px-2 py-1 text-xs text-white hover:bg-white/10 disabled:opacity-40 max-md:px-3 max-md:py-2"
               aria-label={`Download chart as ${k}`}
             >
               {k}

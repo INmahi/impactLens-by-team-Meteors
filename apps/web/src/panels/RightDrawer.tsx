@@ -33,7 +33,7 @@ export default function RightDrawer({
   const v = analysis ? variables?.find((x) => x.id === analysis.variable) : undefined
   const r = analysis ? regions?.find((x) => x.id === analysis.region) : undefined
 
-  const iconBtn = 'rounded-md px-2 py-0.5 text-base font-semibold text-white/90 hover:bg-white/10'
+  const iconBtn = 'rounded-md px-2 py-0.5 max-md:px-3 max-md:py-2 text-base font-semibold text-white/90 hover:bg-white/10'
   return (
     <section aria-label="Results" aria-busy={status === 'running'} className={cn('glass-sidebar flex w-full flex-col overflow-hidden text-white', className)}>
       <header className="flex items-center justify-between gap-2 px-4 pt-3 pb-2">
@@ -141,7 +141,7 @@ function Body({ a, v, r, regions, variables, wide }: { a: AnalysisResult; v: Var
               aria-selected={tab === t.id}
               aria-controls={`${tabsId}-${t.id}-panel`}
               onClick={() => setTab(t.id)}
-              className={cn('rounded-md px-1.5 py-1 text-[12px]', tab === t.id ? 'bg-white/90 font-medium text-slate-950' : 'text-white/90 hover:bg-white/10')}
+              className={cn('rounded-md px-1.5 py-1 text-[12px] max-md:py-2.5 max-md:text-[13px]', tab === t.id ? 'bg-white/90 font-medium text-slate-950' : 'text-white/90 hover:bg-white/10')}
             >
               {t.label}
             </button>

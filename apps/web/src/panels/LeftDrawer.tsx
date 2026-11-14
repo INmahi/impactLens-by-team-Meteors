@@ -471,7 +471,7 @@ function RegionPicker({
                 <label
                   key={r.id}
                   className={cn(
-                    'cursor-pointer rounded-full border px-2.5 py-1 text-[13px]',
+                    'cursor-pointer rounded-full border px-2.5 py-1 text-[13px] max-md:px-3 max-md:py-2',
                     'has-focus-visible:outline-2 has-focus-visible:outline-offset-1 has-focus-visible:outline-ring',
                     selected === r.id ? on : 'border-white/20 text-white/90 hover:bg-white/10',
                   )}
@@ -616,7 +616,7 @@ function ComparePicker({
           <label
             key={m.id}
             className={cn(
-              'cursor-pointer rounded-full px-2 py-1 text-center text-[13px]',
+              'cursor-pointer rounded-full px-2 py-1 text-center text-[13px] max-md:py-2',
               'has-focus-visible:outline-2 has-focus-visible:outline-ring has-disabled:cursor-not-allowed has-disabled:opacity-40',
               mode === m.id ? 'bg-amber-300 font-medium text-slate-950' : 'text-white/90 hover:bg-white/10',
             )}

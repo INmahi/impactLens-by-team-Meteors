@@ -158,3 +158,12 @@
     box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.9), 0 0 14px 1px rgba(125, 211, 252, 0.4);
   }
 }
+
+/* Phone (< 768 px, same breakpoint as usePhone): the Cesium credit sits just above the bottom tab bar instead of
+   under it, where it overlapped the tabs (boss, 2026-11-14 mobile check). */
+@media (max-width: 767px) {
+  main .cesium-viewer .cesium-viewer-bottom {
+    /* !important: globe/engine.ts sets bottom inline */
+    bottom: calc(max(0.5rem, env(safe-area-inset-bottom)) + 3.6rem) !important;
+  }
+}

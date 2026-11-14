@@ -24,6 +24,12 @@ the JRC server). Not done: visual check against the GSW explorer "Transitions" l
 badges and labels removed 2026-11-14 at boss's request). The synthetic generator in `pipeline/synthetic` stays as a dev
 tool (it also builds the region files); never copy its output into `data/public`.
 
+**Mobile pass 2026-11-14 (390x844 and 360x640):** every control at least 34 px tall on phones (`max-md:` classes), the
+Cesium credit sits above the tab bar (index.css, `!important` because engine.ts sets it inline), `<main>` uses
+`overflow-clip` (with `overflow-hidden` a focus/scroll could slide the whole app up 118 px), the Map sheet is a
+labelled list (touch has no hover), the Charts sheet scrolls in a wrapper. Teammate PR #1 merged (Info icon for Data
+sources, Statistics tab first, honesty card below the tabs).
+
 ## Repository map
 
 ```

@@ -26,7 +26,7 @@ export default function DescribeDialog({ variable: v }: { variable: Variable }) 
           <button
             type="button"
             aria-label={`Describe ${v.name}`}
-            className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] text-white/85 underline-offset-2 hover:bg-white/10 hover:underline"
+            className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] max-md:min-h-9 max-md:px-2.5 max-md:text-xs text-white/85 underline-offset-2 hover:bg-white/10 hover:underline"
           />
         }
       >

@@ -347,7 +347,7 @@ export default function ImportDataDialog({
             type="button"
             className={cn(
               "pointer-events-auto flex items-center gap-1.5 rounded-xl border border-amber-300/60 bg-amber-300/15 font-semibold text-amber-50 shadow-lg backdrop-blur hover:bg-amber-300/25",
-              compact ? "px-2.5 py-1.5 text-xs" : "px-3 py-1.5 text-sm",
+              compact ? "h-10 px-3 text-xs" : "px-3 py-1.5 text-sm",
             )}
           />
         }

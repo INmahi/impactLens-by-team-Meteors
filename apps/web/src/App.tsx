@@ -20,9 +20,9 @@ import { cn } from 'cn'
 export default function App() {
   const phone = usePhone()
   return (
-    <main className="fixed inset-0 overflow-hidden bg-black text-foreground">
+    <main className="fixed inset-0 overflow-clip bg-black text-foreground">
       <Globe />
-      <div className="pointer-events-none absolute inset-0">{phone ? <PhoneOverlay /> : <DesktopOverlay />}</div>
+      <div className="pointer-events-none absolute inset-0 overflow-clip">{phone ? <PhoneOverlay /> : <DesktopOverlay />}</div>
     </main>
   )
 }
@@ -90,7 +90,7 @@ function AskAiButton({ open, glow, onClick, compact = false }: { open: boolean; 
       aria-label={glow ? 'Ask AI for a plain-language summary of this result' : undefined}
       className={cn(
         'glass pointer-events-auto flex items-center gap-1.5 font-medium text-white hover:bg-white/10',
-        compact ? 'px-2.5 py-1.5 text-xs' : 'px-3 py-1.5 text-sm',
+        compact ? 'h-10 px-3 text-xs' : 'px-3 py-1.5 text-sm',
         open && 'ring-2 ring-sky-300/70',
         glow && 'ai-glow text-sky-100',
       )}
@@ -248,17 +248,22 @@ function PhoneOverlay() {
         <AskAiButton compact open={aiOpen} glow={glow} onClick={onAskAi} />
         <ImportDataDialog compact />
       </header>
-      <div className="pointer-events-auto absolute right-2 top-[calc(max(0.5rem,env(safe-area-inset-top))+2.75rem)]">
+      <div className="pointer-events-auto absolute right-2 top-[calc(max(0.5rem,env(safe-area-inset-top))+3.25rem)] [&_button]:h-10 [&_button]:min-w-10">
         <GlobeControls />
       </div>
 
       <div className="absolute inset-x-2 bottom-[calc(3.75rem+env(safe-area-inset-bottom))] flex max-h-[60dvh] flex-col gap-2">
         {sheet === 'inputs' && <LeftDrawer className="h-[60dvh] max-h-[60dvh] w-full" />}
         {sheet === 'results' && <RightDrawer className="max-h-[60dvh] w-full max-w-none" />}
-        {sheet === 'charts' && <ChartDrawer className="no-scrollbar max-h-[60dvh] overflow-y-auto" />}
+        {sheet === 'charts' && (
+          // The wrapper scrolls (the drawer itself clips its overflow), so the source line under the chart is reachable.
+          <div className="no-scrollbar pointer-events-auto max-h-[60dvh] overflow-y-auto rounded-2xl">
+            <ChartDrawer />
+          </div>
+        )}
         {sheet === 'map' && (
           <div className="no-scrollbar flex max-h-[60dvh] flex-col items-stretch gap-2 overflow-y-auto">
-            <MapPanel />
+            <MapPanel labelled />
           </div>
         )}
         {sheet === null && (
@@ -271,7 +276,7 @@ function PhoneOverlay() {
       <AssistantPanel
         open={aiOpen}
         onClose={() => setAiOpen(false)}
-        className="absolute inset-x-2 top-[calc(max(0.5rem,env(safe-area-inset-top))+2.75rem)] bottom-[calc(3.75rem+env(safe-area-inset-bottom))] z-20"
+        className="absolute inset-x-2 top-[calc(max(0.5rem,env(safe-area-inset-top))+3.25rem)] bottom-[calc(3.75rem+env(safe-area-inset-bottom))] z-20"
       />
       <nav
         aria-label="Panels"

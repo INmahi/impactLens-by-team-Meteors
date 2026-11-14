@@ -209,7 +209,7 @@ export default function TimeScroller({ className, monthlyStepsPerSecond = 8, ann
     e.preventDefault()
   }
 
-  const btn = 'text-white hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-ring'
+  const btn = 'max-md:size-10 text-white hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-ring'
   const atStart = index <= 0
   const atEnd = index >= n - 1
 
