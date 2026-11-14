@@ -44,6 +44,19 @@ function LegendHeader({ title, titleId, date }: { title: string; titleId: string
   )
 }
 
+/**
+ * Explanations and source: folded away so the legend shows only the colour code (boss, 2026-11-14). They unfold
+ * while the legend is hovered (mouse) or focused (tap on touch, Tab on keyboard); tapping elsewhere folds them.
+ * Kept in the DOM (only clipped), so screen readers still read them.
+ */
+function LegendDetails({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="grid grid-rows-[0fr] opacity-0 transition-[grid-template-rows,opacity] duration-200 ease-out group-hover/legend:grid-rows-[1fr] group-hover/legend:opacity-100 group-focus-within/legend:grid-rows-[1fr] group-focus-within/legend:opacity-100 motion-reduce:transition-none">
+      <div className="-mt-2 flex min-h-0 flex-col gap-2 overflow-hidden pt-2">{children}</div>
+    </div>
+  )
+}
+
 function GridLegend({ active, className }: { active: ActiveMode; className?: string }) {
   const variables = useVariables()
   const { mode, manifest, step, variable } = active
@@ -62,7 +75,9 @@ function GridLegend({ active, className }: { active: ActiveMode; className?: str
     <section
       aria-labelledby={titleId}
       data-testid="map-legend"
-      className={cn('glass-strong flex w-72 flex-col gap-2 p-3 text-sm', className)}
+      tabIndex={0}
+      title="Hover or tap for details"
+      className={cn('group/legend glass-strong flex w-72 cursor-help flex-col gap-2 p-3 text-sm outline-none', className)}
     >
       <LegendHeader title={title} titleId={titleId} date={step.date} />
 
@@ -91,6 +106,7 @@ function GridLegend({ active, className }: { active: ActiveMode; className?: str
         </figcaption>
       </figure>
 
+      <LegendDetails>
       <p className="text-xs text-white/80">
         Fixed colour range in {units}; values beyond it show the end colours.
         {manifest.fadeNearZero && ' Values near 0 are left uncoloured, so the map underneath shows.'}
@@ -99,6 +115,7 @@ function GridLegend({ active, className }: { active: ActiveMode; className?: str
       </p>
       {manifest.note && <p className="text-xs text-white/90">{manifest.note}</p>}
       {manifest.source && <p className="text-xs text-white/80">Source: {manifest.source.name}</p>}
+      </LegendDetails>
     </section>
   )
 }
@@ -135,7 +152,9 @@ function OutlineLegend({ active, className }: { active: ActiveMode; className?: 
     <section
       aria-labelledby={titleId}
       data-testid="map-legend"
-      className={cn('glass-strong flex w-72 flex-col gap-2 p-3 text-sm', className)}
+      tabIndex={0}
+      title="Hover or tap for details"
+      className={cn('group/legend glass-strong flex w-72 cursor-help flex-col gap-2 p-3 text-sm outline-none', className)}
     >
       <LegendHeader title={title} titleId={titleId} date={step.date} />
 
@@ -162,10 +181,12 @@ function OutlineLegend({ active, className }: { active: ActiveMode; className?: 
         )}
       </ul>
 
+      <LegendDetails>
       {mode.kind === 'outline' && mode.frequency === 'monthly' && (
         <p className="text-xs text-white/80">One outline per year; each month shows its year&apos;s outline.</p>
       )}
       {variable?.source && <p className="text-xs text-white/80">Source: {variable.source.name}</p>}
+      </LegendDetails>
     </section>
   )
 }

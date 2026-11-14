@@ -159,11 +159,16 @@
   }
 }
 
-/* Phone (< 768 px, same breakpoint as usePhone): the Cesium credit sits just above the bottom tab bar instead of
-   under it, where it overlapped the tabs (boss, 2026-11-14 mobile check). */
+/* Phone (< 768 px, same breakpoint as usePhone): the Cesium credit moves to the free space under the header (left
+   of the pole/zoom controls). At the bottom it overlapped the tab bar or showed through the glass sheets (boss,
+   2026-11-14 mobile check). !important: globe/engine.ts sets left/bottom/right inline. */
 @media (max-width: 767px) {
   main .cesium-viewer .cesium-viewer-bottom {
-    /* !important: globe/engine.ts sets bottom inline */
-    bottom: calc(max(0.5rem, env(safe-area-inset-bottom)) + 3.6rem) !important;
+    top: calc(max(0.5rem, env(safe-area-inset-top)) + 3.25rem) !important;
+    bottom: auto !important;
+    left: 0.5rem !important;
+    right: auto !important;
+    max-width: calc(100vw - 8.5rem);
+    border-radius: 8px !important;
   }
 }
