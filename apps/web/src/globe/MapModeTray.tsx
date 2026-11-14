@@ -67,10 +67,9 @@ export default function MapModeTray({
     ...modes.map((m) => ({
       value: m.id as string | null,
       label: modeLabel(variables, m, manifests.get(m.id)),
-      span: yearSpan(m, manifests.get(m.id)),
       Icon: iconFor(m, manifests.get(m.id)),
     })),
-    { value: null as string | null, label: 'No map layer', span: null, Icon: EyeOff },
+    { value: null as string | null, label: 'No map layer', Icon: EyeOff },
   ]
 
   const item = 'group/item relative grid size-10 place-items-center rounded-xl transition-colors'
@@ -103,7 +102,7 @@ export default function MapModeTray({
                 name={`${id}-mode`}
                 className="sr-only"
                 checked={checked}
-                aria-label={`${o.label}${o.span ? `, ${o.span}` : ''}`}
+                aria-label={o.label}
                 onChange={() => {
                   setPlaying(false)
                   setMapLayer(o.value)
@@ -112,7 +111,6 @@ export default function MapModeTray({
               <o.Icon className="size-[18px]" aria-hidden />
               <span aria-hidden className={pill}>
                 <span className="font-medium">{o.label}</span>
-                {o.span && <span className="ml-1.5 text-white/70 tabular-nums">{o.span}</span>}
               </span>
             </label>
           )

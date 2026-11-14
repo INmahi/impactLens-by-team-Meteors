@@ -174,7 +174,7 @@ function DesktopOverlay() {
         )}
         style={{ width: leftWidth }}
       >
-        <LeftDrawer className="max-h-full w-full" onCollapse={() => setLeftOpen(false)} wide={leftWide} onToggleWide={toggleLeftWide} />
+        <LeftDrawer className="h-full min-h-0 w-full" onCollapse={() => setLeftOpen(false)} wide={leftWide} onToggleWide={toggleLeftWide} />
       </div>
       <ReopenTab side="left" label="Show analysis inputs" show={!leftOpen} onClick={openLeft} />
       {/* AI assistant: a floating pop-up under the Ask AI button; the results stay visible on the right. */}
@@ -253,7 +253,7 @@ function PhoneOverlay() {
       </div>
 
       <div className="absolute inset-x-2 bottom-[calc(3.75rem+env(safe-area-inset-bottom))] flex max-h-[60dvh] flex-col gap-2">
-        {sheet === 'inputs' && <LeftDrawer className="max-h-[60dvh] w-full" />}
+        {sheet === 'inputs' && <LeftDrawer className="h-[60dvh] max-h-[60dvh] w-full" />}
         {sheet === 'results' && <RightDrawer className="max-h-[60dvh] w-full max-w-none" />}
         {sheet === 'charts' && <ChartDrawer className="no-scrollbar max-h-[60dvh] overflow-y-auto" />}
         {sheet === 'map' && (

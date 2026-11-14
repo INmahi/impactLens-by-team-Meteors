@@ -4,7 +4,7 @@
 // DOI, licence, download date, records per region, citation and processing, with links. Nothing is hard-coded
 // about a dataset here: it is all read from the data files (variables.json, map manifests).
 import { useEffect, useId, useState } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Info } from 'lucide-react'
 import type { Manifest, Region, Source, Variable } from '@trend/contract'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -161,19 +161,28 @@ export default function DataSourcesDialog({ compact = false }: { compact?: boole
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
+      {/* Icon button that widens to show its label on hover or focus (teammate PR #1, 2026-11-14). */}
       <DialogTrigger
-        render={
-          <button
-            type="button"
-            className={cn(
-              'glass pointer-events-auto flex items-center gap-1.5 font-medium text-white hover:bg-white/10',
-              compact ? 'px-2.5 py-1.5 text-xs' : 'px-3 py-1.5 text-sm',
-            )}
-          />
-        }
+        type="button"
+        className={cn(
+          'glass pointer-events-auto group relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 text-white transition-[width,background-color] duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none hover:bg-white/10 focus-visible:bg-white/10',
+          compact ? 'h-8 w-8' : 'h-9 w-9',
+          'hover:w-32 focus-visible:w-32',
+        )}
+        aria-label="Open data sources and honesty"
+        title="Data Sources"
       >
-        <span aria-hidden className="size-2 rounded-full bg-emerald-300" />
-        Data sources
+        <span className="pointer-events-none absolute left-1/2 flex -translate-x-1/2 items-center justify-center text-white/95 transition-[left,transform] duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none group-hover:left-3 group-hover:translate-x-0 group-focus-visible:left-3 group-focus-visible:translate-x-0">
+          <Info className={cn('shrink-0', compact ? 'size-3.5' : 'size-4')} aria-hidden />
+        </span>
+        <span
+          className={cn(
+            'pointer-events-none absolute left-9 top-1/2 -translate-y-1/2 translate-x-1 whitespace-nowrap text-white opacity-0 transition-[transform,opacity] duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100',
+            compact ? 'text-[10.5px]' : 'text-xs',
+          )}
+        >
+          Data Sources
+        </span>
       </DialogTrigger>
       <DialogContent className="glass-strong no-scrollbar max-h-[90dvh] overflow-y-auto border-0 text-white sm:max-w-2xl">
         <DialogHeader>

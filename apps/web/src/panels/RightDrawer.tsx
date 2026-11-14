@@ -70,7 +70,7 @@ export default function RightDrawer({
   )
 }
 
-type Tab = 'meaning' | 'stats' | 'notes'
+type Tab = 'stats' | 'meaning' | 'notes'
 
 function Body({ a, v, r, regions, variables, wide }: { a: AnalysisResult; v: Variable; r: Region; regions: Region[]; variables: Variable[]; wide: boolean }) {
   const rep = a.report
@@ -80,13 +80,13 @@ function Body({ a, v, r, regions, variables, wide }: { a: AnalysisResult; v: Var
   // Region caveats and this run's notes first; the variable's general notes go in an expandable list.
   const notes = [...new Set([...(r.notes ?? []), ...rep.notes])]
   const general = v.notes.filter((n) => !notes.includes(n))
-  const [tab, setTab] = useState<Tab>('meaning')
+  const [tab, setTab] = useState<Tab>('stats')
   const tabsId = useId()
   const years = spanYears(a.start, a.end)
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: 'meaning', label: 'What it means' },
     { id: 'stats', label: 'Statistics' },
+    { id: 'meaning', label: 'What it means' },
     { id: 'notes', label: `Notes (${notes.length + general.length})` },
   ]
 
@@ -101,9 +101,6 @@ function Body({ a, v, r, regions, variables, wide }: { a: AnalysisResult; v: Var
             {formatStep(a.start)} – {formatStep(a.end)}
           </Chip>
         </p>
-        {/* Dataset block: always at the top of a result (boss, 2026-11-13). One line per dataset this analysis
-            used (the main variable, plus each extra variable in compare mode); jumps to the honesty card. */}
-        <DatasetBlock datasets={[v, ...a.extras.map((x) => variables.find((y) => y.id === x.variable)).filter((x): x is Variable => !!x)]} />
       </section>
 
       {cmp && rB && <CompareCard v={v} A={r} B={rB} rep={a.compare!.report} cv={cmp} wide={wide} />}
@@ -115,7 +112,7 @@ function Body({ a, v, r, regions, variables, wide }: { a: AnalysisResult; v: Var
         className={cn('rounded-xl border p-3', verdict.tone === 'significant' ? 'border-sky-300/50 bg-sky-300/10' : 'border-amber-300/50 bg-amber-300/10')}
       >
         <h3 id="res-verdict" className="mb-1.5 flex flex-wrap items-center gap-1.5 text-xs font-medium tracking-wide uppercase">
-          {a.compare ? `${r.name}, full range` : 'Main conclusion'}
+          {a.compare ? `${r.name}, full range` : 'Conclusion'}
           <Badge tone={verdict.tone}>{verdict.tone === 'significant' ? 'Significant' : 'Cannot tell yet'}</Badge>
           {rep.lowPower && <Badge tone="low">Low power</Badge>}
           
@@ -131,9 +128,6 @@ function Body({ a, v, r, regions, variables, wide }: { a: AnalysisResult; v: Var
       )}
 
       {a.extras.length > 0 && <ExtrasBlock a={a} r={r} variables={variables} />}
-
-      {/* Data source and honesty: always visible, highlighted (competition: honest results). */}
-      <DataSourceCard a={a} v={v} variables={variables} />
 
       {/* 3-5. Details in tabs */}
       <div>
@@ -265,40 +259,10 @@ function Body({ a, v, r, regions, variables, wide }: { a: AnalysisResult; v: Var
           )}
         </div>
       </div>
-    </>
-  )
-}
 
-function DatasetBlock({ datasets }: { datasets: Variable[] }) {
-  const seen = new Map<string, Variable>()
-  for (const d of datasets) if (!seen.has(d.source.name)) seen.set(d.source.name, d)
-  const list = [...seen.values()]
-  return (
-    <button
-      type="button"
-      onClick={() => document.getElementById('res-source')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-      aria-label="Dataset used: show the data source and honesty details"
-      className="mt-1 flex w-full flex-col gap-1 rounded-lg border-2 border-emerald-300/60 bg-emerald-300/10 px-2.5 py-2 text-left leading-snug hover:bg-emerald-300/20"
-    >
-      <span className="flex items-center justify-between gap-2 text-[11px] font-semibold tracking-wide uppercase">
-        <span className="flex items-center gap-1.5">
-          <span aria-hidden className="size-2 rounded-full bg-emerald-300" />
-          {list.length > 1 ? 'Datasets used' : 'Dataset used'}
-        </span>
-        <span className="font-normal tracking-normal normal-case text-white/80 underline underline-offset-2">Details</span>
-      </span>
-      {list.map((d) => (
-        <span key={d.source.name} className="block text-[13px]">
-          <span className="font-semibold text-white">{d.source.name}</span>
-          {d.source.version && <span className="text-white/85">, version {d.source.version}</span>}
-          <span className="block text-[11.5px] text-white/80">
-            Real observations
-            {d.source.doi ? ` · doi:${d.source.doi}` : ''}
-            {list.length > 1 ? ` · for ${d.name.toLowerCase()}` : ''}
-          </span>
-        </span>
-      ))}
-    </button>
+      {/* Data source and honesty: always visible, below the details (teammate PR #1, 2026-11-14). */}
+      <DataSourceCard a={a} v={v} variables={variables} />
+    </>
   )
 }
 
@@ -338,7 +302,7 @@ function trendWord(t: string): string {
   return t === 'no trend' ? 'not significant' : t
 }
 
-/** Compare mode "regions": the difference is the main conclusion, with both slopes and the difference as tiles. */
+/** Compare mode "regions": the difference is the conclusion, with both slopes and the difference as tiles. */
 function CompareCard({
   v,
   A,
@@ -362,7 +326,7 @@ function CompareCard({
       className={cn('rounded-xl border p-3', cv.tone === 'significant' ? 'border-sky-300/50 bg-sky-300/10' : 'border-amber-300/50 bg-amber-300/10')}
     >
       <h3 id="res-compare" className="mb-1.5 flex flex-wrap items-center gap-1.5 text-xs font-medium tracking-wide uppercase">
-        Main conclusion
+        Conclusion
         <Badge tone={cv.tone}>{cv.tone === 'significant' ? 'Different' : 'Cannot tell apart'}</Badge>
         {rep.lowPower && <Badge tone="low">Low power</Badge>}
         
